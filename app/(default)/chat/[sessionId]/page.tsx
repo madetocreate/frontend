@@ -591,7 +591,7 @@ export default function ChatSessionPage() {
       <div className={containerClass}>
         <div
           className={
-            'flex items-center gap-1 text-soft opacity-0 transition-opacity group-hover/message:opacity-100'
+            'flex items-center gap-0.5 text-soft opacity-0 transition-opacity group-hover:opacity-100'
           }
         >
           <button
@@ -663,7 +663,7 @@ export default function ChatSessionPage() {
                 <div
                   key={m.id}
                   className={
-                    'group/message flex flex-col gap-1 ' +
+                    'group flex flex-col gap-0.5 ' +
                     (m.role === 'user' ? 'items-end' : 'items-start')
                   }
                 >
@@ -817,7 +817,7 @@ export default function ChatSessionPage() {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   placeholder={t('chat.inputPlaceholder')}
-                  className="flex-1 bg-transparent text-base text-primary placeholder:text-muted outline-none"
+                  className="flex-1 bg-transparent text-base text-primary placeholder:text-muted outline-none border-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
                 />
                 <div className="flex items-center gap-2">
                   <button
