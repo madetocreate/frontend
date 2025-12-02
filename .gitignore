@@ -8,3 +8,11 @@ out
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Local backup and OS files
+*.bak
+.DS_Store
+
+# Local data files
+memory.jsonl
+*.sqlite
