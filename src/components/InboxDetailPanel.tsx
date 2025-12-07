@@ -55,7 +55,7 @@ export function InboxDetailPanel({ item }: InboxDetailPanelProps) {
             </p>
           </div>
         </div>
-        <div className="min-h-[220px] rounded-2xl border border-slate-200 bg-white/90 px-3 py-3 text-xs text-slate-500">
+        <div className="min-h-[220px] rounded-2xl border border-slate-200 bg-[var(--ak-color-bg-surface)] px-3 py-3 text-xs text-slate-500">
           <p>Hier erscheint dein KI-Assistent, sobald du einen Thread ausgewählt hast.</p>
         </div>
       </div>
@@ -95,7 +95,7 @@ export function InboxDetailPanel({ item }: InboxDetailPanelProps) {
 
   return (
     <div className="flex h-full flex-col gap-3">
-      <section className="flex flex-col rounded-2xl border border-slate-200 bg-white/90 px-4 py-4 text-xs text-slate-700 shadow-sm">
+      <section className="flex flex-col rounded-2xl border border-slate-200 bg-[var(--ak-color-bg-surface)] px-4 py-4 text-xs text-slate-700 shadow-sm">
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-1 items-start gap-3">
             <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/5">
@@ -272,7 +272,7 @@ export function InboxDetailPanel({ item }: InboxDetailPanelProps) {
         </div>
       </section>
 
-      <section className="flex-1 min-h-[220px] rounded-2xl border border-slate-200 bg-white/90 px-2 py-2">
+      <section className="flex-1 min-h-[220px] rounded-2xl border border-slate-200 bg-[var(--ak-color-bg-surface)] px-2 py-2">
         <ChatKitPanel />
       </section>
     </div>

@@ -14,6 +14,8 @@ import {
 import { InboxDrawerWidget } from '@/components/InboxDrawerWidget'
 import type { InboxItem } from '@/components/InboxDrawerWidget'
 import { InboxDetailPanel } from '@/components/InboxDetailPanel'
+import { ChatSidebarWidget, type ChatSidebarConversation } from '@/components/chat/ChatSidebarWidget'
+
 
 
 type WorkspaceModuleToken =
@@ -22,6 +24,8 @@ type WorkspaceModuleToken =
   | 'marketing'
   | 'calendar'
   | 'automation'
+  | 'notifications'
+  | 'settings'
 
 type ModuleConfig = {
   id: WorkspaceModuleToken
@@ -39,9 +43,33 @@ const MODULES: ModuleConfig[] = [
 
 const LEFT_DRAWER_WIDTH = 420
 
+const MOCK_CHAT_CONVERSATIONS: ChatSidebarConversation[] = [
+  {
+    id: 'welcome',
+    title: 'Willkommen bei Aklow',
+    lastMessagePreview: 'Frag mich etwas zu deinem Projekt oder Code...',
+    updatedAt: 'Jetzt',
+    unreadCount: 0,
+    avatarInitials: 'AK',
+  },
+  {
+    id: 'demo-1',
+    title: 'Demo-Workspace',
+    lastMessagePreview: 'Die letzten Änderungen sehen gut aus.',
+    updatedAt: 'Heute',
+    unreadCount: 2,
+    avatarInitials: 'DW',
+  },
+]
+
 function getModuleLabel(token: WorkspaceModuleToken): string {
   const match = MODULES.find((m) => m.id === token)
-  return match?.label ?? token
+  if (match) return match.label
+
+  if (token === 'notifications') return 'Benachrichtigungen'
+  if (token === 'settings') return 'Einstellungen'
+
+  return token
 }
 
 type ChatWorkspaceShellProps = {
@@ -54,15 +82,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const [leftDrawerOpen, setLeftDrawerOpen] = useState(false)
   const [rightDrawerOpen, setRightDrawerOpen] = useState(false)
   const [selectedInboxItem, setSelectedInboxItem] = useState<InboxItem | null>(null)
+  const [activeChatId, setActiveChatId] = useState<string | null>(MOCK_CHAT_CONVERSATIONS[0]?.id ?? null)
 
   const handleModuleClick = (token: WorkspaceModuleToken) => {
-    if (token === 'chat') {
-      setActiveModuleToken('chat')
-      setLeftDrawerOpen(false)
-      setRightDrawerOpen(false)
-      return
-    }
-
     setActiveModuleToken(token)
 
     setLeftDrawerOpen((prev) => {
@@ -71,6 +93,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       }
       return true
     })
+
+    setRightDrawerOpen(false)
   }
 
   const handleOpenDetails = () => {
@@ -86,7 +110,11 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setRightDrawerOpen(false)
   }
 
-  const showLeft = activeModuleToken !== 'chat' && leftDrawerOpen
+  const handleSelectChat = (chatId: string) => {
+    setActiveChatId(chatId)
+  }
+
+  const showLeft = leftDrawerOpen
 
   const chatStyle: CSSProperties = showLeft
     ? { marginLeft: LEFT_DRAWER_WIDTH }
@@ -101,7 +129,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   }
 
   return (
-    <div className="flex h-screen bg-white text-slate-900">
+    <div className="flex h-screen bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)]">
       <aside className="flex w-16 flex-col items-center gap-y-3 bg-white/60 py-4 text-slate-700 shadow-sm backdrop-blur-xl border-r border-white/40">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--ak-color-accent)] text-xs font-semibold text-white">
           AK
@@ -138,24 +166,40 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
             )
           })}
         </nav>
+        <div className="mb-4 flex flex-col items-center gap-y-3">
+          <button
+            type="button"
+            onClick={() => handleModuleClick('notifications')}
+            className={clsx(
+              'flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 transition-colors',
+              activeModuleToken === 'notifications' && leftDrawerOpen
+                ? 'bg-[var(--ak-color-accent)] text-white'
+                : 'bg-transparent hover:bg-slate-100 hover:text-slate-900'
+            )}
+            aria-label="Benachrichtigungen"
+          >
+            <BellIcon className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleModuleClick('settings')}
+            className={clsx(
+              'flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 transition-colors',
+              activeModuleToken === 'settings' && leftDrawerOpen
+                ? 'bg-[var(--ak-color-accent)] text-white'
+                : 'bg-transparent hover:bg-slate-100 hover:text-slate-900'
+            )}
+            aria-label="Einstellungen"
+          >
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--ak-color-accent)] text-xs font-semibold text-white">
+              N
+            </span>
+          </button>
+        </div>
       </aside>
 
       <div className="relative flex flex-1 flex-col">
-        <header className="flex h-14 items-center justify-end bg-white/50 px-4 backdrop-blur-xl border-b border-white/40">
-          <button
-            type="button"
-            className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/40 text-slate-600 ring-1 ring-white/60 shadow-sm hover:bg-white/70 hover:text-slate-900 transition-colors"
-            aria-label="Benachrichtigungen"
-          >
-            <BellIcon className="h-4 w-4" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--ak-color-accent)] text-xs font-semibold text-white"
-          >
-            N
-          </button>
-        </header>
+        
 
         <main className="relative flex-1 overflow-hidden">
           <div
@@ -194,7 +238,13 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto px-3 py-3 text-sm text-slate-600">
-                {activeModuleToken === 'inbox' ? (
+                {activeModuleToken === 'chat' ? (
+                  <ChatSidebarWidget
+                    conversations={MOCK_CHAT_CONVERSATIONS}
+                    activeConversationId={activeChatId}
+                    onSelectConversation={handleSelectChat}
+                  />
+                ) : activeModuleToken === 'inbox' ? (
                   <InboxDrawerWidget onItemClick={handleInboxItemClick} />
                 ) : (
                   <>
@@ -249,12 +299,49 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   </span>
                 </button>
                 <div className="truncate text-sm font-medium text-slate-900">
-                  {selectedInboxItem?.title ?? 'Details'}
+                  {activeModuleToken === 'inbox'
+                    ? selectedInboxItem?.title ?? 'Details'
+                    : getModuleLabel(activeModuleToken)}
                 </div>
                 <div className="w-7" />
               </div>
               <div className="flex-1 overflow-y-auto px-3 py-3 text-sm text-slate-600">
-                <InboxDetailPanel item={selectedInboxItem} />
+                {activeModuleToken === 'inbox' ? (
+                  <InboxDetailPanel item={selectedInboxItem} />
+                ) : activeModuleToken === 'notifications' ? (
+                  <div className="space-y-2">
+                    <p className="text-slate-500">
+                      Hier erscheinen später die Details zu deinen{' '}
+                      <span className="font-medium text-slate-900">Benachrichtigungen</span>.
+                    </p>
+                    <p>
+                      Zum Beispiel Regeln, Kanäle und Häufigkeiten, die du mit ChatKit-Automatisierungen verknüpfen kannst.
+                    </p>
+                  </div>
+                ) : activeModuleToken === 'settings' ? (
+                  <div className="space-y-2">
+                    <p className="text-slate-500">
+                      Hier kannst du später deine{' '}
+                      <span className="font-medium text-slate-900">Workspace-Einstellungen</span> anpassen.
+                    </p>
+                    <p>
+                      Zum Beispiel Profile, Team-Zugänge und KI-Voreinstellungen für deinen Orchestrator.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-slate-500">
+                      Hier erscheinen später Detailansichten für{' '}
+                      <span className="font-medium text-slate-900">
+                        {getModuleLabel(activeModuleToken)}
+                      </span>
+                      .
+                    </p>
+                    <p>
+                      Zum Beispiel Timeline-Ansichten, Kontextinfos oder KI-Vorschläge, die zu diesem Modul gehören.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

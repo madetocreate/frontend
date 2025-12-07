@@ -2,14 +2,14 @@
 
 :root {
   --ak-color-bg-app: #ffffff;
-  --ak-color-bg-surface: rgba(255, 255, 255, 0.85);
-  --ak-color-bg-sidebar: rgba(255, 255, 255, 0.82);
-  --ak-color-bg-header: rgba(255, 255, 255, 0.5);
+  --ak-color-bg-surface: #ffffff;
+  --ak-color-bg-sidebar: #ffffff;
+  --ak-color-bg-header: #ffffff;
 
   --ak-color-border-subtle: rgba(148, 163, 184, 0.3);
   --ak-color-border-strong: rgba(148, 163, 184, 0.6);
 
-  --ak-color-text-primary: #0f172a;
+  --ak-color-text-primary: #000000;
   --ak-color-text-secondary: #6b7280;
   --ak-color-text-muted: #9ca3af;
 
@@ -64,6 +64,12 @@ openai-chatkit {
   border: none;
   outline: none;
   background: transparent;
+  --ck-background: transparent;
+  --ck-surface-color: rgba(255, 255, 255, 0.9);
+  --ck-text-primary: #0f172a;
+  --ck-accent-color: #2563eb;
+  --ck-radius: 999px;
+  --ck-density: spacious;
 }
 
 openai-chatkit:focus-visible {

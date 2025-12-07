@@ -70,10 +70,11 @@ const DEFAULT_ITEMS: InboxItem[] = [
 ]
 
 const FILTER_TABS: { id: InboxChannel; label: string }[] = [
-  { id: 'all', label: 'Alle Kanäle' },
+  { id: 'all', label: 'Alle' },
   { id: 'email', label: 'E‑Mail' },
   { id: 'messenger', label: 'Messenger' },
   { id: 'support', label: 'Support' },
+
 ]
 
 const CHANNEL_META = {
@@ -215,8 +216,7 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
 
   return (
     <div className="flex h-full flex-col gap-3">
-      <div className="grid grid-cols-4 gap-1">
-
+            <div className="grid grid-cols-4 gap-1">
         {FILTER_TABS.map((tab) => {
           const isActive = activeChannel === tab.id
           const isPrimary = tab.id === 'all'
@@ -227,19 +227,21 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
               type="button"
               onClick={() => setActiveChannel(tab.id)}
               className={clsx(
-                'inline-flex w-full items-center justify-between gap-1 rounded-full border px-2 py-1 text-[11px] font-medium',
-                isActive
-                  ? 'border-slate-300 bg-slate-200 text-slate-900'
-                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50',
+                'inline-flex w-full items-center justify-between gap-1 rounded-md border px-2 py-1 text-[11px] font-medium transition-colors',
+                isPrimary && isActive
+                  ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
+                  : isActive
+                    ? 'border-slate-300 bg-slate-100 text-slate-900'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
               )}
             >
               <span>{tab.label}</span>
               <span
                 className={clsx(
                   'inline-flex min-w-[1.5rem] items-center justify-center rounded-full border px-1 text-[10px]',
-                  isActive && isPrimary
-                    ? 'border-slate-400 bg-slate-100 text-slate-900'
-                    : 'border-slate-200 bg-slate-100 text-slate-600',
+                  isActive
+                    ? 'border-slate-200 bg-slate-100 text-slate-900'
+                    : 'border-slate-200 bg-slate-100 text-slate-600'
                 )}
               >
                 {counts[tab.id as keyof typeof counts]}
@@ -249,7 +251,7 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
         })}
       </div>
 
-      {error ? (
+{error ? (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-800">
           {error}
         </div>

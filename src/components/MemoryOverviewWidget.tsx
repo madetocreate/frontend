@@ -251,7 +251,7 @@ export function MemoryOverviewWidget() {
       </div>
 
       <div className="mt-3 flex-1 min-h-0 px-4 pb-4">
-        <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white/90">
+        <div className="flex h-full flex-col rounded-2xl border border-slate-200 bg-[var(--ak-color-bg-surface)]">
           {filteredItems.length === 0 ? (
             <div className="flex flex-1 items-center justify-center px-4 text-[11px] text-slate-500">
               Keine Memories für diesen Filter gefunden.

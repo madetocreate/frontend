@@ -27,7 +27,7 @@ export default function MemoryPage() {
             <MemoryOverviewWidget />
           </section>
           <section className="flex h-full flex-col gap-3">
-            <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-xs text-slate-600 shadow-sm">
+            <div className="rounded-2xl border border-slate-200 bg-[var(--ak-color-bg-surface)] px-4 py-3 text-xs text-slate-600 shadow-sm">
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
