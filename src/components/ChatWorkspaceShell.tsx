@@ -21,6 +21,7 @@ import { InboxDetailPanel } from '@/components/InboxDetailPanel'
 import { ChatSidebarWidget, type ChatSidebarConversation } from '@/components/chat/ChatSidebarWidget'
 import { CalendarSidebarWidget } from '@/components/calendar/CalendarSidebarWidget'
 import { CalendarDetailPanel } from '@/components/calendar/CalendarDetailPanel'
+import { NewsSidebarWidget } from '@/components/NewsSidebarWidget'
 import { ProfileMenu, type ProfileMenuAction, type ProfileUserState } from '@/components/ProfileMenu'
 
 
@@ -310,6 +311,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   <ChatQuickActionsWidget />
                 ) : activeModuleToken === 'inbox' ? (
                   <InboxDrawerWidget onItemClick={handleInboxItemClick} />
+                ) : activeModuleToken === 'news' ? (
+                  <NewsSidebarWidget />
                 ) : activeModuleToken === 'calendar' ? (
                   <CalendarSidebarWidget />
                 ) : activeModuleToken === 'marketing' ? (
