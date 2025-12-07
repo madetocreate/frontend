@@ -39,14 +39,14 @@ export const ChatSidebarWidget: FC<ChatSidebarWidgetProps> = ({
         <button
           type="button"
           onClick={onCreateNewChat}
-          className="flex-1 rounded-md bg-slate-900 px-2 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-slate-800"
+          className="flex-1 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50"
         >
           Neuer Chat
         </button>
         <button
           type="button"
           onClick={onSearchInChats}
-          className="flex-1 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+          className="flex-1 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50"
         >
           In Chats suchen
         </button>

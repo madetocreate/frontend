@@ -2,9 +2,8 @@ import type {
   StartScreenPrompt,
   ToolOption,
   ComposerOption,
-  ThreadItemActionsOption,
   HistoryOption,
-  ThemeOption,
+  ThreadItemActionsOption,
 } from "@openai/chatkit-react"
 
 export const CHATKIT_API_URL =
@@ -38,6 +37,13 @@ export const COMPOSER_ATTACHMENTS: NonNullable<
 }
 
 export const COMPOSER_TOOLS: ToolOption[] = [
+  {
+    id: "voice",
+    label: "Spracheingabe",
+    icon: "phone",
+    shortLabel: "Mikrofon",
+    pinned: true,
+  },
   {
     id: "files",
     label: "Fotos und Dateien hinzufuegen",
@@ -79,10 +85,4 @@ export const HISTORY_OPTIONS: HistoryOption = {
 export const THREAD_ITEM_ACTIONS: ThreadItemActionsOption = {
   feedback: true,
   retry: true,
-}
-
-export const CHATKIT_THEME: ThemeOption = {
-  colorScheme: "light",
-  radius: "pill",
-  density: "normal",
 }

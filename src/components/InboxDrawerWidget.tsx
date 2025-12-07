@@ -216,10 +216,9 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
 
   return (
     <div className="flex h-full flex-col gap-3">
-            <div className="grid grid-cols-4 gap-1">
+                  <div className="grid grid-cols-4 gap-1">
         {FILTER_TABS.map((tab) => {
           const isActive = activeChannel === tab.id
-          const isPrimary = tab.id === 'all'
 
           return (
             <button
@@ -228,11 +227,9 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
               onClick={() => setActiveChannel(tab.id)}
               className={clsx(
                 'inline-flex w-full items-center justify-between gap-1 rounded-md border px-2 py-1 text-[11px] font-medium transition-colors',
-                isPrimary && isActive
-                  ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
-                  : isActive
-                    ? 'border-slate-300 bg-slate-100 text-slate-900'
-                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                isActive
+                  ? 'border-slate-300 bg-slate-100 text-slate-900'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
               )}
             >
               <span>{tab.label}</span>

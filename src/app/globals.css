@@ -63,9 +63,9 @@ openai-chatkit {
   padding: 0;
   border: none;
   outline: none;
-  background: transparent;
-  --ck-background: transparent;
-  --ck-surface-color: rgba(255, 255, 255, 0.9);
+  background: #ffffff;
+  --ck-background: #ffffff;
+  --ck-surface-color: #ffffff;
   --ck-text-primary: #0f172a;
   --ck-accent-color: #2563eb;
   --ck-radius: 999px;

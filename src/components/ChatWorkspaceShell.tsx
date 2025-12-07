@@ -15,6 +15,9 @@ import { InboxDrawerWidget } from '@/components/InboxDrawerWidget'
 import type { InboxItem } from '@/components/InboxDrawerWidget'
 import { InboxDetailPanel } from '@/components/InboxDetailPanel'
 import { ChatSidebarWidget, type ChatSidebarConversation } from '@/components/chat/ChatSidebarWidget'
+import { CalendarSidebarWidget } from '@/components/calendar/CalendarSidebarWidget'
+import { CalendarDetailPanel } from '@/components/calendar/CalendarDetailPanel'
+import { ProfileMenu, type ProfileMenuAction, type ProfileUserState } from '@/components/ProfileMenu'
 
 
 
@@ -83,6 +86,16 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const [rightDrawerOpen, setRightDrawerOpen] = useState(false)
   const [selectedInboxItem, setSelectedInboxItem] = useState<InboxItem | null>(null)
   const [activeChatId, setActiveChatId] = useState<string | null>(MOCK_CHAT_CONVERSATIONS[0]?.id ?? null)
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+
+  const profileUser: ProfileUserState = {
+    isAuthenticated: false,
+    displayName: null,
+    email: null,
+    avatarUrl: null,
+    plan: null,
+    initials: 'AK',
+  }
 
   const handleModuleClick = (token: WorkspaceModuleToken) => {
     setActiveModuleToken(token)
@@ -94,7 +107,29 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       return true
     })
 
-    setRightDrawerOpen(false)
+    if (token === 'calendar') {
+      setRightDrawerOpen(true)
+    } else {
+      setRightDrawerOpen(false)
+    }
+  }
+
+  const handleProfileMenuAction = (action: ProfileMenuAction) => {
+    switch (action) {
+      case 'settings': {
+        handleModuleClick('settings')
+        break
+      }
+      case 'personalization':
+      case 'memoryCrm':
+      case 'help':
+      case 'logout':
+      case 'login':
+      default:
+        break
+    }
+
+    setIsProfileMenuOpen(false)
   }
 
   const handleOpenDetails = () => {
@@ -180,21 +215,34 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
           >
             <BellIcon className="h-5 w-5" aria-hidden="true" />
           </button>
-          <button
-            type="button"
-            onClick={() => handleModuleClick('settings')}
-            className={clsx(
-              'flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 transition-colors',
-              activeModuleToken === 'settings' && leftDrawerOpen
-                ? 'bg-[var(--ak-color-accent)] text-white'
-                : 'bg-transparent hover:bg-slate-100 hover:text-slate-900'
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+              className={clsx(
+                'flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 transition-colors',
+                (activeModuleToken === 'settings' && leftDrawerOpen) || isProfileMenuOpen
+                  ? 'bg-[var(--ak-color-accent)] text-white'
+                  : 'bg-transparent hover:bg-slate-100 hover:text-slate-900'
+              )}
+              aria-label="Einstellungen"
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--ak-color-accent)] text-xs font-semibold text-white">
+                {profileUser.initials ?? 'N'}
+              </span>
+            </button>
+            {isProfileMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsProfileMenuOpen(false)}
+                />
+                <div className="absolute bottom-0 left-full z-50 mb-3 ml-3 w-80 origin-bottom-left">
+                  <ProfileMenu user={profileUser} onAction={handleProfileMenuAction} />
+                </div>
+              </>
             )}
-            aria-label="Einstellungen"
-          >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--ak-color-accent)] text-xs font-semibold text-white">
-              N
-            </span>
-          </button>
+          </div>
         </div>
       </aside>
 
@@ -246,6 +294,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   />
                 ) : activeModuleToken === 'inbox' ? (
                   <InboxDrawerWidget onItemClick={handleInboxItemClick} />
+                ) : activeModuleToken === 'calendar' ? (
+                  <CalendarSidebarWidget />
                 ) : (
                   <>
                     <p className="text-slate-500">
@@ -308,6 +358,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
               <div className="flex-1 overflow-y-auto px-3 py-3 text-sm text-slate-600">
                 {activeModuleToken === 'inbox' ? (
                   <InboxDetailPanel item={selectedInboxItem} />
+                ) : activeModuleToken === 'calendar' ? (
+                  <CalendarDetailPanel />
                 ) : activeModuleToken === 'notifications' ? (
                   <div className="space-y-2">
                     <p className="text-slate-500">
