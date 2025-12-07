@@ -122,7 +122,7 @@ export function useDictation(options: UseDictationOptions = {}) {
       setStatus('error')
       stopStream()
     }
-  }, [options.onTranscriptionReady, status, stopStream])
+  }, [options, status, stopStream])
 
   const stopRecording = useCallback(() => {
     const recorder = mediaRecorderRef.current

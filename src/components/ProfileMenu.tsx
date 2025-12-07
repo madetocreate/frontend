@@ -1,6 +1,7 @@
 'use client'
 
 import type { FC } from 'react'
+import Image from 'next/image'
 import {
   UserIcon,
   SparklesIcon,
@@ -61,9 +62,11 @@ export const ProfileMenu: FC<ProfileMenuProps> = ({ user, onAction }) => {
     <div className="flex flex-col gap-y-3 rounded-2xl bg-white p-3 shadow-xl ring-1 ring-black/5">
       <div className="flex items-center gap-x-3 rounded-xl bg-slate-50 px-3 py-2.5">
         {user.avatarUrl ? (
-          <img
+          <Image
             src={user.avatarUrl}
             alt={displayName}
+            width={36}
+            height={36}
             className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-200"
           />
         ) : (

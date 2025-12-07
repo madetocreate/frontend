@@ -2,6 +2,7 @@
 
 import type { ReactNode, ComponentType, CSSProperties } from 'react'
 import { useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import clsx from 'clsx'
 import {
   ChatBubbleLeftRightIcon,
@@ -10,7 +11,10 @@ import {
   CalendarDaysIcon,
   Cog6ToothIcon,
   BellIcon,
+  ArchiveBoxIcon,
 } from '@heroicons/react/24/outline'
+import { ChatQuickActionsWidget } from '@/components/chat/ChatQuickActionsWidget'
+import { MarketingQuickActionsWidget } from '@/components/MarketingQuickActionsWidget'
 import { InboxDrawerWidget } from '@/components/InboxDrawerWidget'
 import type { InboxItem } from '@/components/InboxDrawerWidget'
 import { InboxDetailPanel } from '@/components/InboxDetailPanel'
@@ -24,6 +28,7 @@ import { ProfileMenu, type ProfileMenuAction, type ProfileUserState } from '@/co
 type WorkspaceModuleToken =
   | 'chat'
   | 'inbox'
+  | 'memory'
   | 'marketing'
   | 'calendar'
   | 'automation'
@@ -34,11 +39,13 @@ type ModuleConfig = {
   id: WorkspaceModuleToken
   label: string
   icon: ComponentType<{ className?: string }>
+  href?: string
 }
 
 const MODULES: ModuleConfig[] = [
-  { id: 'chat', label: 'Chat', icon: ChatBubbleLeftRightIcon },
+  { id: 'chat', label: 'Chat', icon: ChatBubbleLeftRightIcon, href: '/' },
   { id: 'inbox', label: 'Posteingang', icon: InboxIcon },
+  { id: 'memory', label: 'Speicher & CRM', icon: ArchiveBoxIcon, href: '/memory' },
   { id: 'marketing', label: 'Marketing', icon: MegaphoneIcon },
   { id: 'calendar', label: 'Kalender', icon: CalendarDaysIcon },
   { id: 'automation', label: 'Automatisierung', icon: Cog6ToothIcon },
@@ -80,8 +87,14 @@ type ChatWorkspaceShellProps = {
 }
 
 export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const initialModule: WorkspaceModuleToken =
+    pathname === '/memory' ? 'memory' : 'chat'
+
   const [activeModuleToken, setActiveModuleToken] =
-    useState<WorkspaceModuleToken>('chat')
+    useState<WorkspaceModuleToken>(initialModule)
   const [leftDrawerOpen, setLeftDrawerOpen] = useState(false)
   const [rightDrawerOpen, setRightDrawerOpen] = useState(false)
   const [selectedInboxItem, setSelectedInboxItem] = useState<InboxItem | null>(null)
@@ -107,11 +120,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       return true
     })
 
-    if (token === 'calendar') {
-      setRightDrawerOpen(true)
-    } else {
-      setRightDrawerOpen(false)
-    }
+    setRightDrawerOpen(false)
+    setSelectedInboxItem(null)
+  }
+
+  const handleModuleNavClick = (mod: any) => {
+    handleModuleClick(mod.token)
   }
 
   const handleProfileMenuAction = (action: ProfileMenuAction) => {
@@ -120,8 +134,14 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
         handleModuleClick('settings')
         break
       }
+      case 'memoryCrm': {
+        router.push('/memory')
+        setActiveModuleToken('memory')
+        setLeftDrawerOpen(false)
+        setRightDrawerOpen(false)
+        break
+      }
       case 'personalization':
-      case 'memoryCrm':
       case 'help':
       case 'logout':
       case 'login':
@@ -287,15 +307,13 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
               </div>
               <div className="flex-1 overflow-y-auto px-3 py-3 text-sm text-slate-600">
                 {activeModuleToken === 'chat' ? (
-                  <ChatSidebarWidget
-                    conversations={MOCK_CHAT_CONVERSATIONS}
-                    activeConversationId={activeChatId}
-                    onSelectConversation={handleSelectChat}
-                  />
+                  <ChatQuickActionsWidget />
                 ) : activeModuleToken === 'inbox' ? (
                   <InboxDrawerWidget onItemClick={handleInboxItemClick} />
                 ) : activeModuleToken === 'calendar' ? (
                   <CalendarSidebarWidget />
+                ) : activeModuleToken === 'marketing' ? (
+                  <MarketingQuickActionsWidget />
                 ) : (
                   <>
                     <p className="text-slate-500">
@@ -307,17 +325,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     </p>
                     <p className="mt-2">
                       Zum Beispiel Karten, Listen, Formulare oder Kalender, die mit
-                      deinem Orchestrator synchronisiert sind.
+                      deinem Orchestra verbunden sind.
                     </p>
-                    <div className="mt-3">
-                      <button
-                        type="button"
-                        onClick={handleOpenDetails}
-                        className="inline-flex items-center gap-x-2 rounded-md bg-[var(--ak-color-accent)] px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
-                      >
-                        <span>Beispiel-Detailpanel öffnen</span>
-                      </button>
-                    </div>
                   </>
                 )}
               </div>

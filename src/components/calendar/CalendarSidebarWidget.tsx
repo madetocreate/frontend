@@ -65,7 +65,7 @@ function buildCalendarWeeks(viewDate: Date, selectedDate: Date | null): Calendar
   const gridStart = new Date(year, month, 1 - firstDayOfWeek)
 
   const weeks: CalendarWeek[] = []
-  let current = new Date(gridStart)
+  const current = new Date(gridStart)
 
   for (let weekIndex = 0; weekIndex < 6; weekIndex += 1) {
     const week: CalendarWeek = []
@@ -98,7 +98,11 @@ function buildCalendarWeeks(viewDate: Date, selectedDate: Date | null): Calendar
   return weeks
 }
 
-export function CalendarSidebarWidget() {
+type CalendarSidebarWidgetProps = {
+  onOpenDetails?: () => void
+}
+
+export function CalendarSidebarWidget({ onOpenDetails }: CalendarSidebarWidgetProps) {
   const [viewDate, setViewDate] = useState<Date>(() => new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => new Date())
 
@@ -128,6 +132,18 @@ export function CalendarSidebarWidget() {
     setSelectedDate(cell.date)
     setViewDate(cell.date)
   }
+  const handleClickNewEntry = () => {
+    if (onOpenDetails) {
+      onOpenDetails()
+    }
+  }
+
+  const handleClickAklow = () => {
+    if (onOpenDetails) {
+      onOpenDetails()
+    }
+  }
+
 
   return (
     <div className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-[var(--ak-color-bg-surface)]/90 p-3 shadow-sm backdrop-blur-xl">
@@ -219,6 +235,7 @@ export function CalendarSidebarWidget() {
           <div className="flex flex-1 flex-col gap-1">
             <button
               type="button"
+              onClick={handleClickNewEntry}
               className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-3 py-1.5 text-[11px] font-medium text-slate-50 shadow-sm hover:bg-slate-800"
             >
               <PlusIcon className="mr-1.5 h-3 w-3" />

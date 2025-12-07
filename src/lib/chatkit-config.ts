@@ -1,6 +1,5 @@
 import type {
   StartScreenPrompt,
-  ToolOption,
   ComposerOption,
   HistoryOption,
   ThreadItemActionsOption,
@@ -36,7 +35,7 @@ export const COMPOSER_ATTACHMENTS: NonNullable<
   maxCount: 5,
 }
 
-export const COMPOSER_TOOLS: ToolOption[] = [
+export const COMPOSER_TOOLS = [
   {
     id: "voice",
     label: "Spracheingabe",
@@ -74,7 +73,7 @@ export const COMPOSER_TOOLS: ToolOption[] = [
     icon: "document",
     shortLabel: "Dokumente",
   },
-]
+] as const
 
 export const HISTORY_OPTIONS: HistoryOption = {
   enabled: true,

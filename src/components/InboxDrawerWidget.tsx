@@ -116,7 +116,7 @@ function channelIcon(channel: Exclude<InboxChannel, 'all'>) {
 export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
   const [activeChannel, setActiveChannel] = useState<InboxChannel>('all')
   const [items, setItems] = useState<InboxItem[]>(DEFAULT_ITEMS)
-  const [isLoading, setIsLoading] = useState(false)
+  const [, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -154,7 +154,7 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
         if (data.error) {
           setError(data.error)
         }
-      } catch (_error) {
+      } catch {
         if (!cancelled) {
           setError('Fehler beim Laden der Inbox.')
         }

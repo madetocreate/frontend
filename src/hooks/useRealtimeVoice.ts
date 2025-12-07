@@ -55,7 +55,7 @@ export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}) {
       setError('Realtime-Audio konnte nicht gestartet werden.')
       setStatus('error')
     }
-  }, [options.onStart, options.onStop, status])
+  }, [options, status])
 
   return {
     status,
