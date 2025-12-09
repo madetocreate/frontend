@@ -3,12 +3,14 @@
 import type { FC, ReactNode } from 'react'
 import clsx from 'clsx'
 import { emitQuickAction } from '@/lib/quickActionsBus'
+import { WidgetCard } from '@/components/ui/WidgetCard'
 
 export type QuickActionDefinition = {
   id: string
   title: string
   description: string
   icon?: ReactNode
+  category?: string // Optional: "Marketing", "CRM" etc.
 }
 
 type QuickActionsWidgetProps = {
@@ -39,49 +41,41 @@ export const QuickActionsWidget: FC<QuickActionsWidgetProps> = ({
     columns === 1 ? 'grid grid-cols-1' : 'grid grid-cols-2'
 
   return (
-    <div className="flex h-full flex-col gap-3">
-      <div className="space-y-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-          {title}
-        </p>
-        {subtitle ? (
-          <p className="text-xs text-slate-500">{subtitle}</p>
-        ) : null}
-      </div>
-
-      <div className={clsx('flex-1 gap-2 overflow-y-auto pr-1', gridClass)}>
+    <WidgetCard title={title} subtitle={subtitle} padding="sm" shadow={false}>
+      <div className={clsx('flex-1 gap-2 overflow-y-auto', gridClass)}>
         {actions.map((action) => (
           <button
             key={action.id}
             type="button"
             onClick={() => handleClick(action.id)}
             className={clsx(
-              'group flex w-full flex-col rounded-xl border border-slate-200 bg-white/90 px-3 py-2 text-left text-xs shadow-sm transition-colors',
-              'hover:border-slate-300 hover:bg-slate-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-slate-50'
+              'group flex w-full flex-col rounded-[var(--ak-radius-card)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 px-3 py-2.5 text-left shadow-sm backdrop-blur-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+              'hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]/80 hover:shadow-[var(--ak-shadow-card)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-1'
             )}
           >
-            <div className="flex items-start gap-2">
+            <div className="flex items-start gap-2.5">
               {action.icon ? (
-                <div className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-slate-100 text-slate-600 group-hover:bg-slate-200 group-hover:text-slate-900">
+                <div className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center text-[var(--ak-color-text-primary)]">
                   {action.icon}
                 </div>
               ) : null}
-              <div className="flex min-w-0 flex-col">
-                <span className="truncate text-[13px] font-semibold text-slate-900">
+              <div className="flex min-w-0 flex-1 flex-col">
+                {action.category && (
+                  <span className="ak-caption mb-1 text-[var(--ak-color-text-muted)]">
+                    {action.category}
+                  </span>
+                )}
+                <span className="ak-body truncate font-semibold">
                   {action.title}
                 </span>
-                <span className="mt-0.5 text-[11px] text-slate-500">
+                <span className="ak-caption mt-1 line-clamp-2 text-[var(--ak-color-text-secondary)]">
                   {action.description}
-                </span>
-                <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[var(--ak-color-accent)]">
-                  <span>Jetzt starten</span>
-                  <span aria-hidden="true">↗</span>
                 </span>
               </div>
             </div>
           </button>
         ))}
       </div>
-    </div>
+    </WidgetCard>
   )
 }

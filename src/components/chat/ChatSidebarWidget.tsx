@@ -39,14 +39,14 @@ export const ChatSidebarWidget: FC<ChatSidebarWidgetProps> = ({
         <button
           type="button"
           onClick={onCreateNewChat}
-          className="flex-1 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+          className="flex-1 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-2 py-1.5 text-xs font-medium text-[var(--ak-color-text-primary)] shadow-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-1"
         >
           Neuer Chat
         </button>
         <button
           type="button"
           onClick={onSearchInChats}
-          className="flex-1 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+          className="flex-1 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-2 py-1.5 text-xs font-medium text-[var(--ak-color-text-primary)] shadow-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-1"
         >
           In Chats suchen
         </button>
@@ -61,13 +61,13 @@ export const ChatSidebarWidget: FC<ChatSidebarWidgetProps> = ({
               key={conv.id}
               onClick={() => onSelectConversation(conv.id)}
               className={clsx(
-                'group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-xs',
+                'group flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
                 isActive
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-white/80 text-slate-800 hover:bg-slate-100'
+                  ? 'bg-[var(--ak-color-accent)] text-white shadow-[0_12px_28px_-16px_var(--ak-color-accent)]'
+                  : 'bg-[var(--ak-color-bg-surface)]/90 text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-surface-muted)]'
               )}
             >
-              <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-700">
+              <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-[var(--ak-color-bg-surface-muted)] text-[10px] font-medium text-[var(--ak-color-text-primary)]">
                 {conv.avatarInitials ? (
                   <span>{conv.avatarInitials}</span>
                 ) : (
@@ -84,11 +84,11 @@ export const ChatSidebarWidget: FC<ChatSidebarWidgetProps> = ({
                   </span>
                 </div>
                 <div className="mt-0.5 flex items-center justify-between gap-2">
-                  <p className="truncate text-[11px] text-slate-500">
+                  <p className="truncate text-[11px] text-[var(--ak-color-text-secondary)]">
                     {conv.lastMessagePreview}
                   </p>
                   {conv.unreadCount ? (
-                    <span className="flex h-4 min-w-[16px] flex-none items-center justify-center rounded-full bg-[var(--ak-color-accent)] text-[9px] font-semibold text-white">
+                    <span className="flex h-4 min-w-[16px] flex-none items-center justify-center rounded-full bg-[var(--ak-color-accent)] text-[9px] font-semibold text-white shadow-[0_10px_24px_-14px_var(--ak-color-accent)]">
                       {conv.unreadCount}
                     </span>
                   ) : null}
@@ -100,7 +100,7 @@ export const ChatSidebarWidget: FC<ChatSidebarWidgetProps> = ({
                   event.stopPropagation()
                   onOpenConversationMenu?.(conv.id)
                 }}
-                className="flex h-6 w-6 flex-none items-center justify-center rounded-md text-slate-400 opacity-0 transition group-hover:opacity-100 hover:bg-slate-200 hover:text-slate-700"
+                className="flex h-6 w-6 flex-none items-center justify-center rounded-md text-slate-400 opacity-0 transition group-hover:opacity-100 hover:bg-[var(--ak-color-bg-surface-muted)] hover:text-[var(--ak-color-text-primary)]"
                 aria-label="Chat-Aktionen"
               >
                 <EllipsisVerticalIcon className="h-3 w-3" />

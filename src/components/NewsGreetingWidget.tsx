@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 
 type CardSource = {
   name: string
@@ -49,20 +50,30 @@ export function NewsGreetingWidget() {
           headers: {
             Accept: 'application/json',
           },
+          credentials: 'include',
         })
+        // 401: nicht eingeloggt oder keine Berechtigung – im UI ruhig behandeln
+        if (resp.status === 401) {
+          if (!cancelled) {
+            // Keine harten Fehler im Banner, einfach „noch keine Empfehlungen“ zeigen
+            setCards([])
+            setError(null)
+          }
+          return
+        }
         if (!resp.ok) {
           throw new Error(`HTTP ${resp.status}`)
         }
-        const data = (await resp.json()) as any
+        const data: unknown = await resp.json()
         const list: GreetingCard[] = Array.isArray(data)
           ? data
-          : Array.isArray(data?.cards)
-          ? data.cards
+          : Array.isArray((data as { cards?: unknown })?.cards)
+          ? ((data as { cards: GreetingCard[] }).cards ?? [])
           : []
         if (!cancelled) {
           setCards(list)
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('NewsGreetingWidget error', err)
         if (!cancelled) {
           setError('Fehler beim Laden der News')
@@ -84,7 +95,7 @@ export function NewsGreetingWidget() {
 
   if (loading) {
     return (
-      <div className="border-b border-slate-200 bg-slate-50/60 px-6 py-4 text-sm text-slate-500">
+      <div className="border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] px-6 py-4 ak-body text-[var(--ak-color-text-muted)]">
         Persönliche News werden geladen…
       </div>
     )
@@ -92,7 +103,7 @@ export function NewsGreetingWidget() {
 
   if (error) {
     return (
-      <div className="border-b border-amber-200 bg-amber-50 px-6 py-4 text-sm text-amber-900">
+      <div className="border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] px-6 py-4 ak-body text-[var(--ak-color-warning)]">
         {error}
       </div>
     )
@@ -100,60 +111,62 @@ export function NewsGreetingWidget() {
 
   if (!cards || cards.length === 0) {
     return (
-      <div className="border-b border-slate-200 bg-slate-50/60 px-6 py-4 text-sm text-slate-500">
+      <div className="border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] px-6 py-4 ak-body text-[var(--ak-color-text-muted)]">
         Noch keine Empfehlungen – starte ein Gespräch, damit ich deine Interessen besser kennenlerne.
       </div>
     )
   }
 
   return (
-    <section className="border-b border-slate-200 bg-slate-50/60 px-6 py-4">
+    <section className="border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] px-6 py-4">
       <div className="mb-3 flex items-baseline justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold tracking-tight text-slate-900">
+          <h2 className="ak-subheading font-semibold">
             Dein persönlicher Start
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="ak-caption mt-0.5 text-[var(--ak-color-text-secondary)]">
             Mischung aus KI-News, Projekten und Themen, die zu dir passen.
           </p>
         </div>
       </div>
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {cards.slice(0, 6).map((card) => (
+      <div className="grid gap-3 md:grid-cols-2">
+        {cards.slice(0, 2).map((card) => (
           <article
             key={card.id}
-            className="flex flex-col rounded-xl border border-slate-200 bg-white/80 p-3 text-sm shadow-sm backdrop-blur"
+            className="flex flex-col rounded-[var(--ak-radius-card)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-3 shadow-none"
           >
             {card.imageUrl && (
               <div className="mb-2 overflow-hidden rounded-lg">
-                <img
+                <Image
                   src={card.imageUrl}
                   alt={card.title}
+                  width={800}
+                  height={320}
                   className="h-28 w-full object-cover"
                 />
               </div>
             )}
             <div className="flex-1">
               <div className="mb-1 flex items-center gap-2">
-                <span className="inline-flex rounded-full bg-slate-100 px-2 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                <span className="ak-caption inline-flex rounded-full bg-[var(--ak-color-bg-surface-muted)] px-2 font-medium uppercase tracking-wide text-[var(--ak-color-text-muted)]">
                   {card.type}
                 </span>
                 {card.source?.name && (
-                  <span className="text-[11px] text-slate-400">
+                  <span className="ak-caption text-[var(--ak-color-text-muted)]">
                     {card.source.name}
                   </span>
                 )}
               </div>
-              <h3 className="line-clamp-2 text-[13px] font-semibold text-slate-900">
+              <h3 className="ak-body line-clamp-2 font-semibold">
                 {card.title}
               </h3>
               {card.subtitle && (
-                <p className="mt-1 line-clamp-2 text-[11px] text-slate-500">
+                <p className="ak-caption mt-1 line-clamp-2 text-[var(--ak-color-text-secondary)]">
                   {card.subtitle}
                 </p>
               )}
               {card.body && (
-                <p className="mt-2 line-clamp-3 text-[12px] text-slate-700">
+                <p className="ak-caption mt-2 line-clamp-3 text-[var(--ak-color-text-secondary)]">
                   {card.body}
                 </p>
               )}

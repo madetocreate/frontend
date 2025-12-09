@@ -20,7 +20,7 @@ export default function RootLayout({
           async
         />
       </head>
-      <body className="bg-white">
+      <body className="bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)] antialiased">
         {children}
       </body>
     </html>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import clsx from "clsx";
 import { sendChatMessage, ChatResponse } from "../lib/chatClient";
 
 type ChatMessage = {
@@ -15,119 +16,106 @@ function createSessionId(): string {
 }
 
 export function ChatShell() {
-  const [sessionId] = useState<string>(() => createSessionId());
-  const [tenantId] = useState<string>("demo-tenant");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState("");
-  const [isSending, setIsSending] = useState(false);
+  const [sessionId] = useState<string>(() => createSessionId())
+  const [tenantId] = useState<string>('demo-tenant')
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [input, setInput] = useState('')
+  const [isSending, setIsSending] = useState(false)
 
   async function handleSend(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const trimmed = input.trim();
-    if (!trimmed || isSending) return;
+    e.preventDefault()
+    const trimmed = input.trim()
+    if (!trimmed || isSending) return
 
     const userMessage: ChatMessage = {
-      id: String(Date.now()) + "-user",
-      role: "user",
-      text: trimmed
-    };
+      id: String(Date.now()) + '-user',
+      role: 'user',
+      text: trimmed,
+    }
 
-    setMessages(prev => [...prev, userMessage]);
-    setInput("");
-    setIsSending(true);
+    setMessages((prev) => [...prev, userMessage])
+    setInput('')
+    setIsSending(true)
 
     try {
       const res = await sendChatMessage({
         tenantId,
         sessionId,
-        channel: "web_chat",
-        message: trimmed
-      });
+        channel: 'web_chat',
+        message: trimmed,
+      })
 
       const assistantMessage: ChatMessage = {
-        id: String(Date.now()) + "-assistant",
-        role: "assistant",
+        id: String(Date.now()) + '-assistant',
+        role: 'assistant',
         text: res.content,
-        uiMessages: res.uiMessages
-      };
+        uiMessages: res.uiMessages,
+      }
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, assistantMessage])
     } catch (err) {
-      const errorText =
-        err instanceof Error ? err.message : "Unbekannter Fehler im Chat";
+      const errorText = err instanceof Error ? err.message : 'Unbekannter Fehler im Chat'
       const errorMessage: ChatMessage = {
-        id: String(Date.now()) + "-error",
-        role: "assistant",
-        text: "Fehler beim Senden: " + errorText
-      };
-      setMessages(prev => [...prev, errorMessage]);
+        id: String(Date.now()) + '-error',
+        role: 'assistant',
+        text: 'Fehler beim Senden: ' + errorText,
+      }
+      setMessages((prev) => [...prev, errorMessage])
     } finally {
-      setIsSending(false);
+      setIsSending(false)
     }
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div
-        style={{
-          flex: 1,
-          overflow: "auto",
-          padding: "1rem",
-          border: "1px solid var(--ak-color-border-subtle)",
-          borderRadius: "0.5rem",
-          marginBottom: "0.5rem"
-        }}
-      >
-        {messages.map(message => (
+    <div className="flex h-full flex-col gap-3 rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/90 p-3 shadow-[var(--ak-shadow-soft)] backdrop-blur-md">
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-xl bg-[var(--ak-color-bg-surface-muted)]/80 px-3 py-3">
+        {messages.map((message) => (
           <div
             key={message.id}
-            style={{
-              marginBottom: "0.75rem",
-              textAlign: message.role === "user" ? "right" : "left"
-            }}
+            className={clsx(
+              'flex flex-col gap-1',
+              message.role === 'user' ? 'items-end text-right' : 'items-start text-left'
+            )}
           >
             <div
+              className="inline-block max-w-[82%] rounded-2xl px-3 py-2 text-left shadow-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]"
               style={{
-                display: "inline-block",
-                padding: "0.5rem 0.75rem",
-                borderRadius: "0.75rem",
                 backgroundColor:
-                  message.role === "user" ? "var(--ak-color-chat-user-bg)" : "var(--ak-color-chat-assistant-bg)"
+                  message.role === 'user'
+                    ? 'var(--ak-color-chat-user-bg)'
+                    : 'var(--ak-color-chat-assistant-bg)',
               }}
             >
-              <div style={{ fontSize: "0.75rem", opacity: 0.7 }}>
-                {message.role === "user" ? "Du" : "Assistant"}
+              <div className="text-[11px] font-medium text-[var(--ak-color-text-muted)]">
+                {message.role === 'user' ? 'Du' : 'Assistant'}
               </div>
-              <div>{message.text}</div>
+              <div className="text-[13px] text-[var(--ak-color-text-primary)]">{message.text}</div>
             </div>
-            {message.uiMessages && message.uiMessages.length > 0 && (
-              <pre
-                style={{
-                  marginTop: "0.25rem",
-                  fontSize: "0.75rem",
-                  opacity: 0.8,
-                  whiteSpace: "pre-wrap"
-                }}
-              >
+            {message.uiMessages && message.uiMessages.length > 0 ? (
+              <pre className="whitespace-pre-wrap text-[11px] text-[var(--ak-color-text-muted)]">
                 {JSON.stringify(message.uiMessages, null, 2)}
               </pre>
-            )}
+            ) : null}
           </div>
         ))}
       </div>
 
-      <form onSubmit={handleSend} style={{ display: "flex", gap: "0.5rem" }}>
+      <form onSubmit={handleSend} className="flex items-center gap-2 rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-2 shadow-sm">
         <input
           type="text"
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="Nachricht eingeben..."
-          style={{ flex: 1, padding: "0.5rem 0.75rem" }}
+          className="flex-1 rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)]/80 px-3 py-2 text-[13px] text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
         />
-        <button type="submit" disabled={isSending || !input.trim()}>
-          {isSending ? "Senden..." : "Senden"}
+        <button
+          type="submit"
+          disabled={isSending || !input.trim()}
+          className="inline-flex items-center justify-center rounded-full bg-[var(--ak-color-accent)] px-4 py-2 text-sm font-medium text-white shadow-[0_12px_32px_-16px_var(--ak-color-accent)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:shadow-[0_14px_40px_-16px_var(--ak-color-accent)] disabled:opacity-70 disabled:shadow-none"
+        >
+          {isSending ? 'Senden...' : 'Senden'}
         </button>
       </form>
     </div>
-  );
+  )
 }

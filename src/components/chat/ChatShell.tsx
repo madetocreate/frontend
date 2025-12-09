@@ -11,124 +11,96 @@ type ChatMessage = {
 };
 
 export function ChatShell() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
 
   async function handleSend() {
-    const trimmed = input.trim();
+    const trimmed = input.trim()
     if (!trimmed || loading) {
-      return;
+      return
     }
 
     const userMessage: ChatMessage = {
-      role: "user",
-      text: trimmed
-    };
+      role: 'user',
+      text: trimmed,
+    }
 
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setLoading(true);
+    setMessages((prev) => [...prev, userMessage])
+    setInput('')
+    setLoading(true)
 
     try {
       const res = await sendChatMessage({
-        tenantId: "demo-tenant",
-        sessionId: "demo-session",
-        channel: "web_chat",
-        message: trimmed
-      });
+        tenantId: 'demo-tenant',
+        sessionId: 'demo-session',
+        channel: 'web_chat',
+        message: trimmed,
+      })
 
       const assistantMessage: ChatMessage = {
-        role: "assistant",
+        role: 'assistant',
         text: res.content,
-        uiMessages: res.uiMessages
-      };
+        uiMessages: res.uiMessages,
+      }
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, assistantMessage])
     } catch (err) {
       const errorText =
-        err instanceof Error
-          ? err.message
-          : "Unbekannter Fehler beim Aufruf des Backends";
+        err instanceof Error ? err.message : 'Unbekannter Fehler beim Aufruf des Backends'
 
       const errorMessage: ChatMessage = {
-        role: "assistant",
-        text: "Fehler beim Backend-Aufruf: " + errorText
-      };
+        role: 'assistant',
+        text: 'Fehler beim Backend-Aufruf: ' + errorText,
+      }
 
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage])
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      handleSend();
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      handleSend()
     }
   }
 
   return (
-    <div className="chat-shell" style={{ display: "flex", flexDirection: "column", height: "100%", maxHeight: "100vh" }}>
-      <div
-        className="chat-messages"
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "1rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.75rem"
-        }}
-      >
+    <div className="chat-shell flex max-h-[100vh] flex-col gap-3 rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/90 p-3 shadow-[var(--ak-shadow-soft)] backdrop-blur-md">
+      <div className="chat-messages flex-1 space-y-3 overflow-y-auto rounded-xl bg-[var(--ak-color-bg-surface-muted)]/70 px-3 py-3">
         {messages.map((m, idx) => (
           <div
             key={idx}
-            className={"chat-message chat-message-" + m.role}
-            style={{
-              alignSelf: m.role === "user" ? "flex-end" : "flex-start",
-              maxWidth: "80%"
-            }}
+            className={clsx(
+              'chat-message flex max-w-[82%] flex-col gap-1',
+              m.role === 'user' ? 'self-end items-end' : 'self-start items-start'
+            )}
           >
             <div
-              className="chat-message-text"
-              style={{
-                padding: "0.5rem 0.75rem",
-                borderRadius: "0.75rem",
-                backgroundColor:
-                  m.role === "user" ? "var(--ak-color-accent)" : "var(--ak-color-chat-assistant-bg)",
-                color: m.role === "user" ? "#ffffff" : "var(--ak-color-text-primary)",
-                marginBottom:
-                  m.uiMessages && m.uiMessages.length > 0 ? "0.25rem" : 0
-              }}
+              className={clsx(
+                'chat-message-text rounded-2xl px-3 py-2 text-[13px] leading-relaxed shadow-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+                m.role === 'user'
+                  ? 'bg-[var(--ak-color-accent)] text-white shadow-[0_12px_36px_-18px_var(--ak-color-accent)]'
+                  : 'bg-[var(--ak-color-chat-assistant-bg)] text-[var(--ak-color-text-primary)] border border-[var(--ak-color-border-subtle)]'
+              )}
             >
               {m.text}
             </div>
 
-            {m.uiMessages && m.uiMessages.length > 0 && (
-              <div
-                className="chat-message-widgets"
-                style={{ marginTop: "0.25rem" }}
-              >
+            {m.uiMessages && m.uiMessages.length > 0 ? (
+              <div className="chat-message-widgets w-full space-y-1.5 text-[11px] text-[var(--ak-color-text-muted)]">
                 {m.uiMessages.map((ui, uiIdx) => (
                   <WidgetRenderer key={uiIdx} message={ui} />
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
         ))}
       </div>
 
-      <div
-        className="chat-input-row"
-        style={{
-          display: "flex",
-          gap: "0.5rem",
-          padding: "0.75rem",
-          borderTop: "1px solid var(--ak-color-chat-assistant-bg)"
-        }}
-      >
+      <div className="chat-input-row flex items-center gap-2 rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-2 shadow-sm">
         <input
           type="text"
           value={input}
@@ -136,30 +108,22 @@ export function ChatShell() {
           onKeyDown={handleKeyDown}
           disabled={loading}
           placeholder="Schreib mir etwas..."
-          style={{
-            flex: 1,
-            padding: "0.5rem 0.75rem",
-            borderRadius: "999px",
-            border: "1px solid var(--ak-color-border-subtle)",
-            outline: "none"
-          }}
+          className="flex-1 rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)]/80 px-3 py-2 text-[13px] text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] placeholder:text-[var(--ak-color-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
         />
         <button
           type="button"
           onClick={handleSend}
           disabled={loading}
-          style={{
-            padding: "0.5rem 0.9rem",
-            borderRadius: "999px",
-            border: "none",
-            backgroundColor: loading ? "#9ca3af" : "var(--ak-color-accent)",
-            color: "#ffffff",
-            cursor: loading ? "default" : "pointer"
-          }}
+          className={clsx(
+            'inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/30 focus-visible:ring-offset-1',
+            loading
+              ? 'bg-[var(--ak-color-text-muted)] text-white opacity-80'
+              : 'bg-[var(--ak-color-accent)] text-white shadow-[0_12px_32px_-16px_var(--ak-color-accent)] hover:shadow-[0_14px_40px_-16px_var(--ak-color-accent)]'
+          )}
         >
-          {loading ? "..." : "Senden"}
+          {loading ? '...' : 'Senden'}
         </button>
       </div>
     </div>
-  );
+  )
 }

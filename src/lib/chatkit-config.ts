@@ -1,4 +1,5 @@
 import type {
+  ChatKitOptions,
   StartScreenPrompt,
   ComposerOption,
   HistoryOption,
@@ -14,18 +15,8 @@ export const CHATKIT_DOMAIN_KEY =
 export const GREETING =
   "Hi, ich bin dein KI Assistent. Womit kann ich dir helfen?"
 
-export const STARTER_PROMPTS: StartScreenPrompt[] = [
-  {
-    label: "Architektur erklaeren",
-    prompt: "Erklaere mir die Architektur dieser App.",
-    icon: "circle-question",
-  },
-  {
-    label: "Bug Hilfe",
-    prompt: "Hilf mir, einen Bug zu analysieren.",
-    icon: "bug",
-  },
-]
+// Start-Screen-Prompts (vorerst leer, wir bauen später eigene Widgets)
+export const STARTER_PROMPTS: StartScreenPrompt[] = []
 
 export const COMPOSER_ATTACHMENTS: NonNullable<
   ComposerOption["attachments"]
@@ -35,45 +26,8 @@ export const COMPOSER_ATTACHMENTS: NonNullable<
   maxCount: 5,
 }
 
-export const COMPOSER_TOOLS = [
-  {
-    id: "voice",
-    label: "Spracheingabe",
-    icon: "phone",
-    shortLabel: "Mikrofon",
-    pinned: true,
-  },
-  {
-    id: "files",
-    label: "Fotos und Dateien hinzufuegen",
-    icon: "images",
-    shortLabel: "Dateien",
-  },
-  {
-    id: "deep_research",
-    label: "Deep Research",
-    icon: "search",
-    shortLabel: "Research",
-  },
-  {
-    id: "study_mode",
-    label: "Lernmodus",
-    icon: "book-open",
-    shortLabel: "Lernen",
-  },
-  {
-    id: "content_create",
-    label: "Content erstellen",
-    icon: "write-alt",
-    shortLabel: "Content",
-  },
-  {
-    id: "doc_analysis",
-    label: "Dokumentenanalyse",
-    icon: "document",
-    shortLabel: "Dokumente",
-  },
-] as const
+// Composer-Tools: vorerst deaktiviert, damit der Composer eine Zeile bleibt
+export const COMPOSER_TOOLS: ComposerOption["tools"] = []
 
 export const HISTORY_OPTIONS: HistoryOption = {
   enabled: true,
@@ -84,4 +38,54 @@ export const HISTORY_OPTIONS: HistoryOption = {
 export const THREAD_ITEM_ACTIONS: ThreadItemActionsOption = {
   feedback: true,
   retry: true,
+}
+
+// Zentrales ChatKit-Options-Objekt für den Workspace-Chat
+export const chatKitOptions: ChatKitOptions = {
+  // 1) Verbindung zu deinem self-hosted Backend
+  api: {
+    url: CHATKIT_API_URL,
+    domainKey: CHATKIT_DOMAIN_KEY,
+    uploadStrategy: {
+      type: "two_phase",
+    },
+  },
+
+  // 2) Sprache
+  locale: "de-DE",
+
+  // 3) Theme: Apple-/OpenAI-like, 16px, Pill, normal (eine Stufe kleiner)
+  theme: {
+    radius: "pill",
+    density: "normal",
+    typography: {
+      baseSize: 16,
+      fontFamily:
+        '"OpenAI Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    },
+  },
+
+  // 4) History
+  history: HISTORY_OPTIONS,
+
+  // 5) Header: deaktiviert (Navigation ist in der Sidebar)
+  header: {
+    enabled: false,
+  },
+
+  // 6) Start Screen: Greeting + Starter Prompts
+  startScreen: {
+    greeting: "Wobei kann ich dir heute helfen?",
+    prompts: STARTER_PROMPTS,
+  },
+
+  // 7) Composer: Placeholder, Attachments, Tools
+  composer: {
+    placeholder: "Schreibe deinem persönlichem Assistenten Aklow",
+    attachments: COMPOSER_ATTACHMENTS,
+    tools: COMPOSER_TOOLS,
+  },
+
+  // 8) Message Actions
+  threadItemActions: THREAD_ITEM_ACTIONS,
 }

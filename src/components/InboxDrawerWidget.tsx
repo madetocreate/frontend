@@ -172,21 +172,6 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
     }
   }, [])
 
-  const counts = useMemo(() => {
-    const base = {
-      all: items.length,
-      email: 0,
-      messenger: 0,
-      support: 0,
-    }
-
-    for (const item of items) {
-      base[item.channel]++
-    }
-
-    return base
-  }, [items])
-
   const filteredItems = useMemo(
     () =>
       activeChannel === 'all'
@@ -215,8 +200,8 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
   }
 
   return (
-    <div className="flex h-full flex-col gap-3">
-                  <div className="grid grid-cols-4 gap-1">
+    <div className="flex h-full flex-col gap-3 rounded-xl border border-slate-200 bg-[var(--ak-color-bg-surface)]/95 p-3 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl">
+      <div className="grid grid-cols-4 gap-1">
         {FILTER_TABS.map((tab) => {
           const isActive = activeChannel === tab.id
 
@@ -226,23 +211,14 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
               type="button"
               onClick={() => setActiveChannel(tab.id)}
               className={clsx(
-                'inline-flex w-full items-center justify-between gap-1 rounded-md border px-2 py-1 text-[11px] font-medium transition-colors',
+                'inline-flex w-full items-center justify-center rounded-lg border px-1.5 py-0.5 font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
                 isActive
-                  ? 'border-slate-300 bg-slate-100 text-slate-900'
-                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                  ? 'border-[var(--ak-color-border-strong)] bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-primary)] shadow-[var(--ak-shadow-soft)]'
+                  : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
               )}
+              style={{ fontSize: 'var(--ak-font-size-button-small)' }}
             >
-              <span>{tab.label}</span>
-              <span
-                className={clsx(
-                  'inline-flex min-w-[1.5rem] items-center justify-center rounded-full border px-1 text-[10px]',
-                  isActive
-                    ? 'border-slate-200 bg-slate-100 text-slate-900'
-                    : 'border-slate-200 bg-slate-100 text-slate-600'
-                )}
-              >
-                {counts[tab.id as keyof typeof counts]}
-              </span>
+              <span className="truncate">{tab.label}</span>
             </button>
           )
         })}
@@ -254,13 +230,13 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
         </div>
       ) : null}
 
-      <div className="flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="flex-1 overflow-y-auto rounded-xl">
         {filteredItems.length === 0 ? (
           <div className="flex h-32 items-center justify-center px-3 text-xs text-slate-500">
             Keine Einträge für diesen Filter.
           </div>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="flex flex-col gap-2">
             {filteredItems.map((item) => {
               const Icon = channelIcon(item.channel)
               const meta = CHANNEL_META[item.channel]
@@ -271,10 +247,10 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
                     type="button"
                     onClick={() => handleItemClick(item)}
                     className={clsx(
-                      'flex w-full items-stretch gap-3 px-3 py-2.5 text-left text-xs',
+                      'group flex w-full items-stretch gap-3 rounded-[var(--ak-radius-card)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 px-3 py-2.5 text-left text-xs shadow-sm backdrop-blur-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
                       item.unread
-                        ? `${meta.rowBg} hover:bg-slate-100`
-                        : 'hover:bg-slate-50',
+                        ? 'bg-slate-50/90 hover:border-slate-300 hover:bg-slate-100/90 hover:shadow-[var(--ak-shadow-card)]'
+                        : 'hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]/80 hover:shadow-[var(--ak-shadow-card)]',
                     )}
                   >
                     <div className="flex items-center">
@@ -301,7 +277,7 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
                           </span>
                         ) : null}
                       </p>
-                      <p className="truncate text-[11px] text-slate-500">
+                      <p className="truncate text-[10px] text-slate-500">
                         {item.preview}
                       </p>
                     </div>
@@ -323,12 +299,6 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
             })}
           </ul>
         )}
-      </div>
-
-      <div className="mt-1 flex justify-center">
-        <p className="text-[11px] text-slate-400">
-          Tipp: Rechtsklick oder Langdruck zum Löschen.
-        </p>
       </div>
     </div>
   )

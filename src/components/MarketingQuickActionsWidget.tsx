@@ -6,6 +6,8 @@ import {
   LightBulbIcon,
   CalendarDaysIcon,
   CursorArrowRaysIcon,
+  MegaphoneIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline'
 import { QuickActionsWidget, type QuickActionDefinition } from '@/components/QuickActionsWidget'
 
@@ -33,6 +35,18 @@ const MARKETING_QUICK_ACTIONS: QuickActionDefinition[] = [
     title: 'Landingpage-Text optimieren',
     description: 'Verbessere Überschriften, Nutzenargumentation und Call-to-Actions deiner Seiten.',
     icon: <CursorArrowRaysIcon className="h-4 w-4" />,
+  },
+  {
+    id: 'ad_copy_creation',
+    title: 'Werbetexte erstellen',
+    description: 'Generiere überzeugende Werbetexte für verschiedene Kanäle und Zielgruppen.',
+    icon: <MegaphoneIcon className="h-4 w-4" />,
+  },
+  {
+    id: 'campaign_analysis',
+    title: 'Kampagnen-Analyse',
+    description: 'Analysiere Performance-Metriken und erhalte Optimierungsvorschläge.',
+    icon: <ChartBarIcon className="h-4 w-4" />,
   },
 ]
 
