@@ -104,10 +104,27 @@ export const ENTITIES_OPTIONS: EntitiesOption = {
 export const chatKitOptions: ChatKitOptions = {
   // 1) Verbindung zu deinem self-hosted Backend
   api: {
-    url: CHATKIT_API_URL,
-    domainKey: CHATKIT_DOMAIN_KEY,
-    uploadStrategy: {
-      type: "two_phase",
+    async getClientSecret(existingClientSecret) {
+      if (existingClientSecret) {
+        return existingClientSecret
+      }
+      const res = await fetch(
+        process.env.NEXT_PUBLIC_CHATKIT_SESSION_URL ??
+          "http://127.0.0.1:8000/chatkit/session",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ user_id: "aklow-dev-user" }),
+        },
+      )
+      if (!res.ok) {
+        console.error("ChatKit session failed", res.status, await res.text())
+        throw new Error("Failed to create ChatKit session")
+      }
+      const data = (await res.json()) as { client_secret: string }
+      return data.client_secret
     },
   },
 
