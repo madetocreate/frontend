@@ -66,22 +66,53 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     headers["Authorization"] = `Bearer ${memoryApiSecret}`;
   }
 
-  const response = await fetch(targetUrl, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(payload),
-  });
+  try {
+    const response = await fetch(targetUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    });
 
-  const text = await response.text();
-  let result: unknown = null;
+    const text = await response.text();
+    let result: unknown = null;
 
-  if (text) {
-    try {
-      result = JSON.parse(text);
-    } catch {
-      result = { raw: text };
+    if (text) {
+      try {
+        result = JSON.parse(text);
+      } catch {
+        result = { raw: text };
+      }
     }
-  }
 
-  return NextResponse.json(result ?? {}, { status: response.status });
+    // Wenn der Response nicht OK ist, gib mehr Details zurück
+    if (!response.ok) {
+      console.error("Memory search API error:", {
+        status: response.status,
+        statusText: response.statusText,
+        url: targetUrl,
+        payload,
+        result
+      });
+      return NextResponse.json(
+        { 
+          error: `Memory search failed: ${response.status} ${response.statusText}`,
+          details: result,
+          url: targetUrl
+        },
+        { status: response.status }
+      );
+    }
+
+    return NextResponse.json(result ?? {}, { status: response.status });
+  } catch (error) {
+    console.error("Memory search fetch error:", error);
+    return NextResponse.json(
+      { 
+        error: "Failed to call memory search API",
+        message: error instanceof Error ? error.message : String(error),
+        url: targetUrl
+      },
+      { status: 500 }
+    );
+  }
 }
