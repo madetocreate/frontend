@@ -18,13 +18,7 @@ type NewsStory = {
   age: string
 }
 
-type NewsfeedStatus = {
-  title: string
-  caption: string
-}
-
 type NewsfeedWidgetProps = {
-  status: NewsfeedStatus
   stories: NewsStory[]
   onStoryClick?: (id: string) => void
 }

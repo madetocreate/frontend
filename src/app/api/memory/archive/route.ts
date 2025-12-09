@@ -28,42 +28,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Body must be an object" }, { status: 400 });
   }
 
-  const { threadId, role, content, timestamp, tenantId } = body as Record<string, unknown>;
-
-  if (typeof threadId !== "string" || !threadId) {
-    return NextResponse.json({ error: "Missing or invalid threadId" }, { status: 400 });
-  }
-  if (typeof role !== "string" || !role) {
-    return NextResponse.json({ error: "Missing or invalid role" }, { status: 400 });
-  }
-  if (typeof content !== "string" || !content) {
-    return NextResponse.json({ error: "Missing or invalid content" }, { status: 400 });
-  }
-  if (typeof timestamp !== "string" || !timestamp) {
-    return NextResponse.json({ error: "Missing or invalid timestamp" }, { status: 400 });
-  }
+  const { tenantId, memoryId } = body as Record<string, unknown>;
 
   if (typeof tenantId !== "string" || !tenantId) {
     return NextResponse.json({ error: "Missing or invalid tenantId" }, { status: 400 });
   }
+  if (typeof memoryId !== "string" || !memoryId) {
+    return NextResponse.json({ error: "Missing or invalid memoryId" }, { status: 400 });
+  }
 
-  // Konvertiere ChatKit-Format zu Memory-API-Format
-  const memoryType = role === "user" ? "conversation_message" : "conversation_summary";
-  
   const payload = {
     tenant_id: tenantId,
-    type: memoryType,
-    content: content,
-    metadata: {
-      thread_id: threadId,
-      role: role,
-      timestamp: timestamp,
-    },
-    conversation_id: threadId,
-    message_id: threadId, // Kann später spezifischer sein
+    memory_id: memoryId,
   };
 
-  const targetUrl = `${normalizeBaseUrl(AGENT_BACKEND_URL)}/memory/write`;
+  const targetUrl = `${normalizeBaseUrl(AGENT_BACKEND_URL)}/memory/archive`;
   const memoryApiSecret = process.env.MEMORY_API_SECRET;
 
   const headers: Record<string, string> = {
@@ -93,3 +72,4 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   return NextResponse.json(result ?? {}, { status: response.status });
 }
+

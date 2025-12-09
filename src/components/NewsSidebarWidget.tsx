@@ -202,22 +202,39 @@ export function NewsSidebarWidget({ onStoryClick }: NewsSidebarWidgetProps) {
           credentials: 'include',
         })
         if (!resp.ok) {
-          // Bei 401 (nicht authentifiziert) oder anderen Fehlern: Fallback zu Mock-Daten
-          if (resp.status === 401 || resp.status >= 500) {
-            console.warn('News-Feed konnte nicht geladen werden, verwende Mock-Daten')
+          // Bei 404, 401 oder anderen Fehlern: Fallback zu Mock-Daten
+          if (resp.status === 404 || resp.status === 401 || resp.status >= 500) {
+            console.warn(`News-Feed konnte nicht geladen werden (HTTP ${resp.status}), verwende Mock-Daten`)
             if (!cancelled) {
               setStories(DEFAULT_STORIES)
               setLoading(false)
             }
             return
           }
-          throw new Error(`HTTP ${resp.status}`)
+          // Bei anderen Fehlern auch Fallback
+          console.warn(`News-Feed Fehler (HTTP ${resp.status}), verwende Mock-Daten`)
+          if (!cancelled) {
+            setStories(DEFAULT_STORIES)
+            setLoading(false)
+          }
+          return
         }
         const data: unknown = await resp.json()
         
         // Versuche, die Daten zu konvertieren
         if (Array.isArray(data)) {
           // Wenn es ein Array von Stories ist
+          const normalizeSource = (src: unknown): string => {
+            if (!src) return 'Unbekannt'
+            if (typeof src === 'string') return src
+            if (typeof src === 'object') {
+              const maybe = src as { name?: unknown; url?: unknown }
+              if (typeof maybe.name === 'string' && maybe.name.trim()) return maybe.name
+              if (typeof maybe.url === 'string' && maybe.url.trim()) return maybe.url
+            }
+            return 'Unbekannt'
+          }
+
           const convertedStories: NewsStory[] = data.map((item: unknown) => {
             const story = item as {
               id: string
@@ -230,8 +247,8 @@ export function NewsSidebarWidget({ onStoryClick }: NewsSidebarWidgetProps) {
               category?: string
               type?: string
               badgeColor?: NewsStory['badgeColor']
-              source?: string
-              age?: string
+              source?: unknown
+              age?: unknown
             }
             return {
               id: story.id,
@@ -240,8 +257,8 @@ export function NewsSidebarWidget({ onStoryClick }: NewsSidebarWidgetProps) {
               description: story.description || story.body || story.subtitle || '',
               category: story.category || story.type || 'News',
               badgeColor: story.badgeColor || 'secondary',
-              source: story.source || 'Unbekannt',
-              age: story.age || 'vor kurzem',
+              source: normalizeSource(story.source),
+              age: typeof story.age === 'string' && story.age.trim() ? story.age : 'vor kurzem',
             }
           })
           if (!cancelled) {
@@ -256,8 +273,10 @@ export function NewsSidebarWidget({ onStoryClick }: NewsSidebarWidgetProps) {
       } catch (err: unknown) {
         console.error('NewsSidebarWidget error', err)
         if (!cancelled) {
-          setError('Konnte News-Feed nicht laden.')
+          // Immer Mock-Daten verwenden bei Fehler
           setStories(DEFAULT_STORIES)
+          setError(null) // Kein Fehler anzeigen, da wir Mock-Daten haben
+          setLoading(false)
         }
       } finally {
         if (!cancelled) {
@@ -298,10 +317,6 @@ export function NewsSidebarWidget({ onStoryClick }: NewsSidebarWidgetProps) {
 
   return (
     <NewsfeedWidget
-      status={{
-        title: '',
-        caption: '',
-      }}
       stories={stories}
       onStoryClick={handleStoryClick}
     />

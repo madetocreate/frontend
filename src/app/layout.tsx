@@ -18,6 +18,7 @@ export default function RootLayout({
         <script
           src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js"
           async
+          crossOrigin="anonymous"
         />
       </head>
       <body className="bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)] antialiased">

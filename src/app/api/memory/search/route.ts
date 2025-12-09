@@ -28,30 +28,41 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Body must be an object" }, { status: 400 });
   }
 
-  const { tenantId, query, limit, offset, filters } = body as Record<string, unknown>;
+  const { tenantId, query, limit, filters } = body as Record<string, unknown>;
 
   if (typeof tenantId !== "string" || !tenantId) {
     return NextResponse.json({ error: "Missing or invalid tenantId" }, { status: 400 });
   }
-  if (typeof query !== "string" || !query) {
-    return NextResponse.json({ error: "Missing or invalid query" }, { status: 400 });
-  }
+  // Query kann leer sein (für "alle Items" Suche)
+  const searchQuery = typeof query === "string" ? query : "";
+
+  // Extrahiere type aus filters, falls vorhanden
+  const filtersObj = filters && typeof filters === "object" ? filters as Record<string, unknown> : {};
+  const memoryType = filtersObj.types && Array.isArray(filtersObj.types) && filtersObj.types.length > 0
+    ? (filtersObj.types[0] as string)
+    : undefined;
 
   const payload = {
     tenant_id: tenantId,
-    query,
+    query: searchQuery,
+    type: memoryType || null,
     limit: typeof limit === "number" && Number.isFinite(limit) ? limit : 20,
-    offset: typeof offset === "number" && Number.isFinite(offset) ? offset : 0,
-    filters: filters && typeof filters === "object" ? filters : undefined,
   };
 
   const targetUrl = `${normalizeBaseUrl(AGENT_BACKEND_URL)}/memory/search`;
+  const memoryApiSecret = process.env.MEMORY_API_SECRET;
+
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+  };
+
+  if (memoryApiSecret) {
+    headers["Authorization"] = `Bearer ${memoryApiSecret}`;
+  }
 
   const response = await fetch(targetUrl, {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-    },
+    headers,
     body: JSON.stringify(payload),
   });
 

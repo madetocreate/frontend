@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, KeyboardEvent } from "react";
+import clsx from "clsx";
 import { sendChatMessage, UIMessage } from "../../lib/chatClient";
 import { WidgetRenderer } from "./WidgetRenderer";
 

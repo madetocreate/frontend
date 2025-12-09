@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode, ComponentType, CSSProperties } from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import clsx from 'clsx'
 import {
@@ -21,6 +21,7 @@ import { InboxDrawerWidget } from '@/components/InboxDrawerWidget'
 import { NewsSidebarWidget } from '@/components/NewsSidebarWidget'
 import type { InboxItem } from '@/components/InboxDrawerWidget'
 import { InboxDetailPanel } from '@/components/InboxDetailPanel'
+import { NotificationsDetailPanel } from '@/components/NotificationsDetailPanel'
 import { CalendarSidebarWidget } from '@/components/calendar/CalendarSidebarWidget'
 import { CalendarDetailPanel } from '@/components/calendar/CalendarDetailPanel'
 import { ProfileMenu, type ProfileMenuAction, type ProfileUserState } from '@/components/ProfileMenu'
@@ -31,6 +32,10 @@ import type { NewsStory } from '@/components/NewsSidebarWidget'
 import { SettingsDetailPanel } from '@/components/SettingsDetailPanel'
 import { TelephonySidebarWidget, type TelephonyItem } from '@/components/TelephonySidebarWidget'
 import { TelephonyDetailPanel } from '@/components/TelephonyDetailPanel'
+import { MemorySidebarWidget, type MemoryCategory } from '@/components/MemorySidebarWidget'
+import { MemoryDetailPanel } from '@/components/MemoryDetailPanel'
+import { MarketingDetailPanel } from '@/components/MarketingDetailPanel'
+import { AutomationDetailPanel } from '@/components/AutomationDetailPanel'
 
 
 
@@ -96,6 +101,10 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const [selectedNewsItem, setSelectedNewsItem] = useState<NewsStory | null>(null)
   const [selectedSettingsCategory, setSelectedSettingsCategory] = useState<string | null>(null)
   const [selectedTelephonyItem, setSelectedTelephonyItem] = useState<TelephonyItem | null>(null)
+  const [selectedMarketingItem, setSelectedMarketingItem] = useState<{ id: string; title: string } | null>(null)
+  const [selectedAutomationItem, setSelectedAutomationItem] = useState<string | null>(null)
+  const [selectedMemoryCategory, setSelectedMemoryCategory] = useState<MemoryCategory | null>(null)
+  const [showNotifications, setShowNotifications] = useState(false)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
 
   const profileUser: ProfileUserState = {
@@ -109,6 +118,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
   const handleModuleClick = (token: WorkspaceModuleToken) => {
     setActiveModuleToken(token)
+    setShowNotifications(false) // Reset notifications when switching modules
 
     setLeftDrawerOpen((prev) => {
       if (prev && activeModuleToken === token) {
@@ -117,11 +127,16 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       return true
     })
 
+    // Rechten Drawer schließen beim Modulwechsel
     setRightDrawerOpen(false)
+
     setSelectedInboxItem(null)
     setSelectedNewsItem(null)
     setSelectedSettingsCategory(null)
     setSelectedTelephonyItem(null)
+    setSelectedMarketingItem(null)
+    setSelectedAutomationItem(null)
+    setSelectedMemoryCategory(null)
   }
 
   const handleProfileMenuAction = (action: ProfileMenuAction) => {
@@ -148,6 +163,39 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setIsProfileMenuOpen(false)
   }
 
+  // Event-Listener für Modul-Öffnung von außen (z.B. Bell-Icon)
+  useEffect(() => {
+    const handleOpenModule = (e: CustomEvent<{ module: WorkspaceModuleToken }>) => {
+      if (e.detail?.module) {
+        if (e.detail.module === 'inbox') {
+          // Wenn Inbox über Bell geöffnet wird, toggle Benachrichtigungen
+          setShowNotifications((prev) => {
+            if (prev) {
+              // Schließen: Alles zurücksetzen
+              setRightDrawerOpen(false)
+              setLeftDrawerOpen(false)
+              return false
+            } else {
+              // Öffnen: Vollbild rechts, keine Sidebar
+              setRightDrawerOpen(true)
+              setLeftDrawerOpen(false)
+              setActiveModuleToken('inbox')
+              return true
+            }
+          })
+        } else {
+          handleModuleClick(e.detail.module)
+        }
+      }
+    }
+
+    window.addEventListener('aklow-open-module', handleOpenModule as EventListener)
+
+    return () => {
+      window.removeEventListener('aklow-open-module', handleOpenModule as EventListener)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleOpenDetails = () => {
     setRightDrawerOpen(true)
   }
@@ -164,6 +212,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setSelectedNewsItem(null)
     setSelectedSettingsCategory(null)
     setSelectedTelephonyItem(null)
+    setSelectedMarketingItem(null)
+    setSelectedAutomationItem(null)
+    setSelectedMemoryCategory(null)
     handleOpenDetails()
   }
 
@@ -179,6 +230,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setSelectedInboxItem(null)
     setSelectedSettingsCategory(null)
     setSelectedTelephonyItem(null)
+    setSelectedMarketingItem(null)
+    setSelectedAutomationItem(null)
+    setSelectedMemoryCategory(null)
     handleOpenDetails()
   }
 
@@ -191,6 +245,63 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       setSelectedInboxItem(null)
       setSelectedNewsItem(null)
       setSelectedSettingsCategory(null)
+      setSelectedMarketingItem(null)
+      setSelectedAutomationItem(null)
+      setSelectedMemoryCategory(null)
+      handleOpenDetails()
+    }
+  }
+
+  const handleMarketingItemClick = (actionId: string) => {
+    // Erstelle ein MarketingItem aus der Action-ID
+    const marketingItem = {
+      id: actionId,
+      title: actionId,
+    }
+    
+    if (selectedMarketingItem?.id === marketingItem.id && rightDrawerOpen) {
+      setRightDrawerOpen(false)
+      setSelectedMarketingItem(null)
+    } else {
+      setSelectedMarketingItem(marketingItem)
+      setSelectedInboxItem(null)
+      setSelectedNewsItem(null)
+      setSelectedSettingsCategory(null)
+      setSelectedTelephonyItem(null)
+      setSelectedAutomationItem(null)
+      setSelectedMemoryCategory(null)
+      handleOpenDetails()
+    }
+  }
+
+  const handleAutomationItemClick = (workflowId: string) => {
+    if (selectedAutomationItem === workflowId && rightDrawerOpen) {
+      setRightDrawerOpen(false)
+      setSelectedAutomationItem(null)
+    } else {
+      setSelectedAutomationItem(workflowId)
+      setSelectedInboxItem(null)
+      setSelectedNewsItem(null)
+      setSelectedSettingsCategory(null)
+      setSelectedTelephonyItem(null)
+      setSelectedMarketingItem(null)
+      setSelectedMemoryCategory(null)
+      handleOpenDetails()
+    }
+  }
+
+  const handleMemoryCategoryClick = (category: MemoryCategory) => {
+    if (selectedMemoryCategory?.id === category.id && rightDrawerOpen) {
+      setRightDrawerOpen(false)
+      setSelectedMemoryCategory(null)
+    } else {
+      setSelectedMemoryCategory(category)
+      setSelectedInboxItem(null)
+      setSelectedNewsItem(null)
+      setSelectedSettingsCategory(null)
+      setSelectedTelephonyItem(null)
+      setSelectedMarketingItem(null)
+      setSelectedAutomationItem(null)
       handleOpenDetails()
     }
   }
@@ -204,6 +315,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       setSelectedInboxItem(null)
       setSelectedNewsItem(null)
       setSelectedTelephonyItem(null)
+      setSelectedMarketingItem(null)
+      setSelectedAutomationItem(null)
+      setSelectedMemoryCategory(null)
       if (category) {
         handleOpenDetails()
       } else {
@@ -214,16 +328,29 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
   const handleCloseDetails = () => {
     setRightDrawerOpen(false)
+    setShowNotifications(false)
     setSelectedInboxItem(null)
     setSelectedNewsItem(null)
     setSelectedSettingsCategory(null)
     setSelectedTelephonyItem(null)
+    setSelectedMarketingItem(null)
+    setSelectedAutomationItem(null)
+    setSelectedMemoryCategory(null)
   }
 
-  const showLeft = leftDrawerOpen
-  const showRight = rightDrawerOpen && (selectedInboxItem !== null || selectedNewsItem !== null || selectedSettingsCategory !== null || selectedTelephonyItem !== null)
+  const showLeft = leftDrawerOpen && !showNotifications // Keine Sidebar wenn Benachrichtigungen im Vollbild
+  const showRight =
+    rightDrawerOpen &&
+    (showNotifications ||
+      selectedInboxItem !== null ||
+      selectedNewsItem !== null ||
+      selectedSettingsCategory !== null ||
+      selectedTelephonyItem !== null ||
+      selectedMarketingItem !== null ||
+      selectedAutomationItem !== null ||
+      selectedMemoryCategory !== null)
 
-  const chatStyle: CSSProperties = showLeft
+  const chatStyle: CSSProperties = showLeft && !showNotifications
     ? { marginLeft: LEFT_DRAWER_WIDTH }
     : { marginLeft: 0 }
 
@@ -232,7 +359,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   }
 
   const rightContainerStyle: CSSProperties = {
-    left: showLeft ? LEFT_DRAWER_WIDTH : 0,
+    left: showNotifications ? 0 : (showLeft ? LEFT_DRAWER_WIDTH : 0), // Vollbild links bei Benachrichtigungen
   }
 
   return (
@@ -352,15 +479,17 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 ) : activeModuleToken === 'calendar' ? (
                   <CalendarSidebarWidget />
                 ) : activeModuleToken === 'marketing' ? (
-                  <MarketingQuickActionsWidget />
+                  <MarketingQuickActionsWidget onSelectAction={handleMarketingItemClick} />
                 ) : activeModuleToken === 'automation' ? (
-                  <AutomationQuickActionsWidget />
+                  <AutomationQuickActionsWidget onSelectAction={handleAutomationItemClick} />
                 ) : activeModuleToken === 'settings' ? (
                   <SettingsSidebarWidget onCategorySelect={handleSettingsCategorySelect} />
                 ) : activeModuleToken === 'news' ? (
                   <NewsSidebarWidget onStoryClick={handleNewsItemClick} />
                 ) : activeModuleToken === 'telephony' ? (
                   <TelephonySidebarWidget onItemClick={handleTelephonyItemClick} />
+                ) : activeModuleToken === 'memory' ? (
+                  <MemorySidebarWidget onCategoryClick={handleMemoryCategoryClick} />
                 ) : (
                   <>
                     <p className="text-slate-500">
@@ -389,8 +518,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
           >
             <div
               className={clsx(
-                'pointer-events-auto flex h-full w-full flex-col bg-[var(--ak-color-bg-surface)]/97 border-l border-[var(--ak-color-border-subtle)] shadow-[var(--ak-shadow-strong)] transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] backdrop-blur-xl',
-                showRight ? 'translate-x-0' : 'translate-x-full'
+                'pointer-events-auto flex h-full flex-col bg-[var(--ak-color-bg-surface)]/97 border-l border-[var(--ak-color-border-subtle)] shadow-[var(--ak-shadow-strong)] transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] backdrop-blur-xl',
+                showRight ? 'translate-x-0' : 'translate-x-full',
+                showNotifications ? 'w-full' : 'w-full' // Vollbild bei Benachrichtigungen
               )}
             >
               <div className="flex items-center justify-between px-3 py-2">
@@ -405,20 +535,30 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   </span>
                 </button>
                 <div className="truncate text-sm font-medium text-slate-900">
-                  {activeModuleToken === 'inbox'
-                    ? selectedInboxItem?.title ?? 'Details'
-                    : activeModuleToken === 'news'
-                      ? selectedNewsItem?.title ?? 'Details'
-                      : activeModuleToken === 'settings'
-                        ? (selectedSettingsCategory ? 'Allgemein' : 'Einstellungen')
-                        : activeModuleToken === 'telephony'
-                          ? selectedTelephonyItem?.title ?? 'Details'
-                          : getModuleLabel(activeModuleToken)}
+                  {showNotifications
+                    ? 'Benachrichtigungen'
+                    : activeModuleToken === 'inbox'
+                      ? selectedInboxItem?.title ?? 'Details'
+                      : activeModuleToken === 'news'
+                        ? selectedNewsItem?.title ?? 'Details'
+                        : activeModuleToken === 'settings'
+                          ? (selectedSettingsCategory ? 'Allgemein' : 'Einstellungen')
+                          : activeModuleToken === 'telephony'
+                            ? selectedTelephonyItem?.title ?? 'Details'
+                            : activeModuleToken === 'memory'
+                              ? selectedMemoryCategory?.title ?? 'Wissen & Memory'
+                              : activeModuleToken === 'marketing'
+                                ? 'Marketing-Aktionen'
+                                : activeModuleToken === 'automation'
+                                  ? 'Automatisierung'
+                                  : getModuleLabel(activeModuleToken)}
                 </div>
                 <div className="w-7" />
               </div>
               <div className="flex-1 overflow-y-auto px-3 py-3 text-sm text-slate-600">
-                {activeModuleToken === 'inbox' ? (
+                {showNotifications ? (
+                  <NotificationsDetailPanel />
+                ) : activeModuleToken === 'inbox' ? (
                   <InboxDetailPanel item={selectedInboxItem} />
                 ) : activeModuleToken === 'news' ? (
                   <NewsDetailPanel story={selectedNewsItem} />
@@ -428,6 +568,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   <SettingsDetailPanel category={selectedSettingsCategory} />
                 ) : activeModuleToken === 'telephony' ? (
                   <TelephonyDetailPanel item={selectedTelephonyItem} />
+                ) : activeModuleToken === 'memory' ? (
+                  <MemoryDetailPanel category={selectedMemoryCategory} />
+                ) : activeModuleToken === 'marketing' ? (
+                  <MarketingDetailPanel actionId={selectedMarketingItem?.id ?? null} />
+                ) : activeModuleToken === 'automation' ? (
+                  <AutomationDetailPanel workflowId={selectedAutomationItem} />
                 ) : (
                   <div className="space-y-2">
                     <p className="text-slate-500">
