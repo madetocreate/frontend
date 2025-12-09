@@ -34,20 +34,26 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Missing or invalid tenantId" }, { status: 400 });
   }
   // Query kann leer sein (für "alle Items" Suche)
-  const searchQuery = typeof query === "string" ? query : "";
+  const searchQuery = typeof query === "string" ? query.trim() : "";
 
-  // Extrahiere type aus filters, falls vorhanden
+  // Extrahiere types aus filters, falls vorhanden
   const filtersObj = filters && typeof filters === "object" ? filters as Record<string, unknown> : {};
-  const memoryType = filtersObj.types && Array.isArray(filtersObj.types) && filtersObj.types.length > 0
-    ? (filtersObj.types[0] as string)
+  const memoryTypes = filtersObj.types && Array.isArray(filtersObj.types) && filtersObj.types.length > 0
+    ? (filtersObj.types as string[])
     : undefined;
 
-  const payload = {
+  const payload: Record<string, unknown> = {
     tenant_id: tenantId,
     query: searchQuery,
-    type: memoryType || null,
     limit: typeof limit === "number" && Number.isFinite(limit) ? limit : 20,
   };
+
+  // Füge filters hinzu, falls types vorhanden
+  if (memoryTypes) {
+    payload.filters = {
+      types: memoryTypes,
+    };
+  }
 
   const targetUrl = `${normalizeBaseUrl(AGENT_BACKEND_URL)}/memory/search`;
   const memoryApiSecret = process.env.MEMORY_API_SECRET;

@@ -273,7 +273,7 @@ export function InboxDetailPanel({ item }: InboxDetailPanelProps) {
       </section>
 
       <section className="flex-1 min-h-[220px] rounded-2xl border border-slate-200 bg-[var(--ak-color-bg-surface)] px-2 py-2">
-        <ChatKitPanel />
+        <ChatKitPanel showPrompts={true} />
       </section>
     </div>
   )

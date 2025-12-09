@@ -57,7 +57,7 @@ export const COMPOSER_TOOLS: ComposerOption["tools"] = [
   },
   {
     id: 'internet-search',
-    label: 'Internet-Suche',
+    label: 'Intensive Internet-Suche',
     icon: 'search',
   },
   {
@@ -100,8 +100,9 @@ export const ENTITIES_OPTIONS: EntitiesOption = {
   },
 }
 
-// Zentrales ChatKit-Options-Objekt für den Workspace-Chat
-export const chatKitOptions: ChatKitOptions = {
+// Funktion zum Erstellen von ChatKit-Optionen mit oder ohne Prompts
+export function createChatKitOptions(showPrompts: boolean = true): ChatKitOptions {
+  return {
   // 1) Verbindung zu deinem self-hosted Backend
   api: {
     async getClientSecret(existingClientSecret) {
@@ -150,15 +151,15 @@ export const chatKitOptions: ChatKitOptions = {
     enabled: false,
   },
 
-  // 6) Start Screen: Greeting + Starter Prompts
+  // 6) Start Screen: Greeting + Starter Prompts (optional)
   startScreen: {
     greeting: "Wobei kann ich dir heute helfen?",
-    prompts: STARTER_PROMPTS,
+    prompts: showPrompts ? STARTER_PROMPTS : [],
   },
 
   // 7) Composer: Placeholder, Attachments, Tools
   composer: {
-    placeholder: "Schreibe deinem persönlichem Assistenten Aklow",
+    placeholder: "Schreibe deinem persönlichen Assistenten",
     attachments: COMPOSER_ATTACHMENTS,
     tools: COMPOSER_TOOLS,
   },
@@ -180,13 +181,32 @@ export const chatKitOptions: ChatKitOptions = {
     // Hier können Sie Logik für jedes Tool implementieren
     switch (toolCall.name) {
       case 'file-photo':
-        // Beispiel: Öffne Dateiauswahl-Dialog
-        console.log('Datei oder Foto ausgewählt');
-        // Implement file upload logic here
-        return { status: 'success', message: 'Datei-Upload gestartet' };
+        // Direkt Datei-Upload-Dialog öffnen
+        console.log('Datei oder Foto ausgewählt - öffne Datei-Upload-Dialog');
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*,application/pdf,.doc,.docx,.txt,.csv,.xlsx,.xls';
+        input.multiple = true;
+        input.onchange = async (e) => {
+          const files = (e.target as HTMLInputElement).files;
+          if (files && files.length > 0) {
+            console.log('Dateien ausgewählt:', files);
+            // Hier könnte die Datei-Upload-Logik implementiert werden
+            // z.B. Upload zu einem Server oder Verarbeitung der Dateien
+            for (let i = 0; i < files.length; i++) {
+              const file = files[i];
+              console.log(`Datei ${i + 1}: ${file.name}, Größe: ${file.size} bytes, Typ: ${file.type}`);
+              // TODO: Datei-Upload implementieren
+            }
+          }
+        };
+        input.click();
+        return { status: 'success', message: 'Datei-Upload-Dialog geöffnet' };
       case 'internet-search':
-        // Internet-Suche über Research API
+        // Intensive Internet-Suche - direkt ausführen
+        console.log('Intensive Internet-Suche ausgewählt');
         try {
+          const searchQuery = toolCall.input?.query || toolCall.input?.question || '';
           const response = await fetch('/api/realtime/research', {
             method: 'POST',
             headers: {
@@ -195,9 +215,9 @@ export const chatKitOptions: ChatKitOptions = {
             body: JSON.stringify({
               tenantId: DEFAULT_TENANT_ID,
               sessionId: sessionId,
-              question: toolCall.input?.query || toolCall.input?.question || '',
+              question: searchQuery,
               scope: 'general',
-              maxSources: 5,
+              maxSources: 10, // Mehr Quellen für intensive Suche
               channel: 'composer',
             }),
           });
@@ -209,7 +229,7 @@ export const chatKitOptions: ChatKitOptions = {
           const data = await response.json();
           return { 
             status: 'success', 
-            message: 'Internet-Suche abgeschlossen',
+            message: 'Intensive Internet-Suche abgeschlossen',
             results: data 
           };
         } catch (error) {
@@ -220,10 +240,12 @@ export const chatKitOptions: ChatKitOptions = {
           };
         }
       case 'create-image':
+        // Bild erstellen - bleibt im Modus
         console.log('Bild erstellen ausgewählt');
         // Bild-Erstellung könnte über OpenAI DALL-E oder ähnliches laufen
         return { status: 'success', message: 'Bild-Erstellung gestartet' };
       case 'learning-mode':
+        // Lernmodus - bleibt im Modus
         console.log('Lernmodus ausgewählt');
         // Lernmodus könnte spezielle Prompts oder Kontext hinzufügen
         return { status: 'success', message: 'Lernmodus aktiviert' };
@@ -232,4 +254,11 @@ export const chatKitOptions: ChatKitOptions = {
         return { status: 'error', message: `Unbekanntes Tool: ${toolCall.name}` };
     }
   },
+  }
 }
+
+// Zentrales ChatKit-Options-Objekt für den Workspace-Chat (mit Prompts)
+export const chatKitOptions: ChatKitOptions = createChatKitOptions(true)
+
+// ChatKit-Optionen ohne Prompts (für Chat-Route)
+export const chatKitOptionsWithoutPrompts: ChatKitOptions = createChatKitOptions(false)

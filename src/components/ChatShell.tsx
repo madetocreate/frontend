@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import clsx from "clsx";
 import { sendChatMessage, ChatResponse } from "../lib/chatClient";
+import { MicrophoneButton } from "./MicrophoneButton";
 
 type ChatMessage = {
   id: string;
@@ -108,6 +109,7 @@ export function ChatShell() {
           placeholder="Nachricht eingeben..."
           className="flex-1 rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)]/80 px-3 py-2 text-[13px] text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
         />
+        <MicrophoneButton disabled={isSending} />
         <button
           type="submit"
           disabled={isSending || !input.trim()}

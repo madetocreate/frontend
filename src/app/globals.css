@@ -266,3 +266,11 @@ openai-chatkit [data-thoughts] {
   opacity: 1 !important;
   visibility: visible !important;
 }
+
+/* Mikrofon-Button sichtbar machen */
+.microphone-button-container {
+  pointer-events: auto !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}

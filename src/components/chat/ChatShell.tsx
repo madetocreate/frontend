@@ -4,6 +4,7 @@ import React, { useState, KeyboardEvent } from "react";
 import clsx from "clsx";
 import { sendChatMessage, UIMessage } from "../../lib/chatClient";
 import { WidgetRenderer } from "./WidgetRenderer";
+import { MicrophoneButton } from "../MicrophoneButton";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -111,6 +112,7 @@ export function ChatShell() {
           placeholder="Schreib mir etwas..."
           className="flex-1 rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)]/80 px-3 py-2 text-[13px] text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] placeholder:text-[var(--ak-color-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
         />
+        <MicrophoneButton disabled={loading} />
         <button
           type="button"
           onClick={handleSend}
