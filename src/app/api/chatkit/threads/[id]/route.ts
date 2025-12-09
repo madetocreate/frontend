@@ -29,19 +29,42 @@ async function proxyThreadRequest(req: NextRequest, id: string) {
     init.body = JSON.stringify(body);
   }
 
-  const response = await fetch(targetUrl, init);
-  const text = await response.text();
-  let data: unknown;
-
   try {
-    data = JSON.parse(text);
-  } catch {
-    data = { raw: text };
-  }
+    const response = await fetch(targetUrl, init);
+    const text = await response.text();
+    let data: unknown;
 
-  return NextResponse.json(data, {
-    status: response.status,
-  });
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { raw: text };
+    }
+
+    // Wenn der Endpunkt nicht existiert (404), gebe eine hilfreiche Fehlermeldung zurück
+    if (response.status === 404) {
+      return NextResponse.json(
+        { 
+          error: "Thread-Endpunkt nicht gefunden",
+          detail: "Das Backend unterstützt möglicherweise keine Thread-Updates über diesen Endpunkt",
+          status: 404
+        },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(data, {
+      status: response.status,
+    });
+  } catch (error) {
+    console.error("Fehler beim Proxy-Request:", error);
+    return NextResponse.json(
+      { 
+        error: "Fehler beim Verbinden mit dem Backend",
+        detail: error instanceof Error ? error.message : "Unbekannter Fehler"
+      },
+      { status: 500 }
+    );
+  }
 }
 
 type RouteContext = {

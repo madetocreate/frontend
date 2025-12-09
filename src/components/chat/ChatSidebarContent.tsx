@@ -151,7 +151,16 @@ export function ChatSidebarContent() {
       });
 
       if (!response.ok) {
-        throw new Error('Fehler beim Umbenennen des Threads');
+        const errorData = await response.json().catch(() => ({ error: 'Unbekannter Fehler' }));
+        const errorMessage = errorData?.error || errorData?.detail || `HTTP ${response.status}`;
+        console.error(`Fehler beim Umbenennen des Threads (${response.status}):`, errorMessage);
+        // Fallback: Lokal umbenennen trotz Fehler
+        setThreads((prev) =>
+          prev.map((t) => (t.id === threadId ? { ...t, title: trimmedTitle } : t))
+        );
+        setEditingThreadId(null);
+        setEditingTitle("");
+        return;
       }
 
       setThreads((prev) =>

@@ -172,6 +172,19 @@ const getSuggestionsForAction = (actionId: string | null): MarketingSuggestion[]
   return MARKETING_SUGGESTIONS_BY_ACTION[actionId] ?? []
 }
 
+const getStatusColor = (status: HistoryItem['status']): string => {
+  switch (status) {
+    case 'Veröffentlicht':
+      return 'border-green-200 bg-green-50 text-green-700'
+    case 'Geplant':
+      return 'border-blue-200 bg-blue-50 text-blue-700'
+    case 'Entwurf':
+      return 'border-slate-200 bg-slate-50 text-slate-700'
+    default:
+      return 'border-slate-200 bg-slate-50 text-slate-700'
+  }
+}
+
 export function MarketingDetailPanel({ actionId }: MarketingDetailPanelProps) {
   const [types, setTypes] = useState<MarketingType[]>(MOCK_TYPES)
   const [channels, setChannels] = useState<ChannelChip[]>(MOCK_CHANNELS)
@@ -187,6 +200,33 @@ const [history] = useState<HistoryItem[]>(MOCK_HISTORY)
 const [isSendingSuggestion, setIsSendingSuggestion] = useState(false)
 const suggestions = getSuggestionsForAction(actionId ?? null)
 
+const handleTypeSelect = (typeId: string) => {
+  setTypes((prev) =>
+    prev.map((type) => ({
+      ...type,
+      selected: type.id === typeId,
+    }))
+  )
+}
+
+const handleChannelSelect = (channelValue: string) => {
+  setChannels((prev) =>
+    prev.map((channel) => ({
+      ...channel,
+      selected: channel.value === channelValue,
+    }))
+  )
+}
+
+const handleToneSelect = (toneValue: string) => {
+  setTones((prev) =>
+    prev.map((tone) => ({
+      ...tone,
+      selected: tone.value === toneValue,
+    }))
+  )
+}
+
 const handleSuggestionClick = async (s: MarketingSuggestion) => {
   setIsSendingSuggestion(true)
   try {
@@ -194,7 +234,7 @@ const handleSuggestionClick = async (s: MarketingSuggestion) => {
       tenantId: 'demo-tenant',
       sessionId: 'marketing-panel',
       channel: 'web_chat',
-      message: s.prompt,
+      message: `${s.label}: ${s.description}`,
       metadata: {
         source: 'marketing_panel',
         suggestionId: s.id,
