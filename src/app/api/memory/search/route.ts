@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ORCHESTRATOR_API_URL = process.env.ORCHESTRATOR_API_URL;
-const ORCHESTRATOR_TENANT_ID = process.env.ORCHESTRATOR_TENANT_ID;
-const ORCHESTRATOR_API_TOKEN = process.env.ORCHESTRATOR_API_TOKEN;
+const AGENT_BACKEND_URL = process.env.AGENT_BACKEND_URL;
 
 export const runtime = "nodejs";
 
@@ -12,9 +10,9 @@ function normalizeBaseUrl(url: string | undefined | null): string {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  if (!ORCHESTRATOR_API_URL || !ORCHESTRATOR_TENANT_ID) {
+  if (!AGENT_BACKEND_URL) {
     return NextResponse.json(
-      { error: "Orchestrator backend is not configured" },
+      { error: "AGENT_BACKEND_URL is not configured" },
       { status: 503 }
     );
   }
@@ -30,33 +28,30 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Body must be an object" }, { status: 400 });
   }
 
-  const { query, limit, offset, filters } = body as Record<string, unknown>;
+  const { tenantId, query, limit, offset, filters } = body as Record<string, unknown>;
 
+  if (typeof tenantId !== "string" || !tenantId) {
+    return NextResponse.json({ error: "Missing or invalid tenantId" }, { status: 400 });
+  }
   if (typeof query !== "string" || !query) {
     return NextResponse.json({ error: "Missing or invalid query" }, { status: 400 });
   }
 
   const payload = {
-    tenantId: ORCHESTRATOR_TENANT_ID,
+    tenant_id: tenantId,
     query,
     limit: typeof limit === "number" && Number.isFinite(limit) ? limit : 20,
     offset: typeof offset === "number" && Number.isFinite(offset) ? offset : 0,
     filters: filters && typeof filters === "object" ? filters : undefined,
   };
 
-  const targetUrl = `${normalizeBaseUrl(ORCHESTRATOR_API_URL)}/memory/search`;
-
-  const headers: Record<string, string> = {
-    "content-type": "application/json",
-  };
-
-  if (ORCHESTRATOR_API_TOKEN) {
-    headers["authorization"] = `Bearer ${ORCHESTRATOR_API_TOKEN}`;
-  }
+  const targetUrl = `${normalizeBaseUrl(AGENT_BACKEND_URL)}/memory/search`;
 
   const response = await fetch(targetUrl, {
     method: "POST",
-    headers,
+    headers: {
+      "content-type": "application/json",
+    },
     body: JSON.stringify(payload),
   });
 
