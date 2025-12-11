@@ -1,12 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  /* Flächentöne - Schneeweiß/Neon-Weiß */
-  --ak-color-bg-app: #ffffff;
-  --ak-color-bg-surface: #ffffff;
-  --ak-color-bg-surface-muted: #fafafa;
-  --ak-color-bg-sidebar: rgba(255, 255, 255, 0.95);
-  --ak-color-bg-header: rgba(255, 255, 255, 0.95);
+  /* Layer-Tokens - Apple-like */
+  --ak-color-layer-0: #f5f5f7; /* App-Hintergrund (leicht warmes, Apple-Grau) */
+  --ak-color-layer-1: #ffffff; /* Haupt-Surfaces (Chat, Cards) */
+  --ak-color-layer-2: rgba(255, 255, 255, 0.92); /* Glassy Panels/Sidebars */
+
+  /* Flächentöne - basierend auf Layer-Tokens */
+  --ak-color-bg-app: var(--ak-color-layer-0);
+  --ak-color-bg-surface: var(--ak-color-layer-1);
+  --ak-color-bg-surface-muted: rgba(245, 245, 247, 0.6); /* Leichte Mischung mit layer-0 */
+  --ak-color-bg-sidebar: var(--ak-color-layer-2);
+  --ak-color-bg-header: var(--ak-color-layer-2);
 
   /* Linien - sehr subtil hellgrau */
   --ak-color-border-subtle: rgba(0, 0, 0, 0.06);
@@ -23,11 +28,18 @@
   --ak-color-accent-soft: rgba(115, 115, 115, 0.08);
   --ak-color-accent-strong: rgba(115, 115, 115, 0.15);
 
-  /* Hover & Selection - einheitlich leicht grau */
-  --ak-color-hover: rgba(0, 0, 0, 0.04);
-  --ak-color-hover-strong: rgba(0, 0, 0, 0.06);
-  --ak-color-selected: rgba(0, 0, 0, 0.06);
-  --ak-color-selected-strong: rgba(0, 0, 0, 0.08);
+  /* State-Tokens - spezifische State-Varianten */
+  --ak-color-bg-hover: rgba(0, 0, 0, 0.04);
+  --ak-color-bg-active: rgba(0, 0, 0, 0.08);
+  --ak-color-bg-selected: rgba(0, 0, 0, 0.06);
+  --ak-color-border-focus: rgba(115, 115, 115, 0.3);
+  --ak-color-bg-danger-soft: rgba(239, 68, 68, 0.1);
+
+  /* Legacy Support */
+  --ak-color-hover: var(--ak-color-bg-hover);
+  --ak-color-hover-strong: var(--ak-color-bg-active);
+  --ak-color-selected: var(--ak-color-bg-selected);
+  --ak-color-selected-strong: var(--ak-color-bg-active);
 
   /* Chat-Bubbles - Glassmorphism ohne Border */
   --ak-color-chat-user-bg: rgba(245, 245, 245, 0.8);
@@ -67,6 +79,10 @@
   --ak-motion-duration-slow: 400ms;
   --ak-motion-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Apple's standard ease */
   --ak-motion-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1); /* Smoother for micro-interactions */
+  --ak-motion-ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ak-motion-ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --ak-motion-distance-small: 4px;
+  --ak-motion-distance-medium: 12px;
 
   /* Focus - hellgrau statt blau */
   --ak-ring: 0 0 0 2px rgba(115, 115, 115, 0.15);
@@ -196,6 +212,15 @@ p, span, div, li, td, th, label, input, textarea, select, button {
   box-shadow: var(--ak-shadow-glass);
 }
 
+/* Glass Panel für Input-Leiste (ChatGPT-Style) */
+.ak-glass-panel {
+  background: var(--ak-color-layer-2);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--ak-color-border-fine);
+  box-shadow: var(--ak-shadow-glass);
+}
+
 .ak-card {
   background: var(--ak-color-bg-surface);
   border: 1px solid var(--ak-color-border-subtle);
@@ -304,6 +329,18 @@ openai-chatkit [data-thoughts] {
   30% {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Fade in up animation for suggestions */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(var(--ak-motion-distance-small));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

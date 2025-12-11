@@ -138,19 +138,16 @@ export function ChatShell() {
 
     if (isUser) {
       return (
-        <div key={message.id} className="flex justify-end" style={{ marginLeft: 'auto', maxWidth: '60%' }}>
+        <div key={message.id} className="flex justify-end" style={{ marginLeft: 'auto', maxWidth: '60%', marginRight: '3%' }}>
           <div
             className="flex flex-col gap-2"
             style={{ alignItems: 'flex-end', width: '100%' }}
           >
             <div
-              className="whitespace-pre-wrap leading-relaxed rounded-2xl px-3 py-2 shadow-sm"
+              className="ak-body whitespace-pre-wrap leading-relaxed rounded-xl px-2.5 py-1.5 shadow-sm text-right bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)]"
               style={{
-                fontSize: '17px',
                 color: 'var(--ak-color-text-primary)',
-                textAlign: 'right',
-                backgroundColor: 'var(--ak-color-bg-surface-muted)',
-                border: '1px solid var(--ak-color-border-subtle)',
+                fontSize: '16px',
               }}
             >
               {message.text}
@@ -161,55 +158,39 @@ export function ChatShell() {
     }
 
     return (
-      <div key={message.id} className="flex justify-start" style={{ marginLeft: '3%', maxWidth: '85%' }}>
+      <div 
+        key={message.id} 
+        className="flex justify-start animate-[fadeInUp_0.3s_var(--ak-motion-ease)]" 
+        style={{ marginLeft: '3%', maxWidth: '85%', opacity: 0, animation: 'fadeInUp 0.3s var(--ak-motion-ease) forwards' }}
+      >
         <div
           className="flex flex-col gap-3"
           style={{ alignItems: 'flex-start', width: '100%' }}
         >
-          <div
-            className="prose prose-slate max-w-none leading-relaxed text-left"
-            style={{ 
-              color: 'var(--ak-color-text-primary)',
-              fontSize: '18px',
-            }}
-            >
-            <ReactMarkdown
+          <div className="prose prose-slate max-w-none leading-relaxed text-left" style={{ fontSize: '19px' }}>
+              <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
                 h1: ({ children }) => (
-                  <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '0.5rem', marginTop: '0' }}>
-                    {children}
-                  </h1>
+                  <h1 className="ak-heading mb-2 mt-0">{children}</h1>
                 ),
                 h2: ({ children }) => (
-                  <h2 style={{ fontSize: '26px', fontWeight: 'bold', marginBottom: '0.5rem', marginTop: '0.75rem' }}>
-                    {children}
-                  </h2>
+                  <h2 className="ak-subheading mb-2 mt-3">{children}</h2>
                 ),
                 h3: ({ children }) => (
-                  <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '0.5rem', marginTop: '0.75rem' }}>
-                    {children}
-                  </h3>
+                  <h3 className="ak-subheading mb-2 mt-3">{children}</h3>
                 ),
                 p: ({ children }) => (
-                  <p style={{ marginBottom: '0.75rem', marginTop: '0', lineHeight: '1.6', fontSize: '18px' }}>
-                    {children}
-                  </p>
+                  <p className="ak-body mb-3 mt-0">{children}</p>
                 ),
                 ul: ({ children }) => (
-                  <ul style={{ marginBottom: '0.75rem', marginTop: '0', paddingLeft: '1.5rem' }}>
-                    {children}
-                  </ul>
+                  <ul className="ak-body mb-3 mt-0 pl-6">{children}</ul>
                 ),
                 ol: ({ children }) => (
-                  <ol style={{ marginBottom: '0.75rem', marginTop: '0', paddingLeft: '1.5rem' }}>
-                    {children}
-                  </ol>
+                  <ol className="ak-body mb-3 mt-0 pl-6">{children}</ol>
                 ),
                 li: ({ children }) => (
-                  <li style={{ marginBottom: '0.25rem' }}>
-                    {children}
-                  </li>
+                  <li className="ak-body mb-1">{children}</li>
                 ),
                 table: ({ children }) => (
                   <div style={{ overflowX: 'auto', marginBottom: '1rem', marginTop: '0.5rem' }}>
@@ -239,50 +220,29 @@ export function ChatShell() {
                   </tr>
                 ),
                 th: ({ children }) => (
-                  <th style={{ 
-                    padding: '0.75rem', 
-                    textAlign: 'left', 
-                    fontWeight: '600',
-                    fontSize: '22px',
-                  }}>
+                  <th className="ak-body p-3 text-left font-semibold">
                     {children}
                   </th>
                 ),
                 td: ({ children }) => (
-                  <td style={{ 
-                    padding: '0.75rem',
-                    fontSize: '22px',
-                  }}>
+                  <td className="ak-body p-3">
                     {children}
                   </td>
                 ),
                 code: ({ children, className }) => {
                   const isInline = !className;
                   return isInline ? (
-                    <code style={{ 
-                      backgroundColor: 'var(--ak-color-bg-surface-muted)',
-                      padding: '0.125rem 0.25rem',
-                      borderRadius: '4px',
-                      fontSize: '22px',
-                      fontFamily: 'monospace',
-                    }}>
+                    <code className="ak-body bg-[var(--ak-color-bg-surface-muted)] px-1 py-0.5 rounded font-mono">
                       {children}
                     </code>
                   ) : (
-                    <code className={className} style={{ fontSize: '22px' }}>
+                    <code className={clsx(className, "ak-body")}>
                       {children}
                     </code>
                   );
                 },
                 pre: ({ children }) => (
-                  <pre style={{ 
-                    backgroundColor: 'var(--ak-color-bg-surface-muted)',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    overflowX: 'auto',
-                    marginBottom: '0.75rem',
-                    fontSize: '22px',
-                  }}>
+                  <pre className="ak-body bg-[var(--ak-color-bg-surface-muted)] p-4 rounded-lg overflow-x-auto mb-3">
                     {children}
                   </pre>
                 ),
@@ -321,13 +281,18 @@ export function ChatShell() {
           ) : null}
           {/* Show suggestions as clickable text links after the last assistant message - only if suggestions exist */}
           {isLastAssistantMessage(message) && followUpSuggestions.length > 0 && (
-            <div className="mt-4 flex flex-col gap-2 items-start">
+            <div className="mt-4 flex flex-col gap-2 items-start animate-[fadeInUp_0.3s_var(--ak-motion-ease)]">
               {followUpSuggestions.slice(0, 3).map((suggestion, index) => (
                 <button
                   key={`suggestion-${index}`}
                   type="button"
                   onClick={() => handleQuickCardClick(suggestion)}
-                  className="text-left text-[18px] text-blue-600 hover:text-blue-700 hover:underline transition-colors cursor-pointer"
+                  className="ak-body text-left text-[var(--ak-color-accent)] hover:text-[var(--ak-color-accent-strong)] hover:underline transition-colors cursor-pointer"
+                  style={{ 
+                    animationDelay: `${index * 50}ms`,
+                    animation: 'fadeInUp 0.3s var(--ak-motion-ease) forwards',
+                    opacity: 0
+                  }}
                 >
                   {suggestion}
                 </button>
@@ -528,7 +493,13 @@ export function ChatShell() {
   }
 
   return (
-    <div className="ak-glass flex h-full flex-col gap-4 rounded-2xl px-4 pt-4 pb-2 relative">
+    <div className="flex h-full flex-col gap-4 rounded-2xl px-4 pt-4 pb-2 relative" style={{
+      background: 'rgba(255, 255, 255, 0.3)',
+      backdropFilter: 'blur(20px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+      border: '1px solid var(--ak-color-border-fine)',
+      boxShadow: 'var(--ak-shadow-glass)'
+    }}>
       {/* Bell Icon - top right */}
       <button
         type="button"
@@ -539,10 +510,10 @@ export function ChatShell() {
         <BellIcon className="h-5 w-5" aria-hidden="true" />
       </button>
 
-      <div className="flex-1 overflow-y-auto space-y-6 px-[5%] py-2 pb-28">
+      <div className="flex-1 overflow-y-auto space-y-6 px-[5%] py-2 pb-28 mx-auto max-w-3xl">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
-            <div className="font-bold text-[var(--ak-color-text-primary)]" style={{ fontSize: '40px' }}>
+            <div className="ak-heading font-bold text-[var(--ak-color-text-primary)]" style={{ fontSize: '2.5rem' }}>
               Was kann ich für dich tun?
             </div>
           </div>
@@ -583,28 +554,27 @@ export function ChatShell() {
 
 
       <form onSubmit={handleSend} className="px-[5%]">
-        <div 
-          className="relative flex items-center gap-2 rounded-full border border-gray-300/70 bg-white/70 px-4 py-3 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.25)] backdrop-blur-md transition-all duration-200 hover:shadow-[0_10px_28px_-14px_rgba(0,0,0,0.28)]"
-          style={{ borderWidth: '1px', transform: 'translateY(0)' }}
-        >
+        {/* ChatGPT-like Input Panel - Glass Pill */}
+        <div className="ak-glass-panel relative flex items-center gap-2 rounded-full px-4 py-3 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-within:shadow-[var(--ak-ring-strong)] focus-within:scale-[1.01]">
           {quickHint ? (
-            <div className="absolute left-2 -top-1 translate-y-[-70%] text-[10px] font-semibold text-green-600 flex items-center gap-1">
+            <div className="absolute left-2 -top-1 translate-y-[-70%] ak-caption font-semibold text-[var(--ak-color-success)] flex items-center gap-1">
               <span>{quickHint}</span>
               <button
                 type="button"
                 onClick={() => setQuickHint('')}
-                className="inline-flex h-4 w-4 items-center justify-center rounded-full text-green-600 hover:bg-green-50"
+                className="inline-flex h-4 w-4 items-center justify-center rounded-full text-[var(--ak-color-success)] hover:bg-[var(--ak-color-bg-hover)]"
                 aria-label="Hinweis schließen"
               >
                 ×
               </button>
             </div>
           ) : null}
-          <div className="relative">
+          {/* Left: Ghost Buttons */}
+          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => setIsPlusMenuOpen(!isPlusMenuOpen)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors duration-150"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
               aria-label="Menü öffnen"
             >
               <svg
@@ -626,7 +596,7 @@ export function ChatShell() {
                   className="fixed inset-0 z-[9998]"
                   onClick={() => setIsPlusMenuOpen(false)}
                 />
-                <div className="absolute bottom-full left-0 z-[9999] mb-2 w-64 origin-bottom-left rounded-xl border border-gray-200 bg-white shadow-lg">
+                <div className="ak-glass absolute bottom-full left-0 z-[9999] mb-2 w-64 origin-bottom-left rounded-xl border shadow-lg">
                   <div className="py-1">
                     <button
                       type="button"
@@ -634,7 +604,7 @@ export function ChatShell() {
                         setIsPlusMenuOpen(false)
                         fileInputRef.current?.click()
                       }}
-                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="ak-body w-full px-4 py-3 text-left text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-hover)] transition-colors"
                     >
                       Datei oder Foto hochladen
                     </button>
@@ -644,7 +614,7 @@ export function ChatShell() {
                         setIsPlusMenuOpen(false)
                         setQuickHint('Intensive Internetsuche aktiviert')
                       }}
-                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="ak-body w-full px-4 py-3 text-left text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-hover)] transition-colors"
                     >
                       Intensive Internetsuche
                     </button>
@@ -654,7 +624,7 @@ export function ChatShell() {
                         setIsPlusMenuOpen(false)
                         // TODO: Bild generieren
                       }}
-                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="ak-body w-full px-4 py-3 text-left text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-hover)] transition-colors"
                     >
                       Bild generieren
                     </button>
@@ -664,7 +634,7 @@ export function ChatShell() {
                         setIsPlusMenuOpen(false)
                         // TODO: Lernmodus
                       }}
-                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="ak-body w-full px-4 py-3 text-left text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-hover)] transition-colors"
                     >
                       Lernmodus
                     </button>
@@ -673,14 +643,16 @@ export function ChatShell() {
               </>
             )}
           </div>
+          {/* Middle: Input */}
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Stelle irgendeine Frage"
             ref={inputRef}
-            className="flex-1 border-none bg-transparent text-[15px] text-gray-900 placeholder:text-gray-500 focus-visible:outline-none"
+            className="ak-body flex-1 border-none bg-transparent text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-muted)] focus-visible:outline-none"
           />
+          {/* Right: Mic & Send Buttons */}
           <button
             type="button"
             onMouseDown={(e) => {
@@ -752,8 +724,8 @@ export function ChatShell() {
               isLongPressRef.current = false
             }}
             className={clsx(
-              "inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-all duration-200 hover:translate-y-[-1px] active:translate-y-[0px]",
-              isMicrophoneActive && "ring-2 ring-red-500 ring-offset-2"
+              "inline-flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px]",
+              isMicrophoneActive && "ring-2 ring-[var(--ak-color-bg-danger-soft)] ring-offset-2"
             )}
             aria-label="Mikrofon"
           >
@@ -772,17 +744,17 @@ export function ChatShell() {
               <line x1="8" y1="23" x2="16" y2="23" />
             </svg>
           </button>
+          {/* Right: Send Button - Accent Circle */}
           <button
             type="submit"
             disabled={isSending || !input.trim()}
             className={clsx(
-              "inline-flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-all duration-200 hover:translate-y-[-1px] active:translate-y-[0px]",
+              "inline-flex h-8 w-8 items-center justify-center rounded-full shadow-[var(--ak-shadow-soft)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px] active:scale-95",
               input.trim()
-                ? "bg-green-500 border-black border-opacity-20"
-                : "bg-white border-black border-opacity-30",
-              "hover:opacity-90 disabled:opacity-60"
+                ? "bg-[var(--ak-color-accent)] text-white hover:opacity-90"
+                : "bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-muted)] border border-[var(--ak-color-border-subtle)]",
+              "disabled:opacity-60"
             )}
-            style={{ borderWidth: '1px' }}
             aria-label="Senden"
           >
             <svg
@@ -794,7 +766,7 @@ export function ChatShell() {
               strokeLinejoin="round"
               className={clsx(
                 "h-4 w-4",
-                input.trim() ? "text-white" : "text-black"
+                input.trim() ? "text-white" : "text-[var(--ak-color-text-primary)]"
               )}
             >
               <path d="M5 12h14" />

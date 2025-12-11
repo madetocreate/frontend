@@ -245,8 +245,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
   return (
     <div className="flex h-screen bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)]">
-      <aside className="ak-glass flex w-16 flex-col items-center gap-y-3 py-4 text-slate-700 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white ak-caption font-semibold text-slate-700 shadow-sm">
+      <aside className="ak-glass flex w-16 flex-col items-center gap-y-3 py-4 text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--ak-color-bg-surface)] ak-caption font-semibold text-[var(--ak-color-text-secondary)] shadow-sm">
           <span className="text-xs">AK</span>
         </div>
         <nav className="mt-4 flex flex-1 flex-col items-center gap-y-3">
@@ -272,10 +272,10 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     e.currentTarget.style.setProperty('--mouse-y', `${y}%`)
                   }}
                   className={clsx(
-                    'ak-sidebar-button flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-slate-500 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
+                    'ak-sidebar-button flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
                     isActive
-                      ? 'bg-[var(--ak-color-selected)] text-[var(--ak-color-text-primary)] shadow-sm border-[var(--ak-color-border-subtle)]'
-                      : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-hover)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
+                      ? 'bg-[var(--ak-color-bg-selected)] text-[var(--ak-color-text-primary)] shadow-sm border-[var(--ak-color-border-subtle)]'
+                      : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
                   )}
                 >
                   <span className="sr-only">{mod.label}</span>
@@ -339,7 +339,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
               style={leftDrawerStyle}
             >
               <div className="flex items-center justify-between px-3 py-2">
-                <div className="truncate text-sm font-medium text-slate-900">
+                <div className="truncate ak-caption font-medium text-[var(--ak-color-text-primary)]">
                   {activeModuleToken === 'settings' && selectedSettingsCategory === 'memory_crm'
                     ? 'Speicher & CRM'
                     : getModuleLabel(activeModuleToken)}
@@ -347,7 +347,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 <button
                   type="button"
                   onClick={() => setLeftDrawerOpen(false)}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm hover:bg-[var(--ak-color-hover)] hover:text-[var(--ak-color-text-primary)] transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] shadow-sm hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
                 >
                   <span className="sr-only">Panel einklappen</span>
                   <span aria-hidden="true" className="text-xs">
@@ -355,7 +355,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   </span>
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto text-sm text-slate-600">
+              <div className="flex-1 overflow-y-auto ak-body text-[var(--ak-color-text-secondary)]">
                 {activeModuleToken === 'chat' ? (
                   <ChatSidebarContent />
                 ) : activeModuleToken === 'inbox' ? (
@@ -370,9 +370,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   )
                 ) : (
                   <>
-                    <p className="text-slate-500">
+                    <p className="ak-body text-[var(--ak-color-text-muted)]">
                       Hier kommen später die Widgets für{' '}
-                      <span className="font-medium text-slate-900">
+                      <span className="font-medium text-[var(--ak-color-text-primary)]">
                         {getModuleLabel(activeModuleToken)}
                       </span>{' '}
                       hin.
@@ -405,14 +405,14 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 <button
                   type="button"
                   onClick={handleCloseDetails}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm hover:bg-[var(--ak-color-hover)] hover:text-[var(--ak-color-text-primary)] transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] shadow-sm hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
                 >
                   <span className="sr-only">Detailpanel einklappen</span>
                   <span aria-hidden="true" className="text-xs">
                     ›
                   </span>
                 </button>
-                <div className="truncate text-sm font-medium text-slate-900">
+                <div className="truncate ak-caption font-medium text-[var(--ak-color-text-primary)]">
                   {showNotifications
                     ? 'Benachrichtigungen'
                     : activeModuleToken === 'inbox'
@@ -442,9 +442,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   <AutomationDetailPanel workflowId={selectedAutomationItem} />
                 ) : (
                   <div className="space-y-2">
-                    <p className="text-slate-500">
+                    <p className="ak-body text-[var(--ak-color-text-muted)]">
                       Hier erscheinen später Detailansichten für{' '}
-                      <span className="font-medium text-slate-900">
+                      <span className="font-medium text-[var(--ak-color-text-primary)]">
                         {getModuleLabel(activeModuleToken)}
                       </span>
                       .
