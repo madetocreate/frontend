@@ -21,31 +21,38 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "File too large" }, { status: 413 });
   }
 
-  try {
-    // Weiterleitung an Backend für Transkription
-    const backendFormData = new FormData();
-    backendFormData.append("file", file);
+    try {
+      // Weiterleitung an Backend für Transkription
+      const backendFormData = new FormData();
+      backendFormData.append("file", file);
 
-    const response = await fetch(`${BACKEND_URL}/audio/transcribe`, {
-      method: "POST",
-      body: backendFormData,
-    });
+      const response = await fetch(`${BACKEND_URL}/audio/transcribe`, {
+        method: "POST",
+        body: backendFormData,
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => "Backend error");
+      if (!response.ok) {
+        let errorDetail = "Transcription failed";
+        try {
+          const errorJson = await response.json();
+          errorDetail = errorJson.detail || errorJson.error || errorDetail;
+        } catch {
+          const errorText = await response.text().catch(() => "");
+          errorDetail = errorText || errorDetail;
+        }
+        return NextResponse.json(
+          { error: errorDetail },
+          { status: response.status }
+        );
+      }
+
+      const result = await response.json();
+      return NextResponse.json(result);
+    } catch (error) {
+      console.error("Transcription error:", error);
       return NextResponse.json(
-        { error: errorText || "Transcription failed" },
-        { status: response.status }
+        { error: "Failed to connect to backend" },
+        { status: 503 }
       );
     }
-
-    const result = await response.json();
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error("Transcription error:", error);
-    return NextResponse.json(
-      { error: "Failed to connect to backend" },
-      { status: 503 }
-    );
-  }
 }

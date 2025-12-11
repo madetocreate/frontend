@@ -93,8 +93,15 @@ export function useDictation(options: UseDictationOptions = {}) {
           })
 
           if (!response.ok) {
-            const message = await response.text().catch(() => '')
-            throw new Error(message || 'Transkription fehlgeschlagen')
+            let errorMessage = 'Transkription fehlgeschlagen'
+            try {
+              const errorJson = await response.json()
+              errorMessage = errorJson.error || errorJson.detail || errorMessage
+            } catch {
+              const message = await response.text().catch(() => '')
+              errorMessage = message || errorMessage
+            }
+            throw new Error(errorMessage)
           }
 
           const json = (await response.json()) as { text?: string }
