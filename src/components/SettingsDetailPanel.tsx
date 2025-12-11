@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 
-export type SettingsCategory = 'general' | 'notifications' | 'personalization' | 'apps_connectors' | 'schedules' | 'data_controls' | 'security' | 'parental' | 'account'
+export type SettingsCategory = 'general' | 'memory_crm' | 'notifications' | 'personalization' | 'apps_connectors' | 'schedules' | 'data_controls' | 'security' | 'parental' | 'account'
 
 type GeneralSettings = {
   appearance: {
@@ -96,6 +96,7 @@ export function SettingsDetailPanel({ category }: SettingsDetailPanelProps) {
     // Für andere Kategorien zeigen wir Platzhalter-Content
     const categoryLabels: Record<SettingsCategory, string> = {
       general: 'Allgemein',
+      memory_crm: 'Speicher & CRM',
       notifications: 'Benachrichtigungen',
       personalization: 'Personalisierung',
       apps_connectors: 'Apps & Konnektoren',

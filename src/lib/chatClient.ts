@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4000";
+  process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
 const CHAT_STREAM_URL =
   process.env.NEXT_PUBLIC_CHAT_STREAM_URL ?? `${API_BASE_URL}/chat/stream`;
 const CHAT_HTTP_URL =

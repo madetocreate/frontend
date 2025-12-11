@@ -4,6 +4,7 @@ import { useState } from 'react'
 import clsx from 'clsx'
 import {
   Cog6ToothIcon,
+  ArchiveBoxIcon,
   EnvelopeIcon,
   SparklesIcon,
   CodeBracketSquareIcon,
@@ -16,6 +17,7 @@ import {
 
 type SettingsCategory =
   | 'general'
+  | 'memory_crm'
   | 'notifications'
   | 'personalization'
   | 'apps_connectors'
@@ -33,6 +35,7 @@ type CategoryConfig = {
 
 const CATEGORIES: CategoryConfig[] = [
   { id: 'general', label: 'Allgemein', icon: Cog6ToothIcon },
+  { id: 'memory_crm', label: 'Speicher & CRM', icon: ArchiveBoxIcon },
   { id: 'notifications', label: 'Benachrichtigungen', icon: EnvelopeIcon },
   { id: 'personalization', label: 'Personalisierung', icon: SparklesIcon },
   { id: 'apps_connectors', label: 'Apps & Konnektoren', icon: CodeBracketSquareIcon },

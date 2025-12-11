@@ -7,34 +7,20 @@ import clsx from 'clsx'
 import {
   ChatBubbleLeftRightIcon,
   InboxIcon,
-  MegaphoneIcon,
-  CalendarDaysIcon,
-  Cog6ToothIcon,
   ArchiveBoxIcon,
-  NewspaperIcon,
-  PhoneIcon,
   BoltIcon,
 } from '@heroicons/react/24/outline'
 import { ChatSidebarContent } from '@/components/chat/ChatSidebarContent'
-import { MarketingQuickActionsWidget } from '@/components/MarketingQuickActionsWidget'
 import { InboxDrawerWidget } from '@/components/InboxDrawerWidget'
-import { NewsSidebarWidget } from '@/components/NewsSidebarWidget'
 import type { InboxItem } from '@/components/InboxDrawerWidget'
 import { InboxDetailPanel } from '@/components/InboxDetailPanel'
 import { NotificationsDetailPanel } from '@/components/NotificationsDetailPanel'
-import { CalendarSidebarWidget } from '@/components/calendar/CalendarSidebarWidget'
-import { CalendarDetailPanel } from '@/components/calendar/CalendarDetailPanel'
-import { ProfileMenu, type ProfileMenuAction, type ProfileUserState } from '@/components/ProfileMenu'
+import type { ProfileUserState } from '@/components/ProfileMenu'
 import { SettingsSidebarWidget } from '@/components/SettingsSidebarWidget'
-import { AutomationQuickActionsWidget } from '@/components/AutomationQuickActionsWidget'
-import { NewsDetailPanel } from '@/components/NewsDetailPanel'
-import type { NewsStory } from '@/components/NewsSidebarWidget'
-import { SettingsDetailPanel } from '@/components/SettingsDetailPanel'
-import { TelephonySidebarWidget, type TelephonyItem } from '@/components/TelephonySidebarWidget'
-import { TelephonyDetailPanel } from '@/components/TelephonyDetailPanel'
+import { SettingsDetailPanel, type SettingsCategory } from '@/components/SettingsDetailPanel'
 import { MemorySidebarWidget, type MemoryCategory } from '@/components/MemorySidebarWidget'
 import { MemoryDetailPanel } from '@/components/MemoryDetailPanel'
-import { MarketingDetailPanel } from '@/components/MarketingDetailPanel'
+import { AutomationQuickActionsWidget } from '@/components/AutomationQuickActionsWidget'
 import { AutomationDetailPanel } from '@/components/AutomationDetailPanel'
 
 
@@ -42,12 +28,7 @@ import { AutomationDetailPanel } from '@/components/AutomationDetailPanel'
 type WorkspaceModuleToken =
   | 'chat'
   | 'inbox'
-  | 'news'
-  | 'memory'
-  | 'marketing'
-  | 'calendar'
   | 'automation'
-  | 'telephony'
   | 'settings'
 
 type ModuleConfig = {
@@ -60,13 +41,7 @@ type ModuleConfig = {
 const MODULES: ModuleConfig[] = [
   { id: 'chat', label: 'Chat', icon: ChatBubbleLeftRightIcon, href: '/' },
   { id: 'inbox', label: 'Posteingang', icon: InboxIcon },
-  { id: 'news', label: 'News', icon: NewspaperIcon, href: '/news' },
-  { id: 'memory', label: 'Speicher & CRM', icon: ArchiveBoxIcon, href: '/memory' },
-  { id: 'marketing', label: 'Marketing', icon: MegaphoneIcon },
-  { id: 'calendar', label: 'Kalender', icon: CalendarDaysIcon },
-  { id: 'telephony', label: 'Telephone Bot', icon: PhoneIcon },
-  { id: 'automation', label: 'Automatisierung', icon: BoltIcon },
-  { id: 'settings', label: 'Einstellungen', icon: Cog6ToothIcon },
+  { id: 'automation', label: 'Automation', icon: BoltIcon },
 ]
 
 const LEFT_DRAWER_WIDTH = 336 // 20% kleiner als 420
@@ -76,9 +51,6 @@ function getModuleLabel(token: WorkspaceModuleToken): string {
   if (match) return match.label
 
   if (token === 'settings') return 'Einstellungen'
-  if (token === 'news') return 'News'
-  if (token === 'telephony') return 'Telephone Bot'
-
   return token
 }
 
@@ -90,22 +62,17 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const router = useRouter()
   const pathname = usePathname()
 
-  const initialModule: WorkspaceModuleToken =
-    pathname === '/memory' ? 'memory' : pathname === '/news' ? 'news' : 'chat'
+  const initialModule: WorkspaceModuleToken = 'chat'
 
   const [activeModuleToken, setActiveModuleToken] =
     useState<WorkspaceModuleToken>(initialModule)
   const [leftDrawerOpen, setLeftDrawerOpen] = useState(false)
   const [rightDrawerOpen, setRightDrawerOpen] = useState(false)
   const [selectedInboxItem, setSelectedInboxItem] = useState<InboxItem | null>(null)
-  const [selectedNewsItem, setSelectedNewsItem] = useState<NewsStory | null>(null)
-  const [selectedSettingsCategory, setSelectedSettingsCategory] = useState<string | null>(null)
-  const [selectedTelephonyItem, setSelectedTelephonyItem] = useState<TelephonyItem | null>(null)
-  const [selectedMarketingItem, setSelectedMarketingItem] = useState<{ id: string; title: string } | null>(null)
+  const [selectedSettingsCategory, setSelectedSettingsCategory] = useState<SettingsCategory | null>(null)
   const [selectedAutomationItem, setSelectedAutomationItem] = useState<string | null>(null)
   const [selectedMemoryCategory, setSelectedMemoryCategory] = useState<MemoryCategory | null>(null)
   const [showNotifications, setShowNotifications] = useState(false)
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
 
   const profileUser: ProfileUserState = {
     isAuthenticated: false,
@@ -131,37 +98,11 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setRightDrawerOpen(false)
 
     setSelectedInboxItem(null)
-    setSelectedNewsItem(null)
     setSelectedSettingsCategory(null)
-    setSelectedTelephonyItem(null)
-    setSelectedMarketingItem(null)
     setSelectedAutomationItem(null)
     setSelectedMemoryCategory(null)
   }
 
-  const handleProfileMenuAction = (action: ProfileMenuAction) => {
-    switch (action) {
-      case 'settings': {
-        handleModuleClick('settings')
-        break
-      }
-      case 'memoryCrm': {
-        router.push('/memory')
-        setActiveModuleToken('memory')
-        setLeftDrawerOpen(false)
-        setRightDrawerOpen(false)
-        break
-      }
-      case 'personalization':
-      case 'help':
-      case 'logout':
-      case 'login':
-      default:
-        break
-    }
-
-    setIsProfileMenuOpen(false)
-  }
 
   // Event-Listener für Modul-Öffnung von außen (z.B. Bell-Icon)
   useEffect(() => {
@@ -209,69 +150,10 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     }
     
     setSelectedInboxItem(item)
-    setSelectedNewsItem(null)
     setSelectedSettingsCategory(null)
-    setSelectedTelephonyItem(null)
-    setSelectedMarketingItem(null)
     setSelectedAutomationItem(null)
     setSelectedMemoryCategory(null)
     handleOpenDetails()
-  }
-
-  const handleNewsItemClick = (story: NewsStory) => {
-    // Wenn dieselbe Story nochmal geklickt wird, schließe den Drawer
-    if (selectedNewsItem?.id === story.id && rightDrawerOpen) {
-      setRightDrawerOpen(false)
-      setSelectedNewsItem(null)
-      return
-    }
-    
-    setSelectedNewsItem(story)
-    setSelectedInboxItem(null)
-    setSelectedSettingsCategory(null)
-    setSelectedTelephonyItem(null)
-    setSelectedMarketingItem(null)
-    setSelectedAutomationItem(null)
-    setSelectedMemoryCategory(null)
-    handleOpenDetails()
-  }
-
-  const handleTelephonyItemClick = (item: TelephonyItem) => {
-    if (selectedTelephonyItem?.id === item.id && rightDrawerOpen) {
-      setRightDrawerOpen(false)
-      setSelectedTelephonyItem(null)
-    } else {
-      setSelectedTelephonyItem(item)
-      setSelectedInboxItem(null)
-      setSelectedNewsItem(null)
-      setSelectedSettingsCategory(null)
-      setSelectedMarketingItem(null)
-      setSelectedAutomationItem(null)
-      setSelectedMemoryCategory(null)
-      handleOpenDetails()
-    }
-  }
-
-  const handleMarketingItemClick = (actionId: string) => {
-    // Erstelle ein MarketingItem aus der Action-ID
-    const marketingItem = {
-      id: actionId,
-      title: actionId,
-    }
-    
-    if (selectedMarketingItem?.id === marketingItem.id && rightDrawerOpen) {
-      setRightDrawerOpen(false)
-      setSelectedMarketingItem(null)
-    } else {
-      setSelectedMarketingItem(marketingItem)
-      setSelectedInboxItem(null)
-      setSelectedNewsItem(null)
-      setSelectedSettingsCategory(null)
-      setSelectedTelephonyItem(null)
-      setSelectedAutomationItem(null)
-      setSelectedMemoryCategory(null)
-      handleOpenDetails()
-    }
   }
 
   const handleAutomationItemClick = (workflowId: string) => {
@@ -281,10 +163,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     } else {
       setSelectedAutomationItem(workflowId)
       setSelectedInboxItem(null)
-      setSelectedNewsItem(null)
       setSelectedSettingsCategory(null)
-      setSelectedTelephonyItem(null)
-      setSelectedMarketingItem(null)
       setSelectedMemoryCategory(null)
       handleOpenDetails()
     }
@@ -297,28 +176,40 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     } else {
       setSelectedMemoryCategory(category)
       setSelectedInboxItem(null)
-      setSelectedNewsItem(null)
-      setSelectedSettingsCategory(null)
-      setSelectedTelephonyItem(null)
-      setSelectedMarketingItem(null)
       setSelectedAutomationItem(null)
+      // Wenn wir in Settings sind und memory_crm ausgewählt ist, behalten wir das bei
+      if (activeModuleToken === 'settings' && selectedSettingsCategory === 'memory_crm') {
+        // Settings-Kategorie bleibt memory_crm
+      } else {
+        // Sonst setzen wir Settings-Kategorie auf memory_crm und öffnen Settings
+        setSelectedSettingsCategory('memory_crm')
+        setActiveModuleToken('settings')
+        setLeftDrawerOpen(true)
+      }
       handleOpenDetails()
     }
   }
 
-  const handleSettingsCategorySelect = (category: string | null) => {
+  const handleSettingsCategorySelect = (category: SettingsCategory | null) => {
     if (selectedSettingsCategory === category && rightDrawerOpen) {
       setRightDrawerOpen(false)
       setSelectedSettingsCategory(null)
+      setSelectedMemoryCategory(null)
     } else {
       setSelectedSettingsCategory(category)
       setSelectedInboxItem(null)
-      setSelectedNewsItem(null)
-      setSelectedTelephonyItem(null)
-      setSelectedMarketingItem(null)
       setSelectedAutomationItem(null)
-      setSelectedMemoryCategory(null)
-      if (category) {
+      // Wenn memory_crm ausgewählt wird, Memory-Category zurücksetzen
+      if (category !== 'memory_crm') {
+        setSelectedMemoryCategory(null)
+      }
+      if (category === 'memory_crm') {
+        // Für memory_crm öffnen wir den rechten Drawer nur wenn eine Memory-Category ausgewählt ist
+        // Der linke Drawer zeigt bereits MemorySidebarWidget
+        if (!selectedMemoryCategory) {
+          setRightDrawerOpen(false)
+        }
+      } else if (category) {
         handleOpenDetails()
       } else {
         setRightDrawerOpen(false)
@@ -330,10 +221,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setRightDrawerOpen(false)
     setShowNotifications(false)
     setSelectedInboxItem(null)
-    setSelectedNewsItem(null)
     setSelectedSettingsCategory(null)
-    setSelectedTelephonyItem(null)
-    setSelectedMarketingItem(null)
     setSelectedAutomationItem(null)
     setSelectedMemoryCategory(null)
   }
@@ -343,10 +231,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     rightDrawerOpen &&
     (showNotifications ||
       selectedInboxItem !== null ||
-      selectedNewsItem !== null ||
       selectedSettingsCategory !== null ||
-      selectedTelephonyItem !== null ||
-      selectedMarketingItem !== null ||
       selectedAutomationItem !== null ||
       selectedMemoryCategory !== null)
 
@@ -404,10 +289,10 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
           <div className="relative">
             <button
               type="button"
-              onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+              onClick={() => handleModuleClick('settings')}
               className={clsx(
                 'flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-slate-500 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
-                (activeModuleToken === 'settings' && leftDrawerOpen) || isProfileMenuOpen
+                activeModuleToken === 'settings' && leftDrawerOpen
                   ? 'bg-slate-100 text-slate-900 shadow-sm border-slate-200'
                   : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-bg-surface)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
               )}
@@ -417,17 +302,6 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 {profileUser.initials ?? 'N'}
               </span>
             </button>
-            {isProfileMenuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setIsProfileMenuOpen(false)}
-                />
-                <div className="absolute bottom-0 left-full z-50 mb-3 ml-3 w-80 origin-bottom-left">
-                  <ProfileMenu user={profileUser} onAction={handleProfileMenuAction} />
-                </div>
-              </>
-            )}
           </div>
         </div>
       </aside>
@@ -458,7 +332,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
             >
               <div className="flex items-center justify-between px-3 py-2">
                 <div className="truncate text-sm font-medium text-slate-900">
-                  {getModuleLabel(activeModuleToken)}
+                  {activeModuleToken === 'settings' && selectedSettingsCategory === 'memory_crm'
+                    ? 'Speicher & CRM'
+                    : getModuleLabel(activeModuleToken)}
                 </div>
                 <button
                   type="button"
@@ -476,20 +352,14 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   <ChatSidebarContent />
                 ) : activeModuleToken === 'inbox' ? (
                   <InboxDrawerWidget onItemClick={handleInboxItemClick} />
-                ) : activeModuleToken === 'calendar' ? (
-                  <CalendarSidebarWidget />
-                ) : activeModuleToken === 'marketing' ? (
-                  <MarketingQuickActionsWidget onSelectAction={handleMarketingItemClick} />
                 ) : activeModuleToken === 'automation' ? (
                   <AutomationQuickActionsWidget onSelectAction={handleAutomationItemClick} />
                 ) : activeModuleToken === 'settings' ? (
-                  <SettingsSidebarWidget onCategorySelect={handleSettingsCategorySelect} />
-                ) : activeModuleToken === 'news' ? (
-                  <NewsSidebarWidget onStoryClick={handleNewsItemClick} />
-                ) : activeModuleToken === 'telephony' ? (
-                  <TelephonySidebarWidget onItemClick={handleTelephonyItemClick} />
-                ) : activeModuleToken === 'memory' ? (
-                  <MemorySidebarWidget onCategoryClick={handleMemoryCategoryClick} />
+                  selectedSettingsCategory === 'memory_crm' ? (
+                    <MemorySidebarWidget onCategoryClick={handleMemoryCategoryClick} />
+                  ) : (
+                    <SettingsSidebarWidget onCategorySelect={handleSettingsCategorySelect} />
+                  )
                 ) : (
                   <>
                     <p className="text-slate-500">
@@ -539,19 +409,13 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     ? 'Benachrichtigungen'
                     : activeModuleToken === 'inbox'
                       ? selectedInboxItem?.title ?? 'Details'
-                      : activeModuleToken === 'news'
-                        ? selectedNewsItem?.title ?? 'Details'
-                        : activeModuleToken === 'settings'
-                          ? (selectedSettingsCategory ? 'Allgemein' : 'Einstellungen')
-                          : activeModuleToken === 'telephony'
-                            ? selectedTelephonyItem?.title ?? 'Details'
-                            : activeModuleToken === 'memory'
-                              ? selectedMemoryCategory?.title ?? 'Wissen & Memory'
-                              : activeModuleToken === 'marketing'
-                                ? 'Marketing-Aktionen'
-                                : activeModuleToken === 'automation'
-                                  ? 'Automatisierung'
-                                  : getModuleLabel(activeModuleToken)}
+                      : activeModuleToken === 'settings'
+                        ? selectedSettingsCategory === 'memory_crm'
+                          ? selectedMemoryCategory?.title ?? 'Speicher & CRM'
+                          : (selectedSettingsCategory ? 'Allgemein' : 'Einstellungen')
+                        : activeModuleToken === 'automation'
+                              ? 'Modules'
+                              : getModuleLabel(activeModuleToken)}
                 </div>
                 <div className="w-7" />
               </div>
@@ -560,18 +424,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   <NotificationsDetailPanel />
                 ) : activeModuleToken === 'inbox' ? (
                   <InboxDetailPanel item={selectedInboxItem} />
-                ) : activeModuleToken === 'news' ? (
-                  <NewsDetailPanel story={selectedNewsItem} />
-                ) : activeModuleToken === 'calendar' ? (
-                  <CalendarDetailPanel />
                 ) : activeModuleToken === 'settings' ? (
-                  <SettingsDetailPanel category={selectedSettingsCategory} />
-                ) : activeModuleToken === 'telephony' ? (
-                  <TelephonyDetailPanel item={selectedTelephonyItem} />
-                ) : activeModuleToken === 'memory' ? (
-                  <MemoryDetailPanel category={selectedMemoryCategory} />
-                ) : activeModuleToken === 'marketing' ? (
-                  <MarketingDetailPanel actionId={selectedMarketingItem?.id ?? null} />
+                  selectedSettingsCategory === 'memory_crm' ? (
+                    <MemoryDetailPanel category={selectedMemoryCategory} />
+                  ) : (
+                    <SettingsDetailPanel category={selectedSettingsCategory} />
+                  )
                 ) : activeModuleToken === 'automation' ? (
                   <AutomationDetailPanel workflowId={selectedAutomationItem} />
                 ) : (

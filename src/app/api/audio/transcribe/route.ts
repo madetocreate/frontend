@@ -1,21 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
 
 export const runtime = "nodejs";
 
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
-const ALLOWED_MIME_PREFIX = "audio/";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const apiKey = process.env.OPENAI_API_KEY;
-
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "OPENAI_API_KEY is not configured" },
-      { status: 503 }
-    );
-  }
-
   const formData = await req.formData();
   const file = formData.get("file");
 
@@ -23,7 +13,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Missing audio file" }, { status: 400 });
   }
 
-  if (!file.type || !file.type.startsWith(ALLOWED_MIME_PREFIX)) {
+  if (!file.type || !file.type.startsWith("audio/")) {
     return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
   }
 
@@ -31,12 +21,31 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "File too large" }, { status: 413 });
   }
 
-  const client = new OpenAI({ apiKey });
+  try {
+    // Weiterleitung an Backend für Transkription
+    const backendFormData = new FormData();
+    backendFormData.append("file", file);
 
-  const transcription = await client.audio.transcriptions.create({
-    file,
-    model: "gpt-4o-transcribe",
-  });
+    const response = await fetch(`${BACKEND_URL}/audio/transcribe`, {
+      method: "POST",
+      body: backendFormData,
+    });
 
-  return NextResponse.json(transcription);
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Backend error");
+      return NextResponse.json(
+        { error: errorText || "Transcription failed" },
+        { status: response.status }
+      );
+    }
+
+    const result = await response.json();
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Transcription error:", error);
+    return NextResponse.json(
+      { error: "Failed to connect to backend" },
+      { status: 503 }
+    );
+  }
 }

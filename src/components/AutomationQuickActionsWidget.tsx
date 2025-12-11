@@ -59,8 +59,8 @@ export const AutomationQuickActionsWidget: FC<AutomationQuickActionsWidgetProps>
 }) => {
   return (
     <QuickActionsWidget
-      title="Automatisierungs-Schnellaktionen"
-      subtitle="Automatisiere wiederkehrende Aufgaben und Prozesse effizienter."
+      title=""
+      subtitle=""
       source="automation"
       columns={1}
       actions={AUTOMATION_QUICK_ACTIONS}
