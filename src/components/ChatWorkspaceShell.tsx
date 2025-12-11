@@ -264,8 +264,15 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 <button
                   type="button"
                   onClick={() => handleModuleClick(mod.id)}
+                  onMouseMove={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    const x = ((e.clientX - rect.left) / rect.width) * 100
+                    const y = ((e.clientY - rect.top) / rect.height) * 100
+                    e.currentTarget.style.setProperty('--mouse-x', `${x}%`)
+                    e.currentTarget.style.setProperty('--mouse-y', `${y}%`)
+                  }}
                   className={clsx(
-                    'flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-slate-500 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
+                    'ak-sidebar-button flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-slate-500 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
                     isActive
                       ? 'bg-slate-100 text-slate-900 shadow-sm border-slate-200'
                       : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-bg-surface)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
@@ -286,8 +293,15 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
             <button
               type="button"
               onClick={() => handleModuleClick('settings')}
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                const x = ((e.clientX - rect.left) / rect.width) * 100
+                const y = ((e.clientY - rect.top) / rect.height) * 100
+                e.currentTarget.style.setProperty('--mouse-x', `${x}%`)
+                e.currentTarget.style.setProperty('--mouse-y', `${y}%`)
+              }}
               className={clsx(
-                'flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-slate-500 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
+                'ak-sidebar-button flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-slate-500 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
                 activeModuleToken === 'settings' && leftDrawerOpen
                   ? 'bg-slate-100 text-slate-900 shadow-sm border-slate-200'
                   : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-bg-surface)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'

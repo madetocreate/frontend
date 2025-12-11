@@ -53,10 +53,12 @@
   --ak-space-shell-padding: 1.5rem;
   --ak-space-panel-gap: 1rem;
 
-  /* Motion */
-  --ak-motion-duration-fast: 160ms;
-  --ak-motion-duration: 220ms;
-  --ak-motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Motion - Apple-like, sanfter und länger */
+  --ak-motion-duration-fast: 200ms;
+  --ak-motion-duration: 300ms;
+  --ak-motion-duration-slow: 400ms;
+  --ak-motion-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Apple's standard ease */
+  --ak-motion-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1); /* Smoother for micro-interactions */
 
   /* Focus - hellgrau statt blau */
   --ak-ring: 0 0 0 2px rgba(115, 115, 115, 0.15);
@@ -285,4 +287,47 @@ openai-chatkit [data-thoughts] {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* Micro-motion: Magnet-Effekt für Cursor bei Buttons */
+@keyframes magnet-pull {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Sanfte Hover-Animation für Sidebar-Buttons */
+.ak-sidebar-button {
+  position: relative;
+  transition: all var(--ak-motion-duration) var(--ak-motion-ease);
+}
+
+.ak-sidebar-button::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  opacity: 0;
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(115, 115, 115, 0.1) 0%, transparent 70%);
+  transition: opacity var(--ak-motion-duration) var(--ak-motion-ease);
+  pointer-events: none;
+}
+
+.ak-sidebar-button:hover::before {
+  opacity: 1;
+}
+
+.ak-sidebar-button:hover {
+  transform: scale(1.05);
+}
+
+.ak-sidebar-button:active {
+  transform: scale(0.98);
+  transition-duration: var(--ak-motion-duration-fast);
 }

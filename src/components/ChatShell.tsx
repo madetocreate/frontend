@@ -135,7 +135,6 @@ export function ChatShell() {
 
   const renderMessage = (message: ChatMessage) => {
     const isUser = message.role === 'user'
-    const maxWidth = isUser ? '60%' : '80%'
 
     if (isUser) {
       return (
@@ -147,7 +146,7 @@ export function ChatShell() {
             <div
               className="whitespace-pre-wrap leading-relaxed rounded-2xl px-3 py-2 shadow-sm"
               style={{
-                fontSize: '19px',
+                fontSize: '17px',
                 color: 'var(--ak-color-text-primary)',
                 textAlign: 'right',
                 backgroundColor: 'var(--ak-color-bg-surface-muted)',
@@ -161,40 +160,20 @@ export function ChatShell() {
       )
     }
 
-    // Check if message is short (1-3 sentences) for card display
-    const isShortAnswer = (text: string): boolean => {
-      const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0)
-      return sentences.length >= 1 && sentences.length <= 3 && text.length < 300
-    }
-
-    const shouldShowAsCard = isShortAnswer(message.text) && !message.text.includes('\n\n') && !message.text.includes('```')
-
     return (
-      <div key={message.id} className="flex justify-start">
+      <div key={message.id} className="flex justify-start" style={{ marginLeft: '3%', maxWidth: '85%' }}>
         <div
           className="flex flex-col gap-3"
-          style={{ maxWidth, alignItems: 'flex-start' }}
+          style={{ alignItems: 'flex-start', width: '100%' }}
         >
-          {shouldShowAsCard ? (
-            <div
-              className="rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 px-4 py-3 shadow-sm backdrop-blur-sm max-w-md"
-              style={{
-                color: 'var(--ak-color-text-primary)',
-                fontSize: '18px',
-                lineHeight: '1.6',
-              }}
+          <div
+            className="prose prose-slate max-w-none leading-relaxed text-left"
+            style={{ 
+              color: 'var(--ak-color-text-primary)',
+              fontSize: '18px',
+            }}
             >
-              {message.text}
-            </div>
-          ) : (
-            <div
-              className="prose prose-slate max-w-none leading-relaxed"
-              style={{ 
-                color: 'var(--ak-color-text-primary)',
-                fontSize: '21px',
-              }}
-            >
-              <ReactMarkdown
+            <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
                 h1: ({ children }) => (
@@ -213,7 +192,7 @@ export function ChatShell() {
                   </h3>
                 ),
                 p: ({ children }) => (
-                  <p style={{ marginBottom: '0.75rem', marginTop: '0', lineHeight: '1.6', fontSize: '21px' }}>
+                  <p style={{ marginBottom: '0.75rem', marginTop: '0', lineHeight: '1.6', fontSize: '18px' }}>
                     {children}
                   </p>
                 ),
@@ -332,8 +311,7 @@ export function ChatShell() {
             >
               {message.text}
             </ReactMarkdown>
-            </div>
-          )}
+          </div>
           {Array.isArray(message.uiMessages) && message.uiMessages.length > 0 ? (
             <div className="mt-3 w-full space-y-3">
               {message.uiMessages.map((uiMessage, index) => (
@@ -341,9 +319,9 @@ export function ChatShell() {
               ))}
             </div>
           ) : null}
-          {/* Show suggestions as clickable text links after the last assistant message */}
+          {/* Show suggestions as clickable text links after the last assistant message - only if suggestions exist */}
           {isLastAssistantMessage(message) && followUpSuggestions.length > 0 && (
-            <div className="mt-4 flex flex-col gap-2">
+            <div className="mt-4 flex flex-col gap-2 items-start">
               {followUpSuggestions.slice(0, 3).map((suggestion, index) => (
                 <button
                   key={`suggestion-${index}`}

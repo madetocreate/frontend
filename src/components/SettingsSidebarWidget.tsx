@@ -13,6 +13,7 @@ import {
   KeyIcon,
   UserCircleIcon,
   UserIcon,
+  ShoppingBagIcon,
 } from '@heroicons/react/24/outline'
 
 type SettingsCategory =
@@ -26,6 +27,7 @@ type SettingsCategory =
   | 'security'
   | 'parental'
   | 'account'
+  | 'shop'
 
 type CategoryConfig = {
   id: SettingsCategory
@@ -44,6 +46,7 @@ const CATEGORIES: CategoryConfig[] = [
   { id: 'security', label: 'Sicherheit', icon: KeyIcon },
   { id: 'parental', label: 'Kindersicherung', icon: UserCircleIcon },
   { id: 'account', label: 'Konto', icon: UserIcon },
+  { id: 'shop', label: 'Shop', icon: ShoppingBagIcon },
 ]
 
 type SettingsSidebarWidgetProps = {
@@ -63,7 +66,7 @@ export function SettingsSidebarWidget({ onCategorySelect }: SettingsSidebarWidge
   return (
     <div className="flex h-full flex-col gap-4 px-3 py-3">
       <h2 className="ak-heading">Einstellungen</h2>
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-1">
         {CATEGORIES.map((category) => {
           const Icon = category.icon
           const isActive = selectedCategory === category.id
