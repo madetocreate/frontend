@@ -56,7 +56,7 @@ export function ChatSidebarContent() {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(DEFAULT_THREAD.id);
   const [editingThreadId, setEditingThreadId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState<string>("");
-  const [hydrated, setHydrated] = useState(false);
+  const [, setHydrated] = useState(false); // Track hydration state (setter only, value not used)
 
   // Lade Threads nur auf dem Client nach Hydration
   useEffect(() => {

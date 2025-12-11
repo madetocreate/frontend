@@ -4,6 +4,7 @@ import { useState, FormEvent, useRef, useEffect, useCallback } from "react";
 import clsx from "clsx";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { WidgetRenderer } from "./chat/WidgetRenderer";
 import { sendChatMessageStream, ChatResponse } from "../lib/chatClient";
 import { useDictation } from "../hooks/useDictation";
 import { useRealtimeVoice } from "../hooks/useRealtimeVoice";
@@ -21,16 +22,7 @@ type ThinkingStep = {
   status: "pending" | "active" | "done";
 };
 
-type QuickCard = {
-  id: string;
-  label: string;
-  text: string;
-  type: "suggestion" | "question" | "confirm";
-};
-
-function createSessionId(): string {
-  return "web-session-" + Math.random().toString(36).slice(2);
-}
+// Removed unused QuickCard type and createSessionId function
 
 export function ChatShell() {
   const [tenantId] = useState<string>('demo-tenant')
@@ -42,17 +34,7 @@ export function ChatShell() {
   const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([])
   const [thinkingNote, setThinkingNote] = useState<string | null>(null)
   const [quickCardsVisible, setQuickCardsVisible] = useState(true)
-  const quickCards: QuickCard[] = [
-    { id: 'sg1', label: 'Radar Status', text: 'Zeig mir den Radar-Status und offene Punkte.', type: 'suggestion' },
-    { id: 'sg2', label: '4-Button Widget', text: 'Zeig das Widget mit 4 Buttons und deren Zweck.', type: 'question' },
-    { id: 'sg3', label: 'Tabellen-Check', text: 'Kannst du mir eine Tabelle mit den letzten Fragen bauen?', type: 'question' },
-  ]
-  const suggestionCards = [
-    { id: 'sg1', label: 'Radar Status', text: 'Zeig mir den Radar-Status und offene Punkte.' },
-    { id: 'sg2', label: '4-Button Widget', text: 'Zeig das Widget mit 4 Buttons und deren Zweck.' },
-    { id: 'sg3', label: 'Tabellen-Check', text: 'Kannst du mir eine Tabelle mit den letzten Fragen bauen?' },
-    { id: 'sg4', label: 'Kurzes Briefing', text: 'Fasse die letzten Schritte stichpunktartig zusammen.' },
-  ]
+  const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([])
   
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null)
   const isLongPressRef = useRef(false)
@@ -121,7 +103,13 @@ export function ChatShell() {
     }
     const handleNew = (e: Event) => {
       const detail = (e as CustomEvent).detail as { threadId?: string } | undefined
-      const newId = detail?.threadId || `thread-${Date.now()}`
+      const generateThreadId = () => {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+          return `thread-${crypto.randomUUID()}`
+        }
+        return `thread-${performance.now()}-${Math.random().toString(36).slice(2)}`
+      }
+      const newId = detail?.threadId || generateThreadId()
       currentThreadRef.current = newId
       const loaded = loadMessages(newId)
       setMessages(loaded)
@@ -325,10 +313,12 @@ export function ChatShell() {
               {message.text}
             </ReactMarkdown>
           </div>
-          {message.uiMessages && message.uiMessages.length > 0 ? (
-            <pre className="whitespace-pre-wrap text-[11px] text-[var(--ak-color-text-muted)]">
-              {JSON.stringify(message.uiMessages, null, 2)}
-            </pre>
+          {Array.isArray(message.uiMessages) && message.uiMessages.length > 0 ? (
+            <div className="mt-3 w-full space-y-3">
+              {message.uiMessages.map((uiMessage, index) => (
+                <WidgetRenderer key={index} message={uiMessage} />
+              ))}
+            </div>
           ) : null}
         </div>
       </div>
@@ -338,9 +328,19 @@ export function ChatShell() {
   async function sendMessage(trimmed: string) {
     if (!trimmed || isSending) return
     const threadId = currentThreadRef.current || 'thread-default'
+    
+    // Generate IDs using crypto.randomUUID if available, otherwise use performance.now for uniqueness
+    const generateId = () => {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID()
+      }
+      return `${performance.now()}-${Math.random().toString(36).slice(2)}`
+    }
+    
+    const userMessageId = `user-${generateId()}`
 
     const userMessage: ChatMessage = {
-      id: String(Date.now()) + '-user',
+      id: userMessageId,
       role: 'user',
       text: trimmed,
     }
@@ -354,7 +354,7 @@ export function ChatShell() {
     setIsSending(true)
     setQuickHint('')
 
-    const assistantMessageId = String(Date.now()) + '-assistant'
+    const assistantMessageId = `assistant-${generateId()}`
     const assistantMessage: ChatMessage = {
       id: assistantMessageId,
       role: 'assistant',
@@ -423,6 +423,20 @@ export function ChatShell() {
               return updated
             })
 
+            // Extract follow-up suggestions from response metadata if available
+            interface ResponseData {
+              followUpSuggestions?: string[]
+              follow_up_suggestions?: string[]
+            }
+            const responseData = data as ResponseData
+            const suggestions = responseData.followUpSuggestions || responseData.follow_up_suggestions || []
+            if (Array.isArray(suggestions) && suggestions.length > 0) {
+              setFollowUpSuggestions(suggestions.filter((s: string) => typeof s === 'string' && s.trim().length > 0))
+              setQuickCardsVisible(true)
+            } else {
+              setFollowUpSuggestions([])
+            }
+
             if (typeof window !== 'undefined') {
               const title = makeTitle(trimmed)
               window.dispatchEvent(
@@ -431,7 +445,7 @@ export function ChatShell() {
                     threadId,
                     title,
                     preview: finalContent.slice(0, 120) || trimmed,
-                    lastMessageAt: Date.now(),
+                    lastMessageAt: performance.now(),
                   },
                 })
               )
@@ -506,21 +520,53 @@ export function ChatShell() {
       </div>
 
       {(thinkingSteps.length > 0 || thinkingNote) && (
-        <div className="px-[5%] -mb-1 text-[9px] text-gray-400">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-[9px] uppercase tracking-wide">Denke nach …</span>
-            {thinkingSteps.map((step) => {
-              const state =
-                step.status === "done" ? "✓" :
-                step.status === "active" ? "…" : "•"
-              return (
-                <span key={step.id} className="inline-flex items-center gap-1">
-                  <span className="text-[9px]">{state}</span>
-                  <span>{step.label}</span>
-                </span>
-              )
-            })}
-            {thinkingNote ? <span>{thinkingNote}</span> : null}
+        <div className="px-[5%] mb-2 flex items-center">
+          <div className="flex items-center gap-1">
+            <span 
+              className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 opacity-60"
+              style={{ 
+                animation: 'thinking-dot 1.4s ease-in-out infinite',
+                animationDelay: '0ms'
+              }}
+            ></span>
+            <span 
+              className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 opacity-60"
+              style={{ 
+                animation: 'thinking-dot 1.4s ease-in-out infinite',
+                animationDelay: '200ms'
+              }}
+            ></span>
+            <span 
+              className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 opacity-60"
+              style={{ 
+                animation: 'thinking-dot 1.4s ease-in-out infinite',
+                animationDelay: '400ms'
+              }}
+            ></span>
+          </div>
+        </div>
+      )}
+
+      {quickCardsVisible && followUpSuggestions.length > 0 && (
+        <div className="px-[5%] mb-3">
+          <div className="flex flex-wrap gap-2">
+            {followUpSuggestions.map((suggestion, index) => (
+              <button
+                key={`suggestion-${index}`}
+                type="button"
+                onClick={() => handleQuickCardClick(suggestion)}
+                className="rounded-full border border-gray-200 bg-white/70 text-gray-800 px-4 py-2 text-sm shadow-sm hover:shadow-md transition-all backdrop-blur-md hover:bg-white/90"
+              >
+                <span className="font-medium">{suggestion}</span>
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setQuickCardsVisible(false)}
+              className="rounded-full border border-gray-200 bg-white/70 px-3 py-2 text-xs text-gray-500 hover:bg-gray-100 transition-colors"
+            >
+              Ausblenden
+            </button>
           </div>
         </div>
       )}
@@ -759,41 +805,6 @@ export function ChatShell() {
           }}
         />
       </form>
-      {quickCardsVisible && quickCards.length > 0 && (
-        <div className="px-[5%] pb-3">
-          <div className="mb-1 flex items-center justify-between text-[11px] text-gray-400">
-            <span>Vorschläge</span>
-            <button
-              type="button"
-              onClick={() => setQuickCardsVisible(false)}
-              className="rounded px-2 py-0.5 text-[11px] text-gray-500 hover:bg-gray-100"
-            >
-              Ausblenden
-            </button>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {quickCards.map((card) => {
-              const tone =
-                card.type === "confirm"
-                  ? "border-amber-200 bg-amber-50 text-amber-800"
-                  : card.type === "question"
-                  ? "border-blue-200 bg-blue-50 text-blue-800"
-                  : "border-gray-200 bg-white/70 text-gray-800";
-              return (
-                <button
-                  key={card.id}
-                  type="button"
-                  onClick={() => handleQuickCardClick(card.text)}
-                  className={`rounded-xl border px-3 py-2 text-left text-[13px] shadow-[0_6px_14px_-10px_rgba(0,0,0,0.25)] hover:shadow-[0_10px_20px_-12px_rgba(0,0,0,0.28)] transition-all backdrop-blur-md ${tone}`}
-                >
-                  <div className="text-[12px] font-semibold">{card.label}</div>
-                  <div className="text-[12px] mt-0.5 opacity-80">{card.text}</div>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

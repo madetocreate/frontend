@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { RealtimeVoiceClientScript } from "../components/RealtimeVoiceClientScript";
 
 export const metadata: Metadata = {
   title: "Aklow Workspace",
@@ -22,6 +23,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)] antialiased">
+        <RealtimeVoiceClientScript />
         {children}
       </body>
     </html>

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, KeyboardEvent } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import clsx from "clsx";
 import { sendChatMessage, UIMessage } from "../../lib/chatClient";
 import { WidgetRenderer } from "./WidgetRenderer";
@@ -71,7 +73,7 @@ export function ChatShell() {
 
   return (
     <div className="chat-shell flex max-h-[100vh] flex-col gap-3 rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/90 p-3 shadow-[var(--ak-shadow-soft)] backdrop-blur-md">
-      <div className="chat-messages flex-1 space-y-3 overflow-y-auto rounded-xl bg-[var(--ak-color-bg-surface-muted)]/70 px-3 py-3">
+      <div className="chat-messages flex-1 space-y-4 overflow-y-auto rounded-xl bg-[var(--ak-color-bg-surface-muted)]/70 px-3 py-3">
         {messages.map((m, idx) => (
           <div
             key={idx}
@@ -82,13 +84,18 @@ export function ChatShell() {
           >
             <div
               className={clsx(
-                'chat-message-text rounded-2xl px-3 py-2 text-[13px] leading-relaxed shadow-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+                'chat-message-text rounded-2xl px-3 py-2 text-[14px] leading-relaxed shadow-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
                 m.role === 'user'
                   ? 'bg-[var(--ak-color-accent)] text-white shadow-[0_12px_36px_-18px_var(--ak-color-accent)]'
                   : 'bg-[var(--ak-color-chat-assistant-bg)] text-[var(--ak-color-text-primary)] border border-[var(--ak-color-border-subtle)]'
               )}
             >
-              {m.text}
+              <ReactMarkdown
+                className="prose prose-invert prose-sm max-w-none"
+                remarkPlugins={[remarkGfm]}
+              >
+                {m.text}
+              </ReactMarkdown>
             </div>
 
             {m.uiMessages && m.uiMessages.length > 0 ? (
@@ -110,7 +117,7 @@ export function ChatShell() {
           onKeyDown={handleKeyDown}
           disabled={loading}
           placeholder="Schreib mir etwas..."
-          className="flex-1 rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)]/80 px-3 py-2 text-[13px] text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] placeholder:text-[var(--ak-color-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
+          className="flex-1 rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)]/80 px-3 py-2 text-[14px] text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] placeholder:text-[var(--ak-color-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
         />
         <MicrophoneButton disabled={loading} />
         <button

@@ -274,3 +274,15 @@ openai-chatkit [data-thoughts] {
   visibility: visible !important;
   opacity: 1 !important;
 }
+
+/* Thinking dots animation - wie ChatGPT */
+@keyframes thinking-dot {
+  0%, 60%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
