@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import { sendChatMessage, ChatResponse } from "../lib/chatClient";
 import { useDictation } from "../hooks/useDictation";
 import { useRealtimeVoice } from "../hooks/useRealtimeVoice";
+import { BellIcon } from "@heroicons/react/24/outline";
 
 type ChatMessage = {
   id: string;
@@ -291,8 +292,24 @@ export function ChatShell() {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/90 p-4 shadow-[var(--ak-shadow-soft)] backdrop-blur-md">
-      <div className="flex-1 overflow-y-auto space-y-6 px-[5%] py-2">
+    <div className="flex h-full flex-col gap-4 rounded-2xl border border-transparent bg-transparent px-4 pt-4 pb-2">
+      <div className="flex items-center justify-end px-[5%] pt-0 pr-[0%]">
+        <button
+          type="button"
+          onClick={() => {
+            // Öffne Notifications (rechts)
+            const evt = new CustomEvent('aklow-open-module', { detail: { module: 'inbox' } })
+            window.dispatchEvent(evt)
+          }}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors duration-150"
+          aria-label="Benachrichtigungen"
+          style={{ marginTop: '-8px', marginRight: '-10px' }}
+        >
+          <BellIcon className="h-6 w-6" />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto space-y-6 px-[5%] py-2 pb-28">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
             <div className="font-bold text-[var(--ak-color-text-primary)]" style={{ fontSize: '40px' }}>
@@ -306,8 +323,8 @@ export function ChatShell() {
 
       <form onSubmit={handleSend} className="px-[5%]">
         <div 
-          className="relative flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-3 shadow-sm transition-colors duration-150"
-          style={{ borderWidth: '1px' }}
+          className="relative flex items-center gap-2 rounded-full border border-gray-300/70 bg-white/70 px-4 py-3 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.25)] backdrop-blur-md transition-all duration-200 hover:shadow-[0_10px_28px_-14px_rgba(0,0,0,0.28)]"
+          style={{ borderWidth: '1px', transform: 'translateY(0)' }}
         >
           <div className="relative">
             <button
@@ -460,7 +477,7 @@ export function ChatShell() {
               isLongPressRef.current = false
             }}
             className={clsx(
-              "inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-all duration-150",
+              "inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-all duration-200 hover:translate-y-[-1px] active:translate-y-[0px]",
               isMicrophoneActive && "ring-2 ring-red-500 ring-offset-2"
             )}
             aria-label="Mikrofon"
@@ -484,7 +501,7 @@ export function ChatShell() {
             type="submit"
             disabled={isSending || !input.trim()}
             className={clsx(
-              "inline-flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-all duration-150",
+              "inline-flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-all duration-200 hover:translate-y-[-1px] active:translate-y-[0px]",
               input.trim()
                 ? "bg-green-500 border-black border-opacity-20"
                 : "bg-white border-black border-opacity-30",
