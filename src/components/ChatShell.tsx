@@ -4,6 +4,7 @@ import { useState, FormEvent, useRef, useEffect, useCallback } from "react";
 import clsx from "clsx";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { BellIcon } from "@heroicons/react/24/outline";
 import { WidgetRenderer } from "./chat/WidgetRenderer";
 import { sendChatMessageStream, ChatResponse } from "../lib/chatClient";
 import { useDictation } from "../hooks/useDictation";
@@ -33,7 +34,6 @@ export function ChatShell() {
   const [quickHint, setQuickHint] = useState<string>('')
   const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([])
   const [thinkingNote, setThinkingNote] = useState<string | null>(null)
-  const [quickCardsVisible, setQuickCardsVisible] = useState(true)
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([])
   
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -161,20 +161,40 @@ export function ChatShell() {
       )
     }
 
+    // Check if message is short (1-3 sentences) for card display
+    const isShortAnswer = (text: string): boolean => {
+      const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0)
+      return sentences.length >= 1 && sentences.length <= 3 && text.length < 300
+    }
+
+    const shouldShowAsCard = isShortAnswer(message.text) && !message.text.includes('\n\n') && !message.text.includes('```')
+
     return (
       <div key={message.id} className="flex justify-start">
         <div
           className="flex flex-col gap-3"
           style={{ maxWidth, alignItems: 'flex-start' }}
         >
-          <div
-            className="prose prose-slate max-w-none leading-relaxed"
-            style={{ 
-              color: 'var(--ak-color-text-primary)',
-              fontSize: '21px',
-            }}
-          >
-            <ReactMarkdown
+          {shouldShowAsCard ? (
+            <div
+              className="rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 px-4 py-3 shadow-sm backdrop-blur-sm max-w-md"
+              style={{
+                color: 'var(--ak-color-text-primary)',
+                fontSize: '18px',
+                lineHeight: '1.6',
+              }}
+            >
+              {message.text}
+            </div>
+          ) : (
+            <div
+              className="prose prose-slate max-w-none leading-relaxed"
+              style={{ 
+                color: 'var(--ak-color-text-primary)',
+                fontSize: '21px',
+              }}
+            >
+              <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
                 h1: ({ children }) => (
@@ -312,7 +332,8 @@ export function ChatShell() {
             >
               {message.text}
             </ReactMarkdown>
-          </div>
+            </div>
+          )}
           {Array.isArray(message.uiMessages) && message.uiMessages.length > 0 ? (
             <div className="mt-3 w-full space-y-3">
               {message.uiMessages.map((uiMessage, index) => (
@@ -320,6 +341,21 @@ export function ChatShell() {
               ))}
             </div>
           ) : null}
+          {/* Show suggestions as clickable text links after the last assistant message */}
+          {isLastAssistantMessage(message) && followUpSuggestions.length > 0 && (
+            <div className="mt-4 flex flex-col gap-2">
+              {followUpSuggestions.slice(0, 3).map((suggestion, index) => (
+                <button
+                  key={`suggestion-${index}`}
+                  type="button"
+                  onClick={() => handleQuickCardClick(suggestion)}
+                  className="text-left text-[18px] text-blue-600 hover:text-blue-700 hover:underline transition-colors cursor-pointer"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     )
@@ -432,7 +468,6 @@ export function ChatShell() {
             const suggestions = responseData.followUpSuggestions || responseData.follow_up_suggestions || []
             if (Array.isArray(suggestions) && suggestions.length > 0) {
               setFollowUpSuggestions(suggestions.filter((s: string) => typeof s === 'string' && s.trim().length > 0))
-              setQuickCardsVisible(true)
             } else {
               setFollowUpSuggestions([])
             }
@@ -501,11 +536,30 @@ export function ChatShell() {
   }
 
   async function handleQuickCardClick(text: string) {
+    // Remove suggestions immediately when clicked
+    setFollowUpSuggestions([])
     await sendMessage(text)
   }
 
+  // Get the last assistant message to show suggestions after it
+  const lastAssistantMessage = messages.filter(m => m.role === 'assistant').slice(-1)[0]
+  const isLastAssistantMessage = (msg: ChatMessage) => msg.id === lastAssistantMessage?.id
+
+  const handleBellClick = () => {
+    window.dispatchEvent(new CustomEvent('aklow-open-module', { detail: { module: 'inbox' } }))
+  }
+
   return (
-    <div className="flex h-full flex-col gap-4 rounded-2xl border border-transparent bg-white/15 backdrop-blur-2xl px-4 pt-4 pb-2">
+    <div className="flex h-full flex-col gap-4 rounded-2xl border border-transparent bg-white/15 backdrop-blur-2xl px-4 pt-4 pb-2 relative">
+      {/* Bell Icon - top right */}
+      <button
+        type="button"
+        onClick={handleBellClick}
+        className="absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-lg border border-transparent text-slate-500 transition-all duration-200 hover:bg-white/20 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25 focus-visible:ring-offset-2"
+        aria-label="Benachrichtigungen"
+      >
+        <BellIcon className="h-5 w-5" aria-hidden="true" />
+      </button>
 
       <div className="flex-1 overflow-y-auto space-y-6 px-[5%] py-2 pb-28">
         {messages.length === 0 ? (
@@ -515,61 +569,40 @@ export function ChatShell() {
             </div>
           </div>
         ) : (
-          messages.map(renderMessage)
+          <>
+            {messages.map(renderMessage)}
+            {/* Show thinking process where the new assistant message will appear */}
+            {(thinkingSteps.length > 0 || thinkingNote) && (
+              <div className="flex justify-start">
+                <div className="flex items-center gap-1 px-[5%]">
+                  <span 
+                    className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 opacity-60"
+                    style={{ 
+                      animation: 'thinking-dot 1.4s ease-in-out infinite',
+                      animationDelay: '0ms'
+                    }}
+                  ></span>
+                  <span 
+                    className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 opacity-60"
+                    style={{ 
+                      animation: 'thinking-dot 1.4s ease-in-out infinite',
+                      animationDelay: '200ms'
+                    }}
+                  ></span>
+                  <span 
+                    className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 opacity-60"
+                    style={{ 
+                      animation: 'thinking-dot 1.4s ease-in-out infinite',
+                      animationDelay: '400ms'
+                    }}
+                  ></span>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {(thinkingSteps.length > 0 || thinkingNote) && (
-        <div className="px-[5%] mb-2 flex items-center">
-          <div className="flex items-center gap-1">
-            <span 
-              className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 opacity-60"
-              style={{ 
-                animation: 'thinking-dot 1.4s ease-in-out infinite',
-                animationDelay: '0ms'
-              }}
-            ></span>
-            <span 
-              className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 opacity-60"
-              style={{ 
-                animation: 'thinking-dot 1.4s ease-in-out infinite',
-                animationDelay: '200ms'
-              }}
-            ></span>
-            <span 
-              className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 opacity-60"
-              style={{ 
-                animation: 'thinking-dot 1.4s ease-in-out infinite',
-                animationDelay: '400ms'
-              }}
-            ></span>
-          </div>
-        </div>
-      )}
-
-      {quickCardsVisible && followUpSuggestions.length > 0 && (
-        <div className="px-[5%] mb-3">
-          <div className="flex flex-wrap gap-2">
-            {followUpSuggestions.map((suggestion, index) => (
-              <button
-                key={`suggestion-${index}`}
-                type="button"
-                onClick={() => handleQuickCardClick(suggestion)}
-                className="rounded-full border border-gray-200 bg-white/70 text-gray-800 px-4 py-2 text-sm shadow-sm hover:shadow-md transition-all backdrop-blur-md hover:bg-white/90"
-              >
-                <span className="font-medium">{suggestion}</span>
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setQuickCardsVisible(false)}
-              className="rounded-full border border-gray-200 bg-white/70 px-3 py-2 text-xs text-gray-500 hover:bg-gray-100 transition-colors"
-            >
-              Ausblenden
-            </button>
-          </div>
-        </div>
-      )}
 
       <form onSubmit={handleSend} className="px-[5%]">
         <div 

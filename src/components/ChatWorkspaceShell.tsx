@@ -7,6 +7,7 @@ import {
   ChatBubbleLeftRightIcon,
   InboxIcon,
   Squares2X2Icon,
+  BellIcon,
 } from '@heroicons/react/24/outline'
 import { ChatSidebarContent } from '@/components/chat/ChatSidebarContent'
 import { InboxDrawerWidget } from '@/components/InboxDrawerWidget'
@@ -302,8 +303,6 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       </aside>
 
       <div className="relative flex flex-1 flex-col">
-        
-
         <main className="relative flex-1 overflow-hidden">
           <div
             className="h-full min-h-0 transition-[margin] duration-200 ease-out"
