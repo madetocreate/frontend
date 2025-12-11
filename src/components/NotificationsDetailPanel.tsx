@@ -11,6 +11,7 @@ import {
   ChartBarIcon,
   InformationCircleIcon,
   PencilSquareIcon,
+  BellIcon,
 } from '@heroicons/react/24/outline'
 import { WidgetCard } from '@/components/ui/WidgetCard'
 
@@ -129,6 +130,9 @@ const MOCK_NOTIFICATIONS: NotificationGroup[] = [
 export function NotificationsDetailPanel() {
   const [selectedFilter, setSelectedFilter] = useState<NotificationFilter>('all')
   const [notifications] = useState<NotificationGroup[]>(MOCK_NOTIFICATIONS)
+  const unreadCount = notifications
+    .flatMap((group) => group.items)
+    .filter((item) => item.isUnread).length
 
   const handleMarkAllRead = () => {
     console.log('Mark all as read')
@@ -167,13 +171,31 @@ export function NotificationsDetailPanel() {
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="ak-heading">Benachrichtigungen</h2>
-          <button
-            type="button"
-            onClick={handleMarkAllRead}
-            className="inline-flex items-center justify-center rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-xs font-medium text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
-          >
-            Alle als gelesen markieren
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                const evt = new CustomEvent('aklow-open-module', { detail: { module: 'inbox' } })
+                window.dispatchEvent(evt)
+              }}
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors duration-150"
+              aria-label="Benachrichtigungen schließen"
+            >
+              <BellIcon className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute right-1 top-1 inline-flex h-2.5 min-w-[10px] items-center justify-center rounded-full bg-red-500 text-[9px] font-semibold text-white px-0.5">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={handleMarkAllRead}
+              className="inline-flex items-center justify-center rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-xs font-medium text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
+            >
+              Alle als gelesen markieren
+            </button>
+          </div>
         </div>
 
         <div className="h-px bg-[var(--ak-color-border-subtle)]" />

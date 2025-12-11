@@ -2,13 +2,11 @@
 
 import type { ReactNode, ComponentType, CSSProperties } from 'react'
 import { useState, useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
 import clsx from 'clsx'
 import {
   ChatBubbleLeftRightIcon,
   InboxIcon,
-  ArchiveBoxIcon,
-  BoltIcon,
+  Squares2X2Icon,
 } from '@heroicons/react/24/outline'
 import { ChatSidebarContent } from '@/components/chat/ChatSidebarContent'
 import { InboxDrawerWidget } from '@/components/InboxDrawerWidget'
@@ -41,7 +39,7 @@ type ModuleConfig = {
 const MODULES: ModuleConfig[] = [
   { id: 'chat', label: 'Chat', icon: ChatBubbleLeftRightIcon, href: '/' },
   { id: 'inbox', label: 'Posteingang', icon: InboxIcon },
-  { id: 'automation', label: 'Automation', icon: BoltIcon },
+  { id: 'automation', label: 'Modules', icon: Squares2X2Icon },
 ]
 
 const LEFT_DRAWER_WIDTH = 336 // 20% kleiner als 420
@@ -59,9 +57,6 @@ type ChatWorkspaceShellProps = {
 }
 
 export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
-  const router = useRouter()
-  const pathname = usePathname()
-
   const initialModule: WorkspaceModuleToken = 'chat'
 
   const [activeModuleToken, setActiveModuleToken] =

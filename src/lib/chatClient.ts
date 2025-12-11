@@ -27,7 +27,66 @@ export interface TextMessage extends BaseMessage {
   markdown: string;
 }
 
-export type UIMessage = TextMessage;
+export type UIMode =
+  | "chat"
+  | "form"
+  | "list"
+  | "card"
+  | "table"
+  | "custom"
+  | "minimal_text"
+  | "wizard"
+  | "flow_graph";
+
+export interface UIField {
+  id: string;
+  label: string;
+  type: "text" | "email" | "number" | "date" | "select" | "textarea";
+  required?: boolean;
+  options?: string[];
+  placeholder?: string;
+  value?: string;
+}
+
+export interface UIItem {
+  id: string;
+  title: string;
+  description?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface UIAction {
+  id: string;
+  label: string;
+  type: "button" | "submit" | "link";
+  onClick?: string;
+  href?: string;
+}
+
+export interface UIContext {
+  mode: UIMode;
+  intent?: string;
+  styleProfile?: string;
+  userPreferences?: {
+    language?: string;
+    [key: string]: unknown;
+  };
+  title?: string;
+  description?: string;
+  fields?: UIField[];
+  items?: UIItem[];
+  actions?: UIAction[];
+  metadata?: Record<string, unknown>;
+}
+
+export type UIMessage =
+  | {
+      role: "user" | "assistant" | "system";
+      content: string;
+      uiContext?: UIContext;
+      metadata?: Record<string, unknown>;
+    }
+  | TextMessage;
 
 export type OrchestratorStep = {
   id: string;

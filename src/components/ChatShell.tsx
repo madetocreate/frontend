@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, FormEvent, useRef, useEffect } from "react";
+import { useState, FormEvent, useRef, useEffect, useCallback } from "react";
 import clsx from "clsx";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { sendChatMessage, ChatResponse } from "../lib/chatClient";
+import { sendChatMessageStream, ChatResponse } from "../lib/chatClient";
 import { useDictation } from "../hooks/useDictation";
 import { useRealtimeVoice } from "../hooks/useRealtimeVoice";
-import { BellIcon } from "@heroicons/react/24/outline";
 
 type ChatMessage = {
   id: string;
@@ -16,20 +15,31 @@ type ChatMessage = {
   uiMessages?: ChatResponse["uiMessages"];
 };
 
+type ThinkingStep = {
+  id: string;
+  label: string;
+  status: "pending" | "active" | "done";
+};
+
 function createSessionId(): string {
   return "web-session-" + Math.random().toString(36).slice(2);
 }
 
 export function ChatShell() {
-  const [sessionId] = useState<string>(() => createSessionId())
   const [tenantId] = useState<string>('demo-tenant')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [isPlusMenuOpen, setIsPlusMenuOpen] = useState(false)
+  const [quickHint, setQuickHint] = useState<string>('')
+  const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([])
+  const [thinkingNote, setThinkingNote] = useState<string | null>(null)
   
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null)
   const isLongPressRef = useRef(false)
+  const currentThreadRef = useRef<string | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const { status: dictationStatus, startRecording, stopRecording } = useDictation({
     onTranscriptionReady: (text) => {
@@ -47,6 +57,65 @@ export function ChatShell() {
   })
 
   const isMicrophoneActive = dictationStatus === 'recording' || dictationStatus === 'transcribing' || realtimeStatus === 'live'
+
+  const threadStorageKey = (threadId: string) => `aklow_thread_${threadId}`
+
+  const loadMessages = useCallback((threadId: string) => {
+    if (typeof window === 'undefined') return []
+    try {
+      const raw = localStorage.getItem(threadStorageKey(threadId))
+      if (!raw) return []
+      const parsed = JSON.parse(raw) as ChatMessage[]
+      if (!Array.isArray(parsed)) return []
+      return parsed
+    } catch {
+      return []
+    }
+  }, [])
+
+  const saveMessages = useCallback((threadId: string, list: ChatMessage[]) => {
+    try {
+      localStorage.setItem(threadStorageKey(threadId), JSON.stringify(list))
+    } catch (e) {
+      console.warn('Konnte Messages nicht speichern', e)
+    }
+  }, [])
+
+  const makeTitle = (text: string) => {
+    const clean = text.replace(/\s+/g, ' ').trim()
+    const sentences = clean.split(/(?<=[.!?])\s+/).filter(Boolean)
+    const firstTwo = sentences.slice(0, 2).join(' ')
+    const base = firstTwo || clean
+    return base.length > 80 ? base.slice(0, 77) + '…' : base || 'Neuer Chat'
+  }
+
+  // Thread-Selektion / Neuer Chat
+  useEffect(() => {
+    const handleSelect = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { threadId?: string } | undefined
+      if (!detail?.threadId) return
+      currentThreadRef.current = detail.threadId
+      const loaded = loadMessages(detail.threadId)
+      setMessages(loaded)
+      setInput('')
+      inputRef.current?.focus()
+    }
+    const handleNew = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { threadId?: string } | undefined
+      const newId = detail?.threadId || `thread-${Date.now()}`
+      currentThreadRef.current = newId
+      const loaded = loadMessages(newId)
+      setMessages(loaded)
+      setInput('')
+      inputRef.current?.focus()
+    }
+    window.addEventListener('aklow-select-thread', handleSelect as EventListener)
+    window.addEventListener('aklow-new-chat', handleNew as EventListener)
+    return () => {
+      window.removeEventListener('aklow-select-thread', handleSelect as EventListener)
+      window.removeEventListener('aklow-new-chat', handleNew as EventListener)
+    }
+  }, [loadMessages])
 
   // Cleanup beim Unmount
   useEffect(() => {
@@ -251,6 +320,7 @@ export function ChatShell() {
     e.preventDefault()
     const trimmed = input.trim()
     if (!trimmed || isSending) return
+    const threadId = currentThreadRef.current || 'thread-default'
 
     const userMessage: ChatMessage = {
       id: String(Date.now()) + '-user',
@@ -258,56 +328,149 @@ export function ChatShell() {
       text: trimmed,
     }
 
-    setMessages((prev) => [...prev, userMessage])
+    setMessages((prev) => {
+      const next = [...prev, userMessage]
+      saveMessages(threadId, next)
+      return next
+    })
     setInput('')
     setIsSending(true)
+    setQuickHint('') // Hinweis zurücksetzen beim Senden
+
+    // Erstelle eine temporäre Assistant-Nachricht für Streaming
+    const assistantMessageId = String(Date.now()) + '-assistant'
+    const assistantMessage: ChatMessage = {
+      id: assistantMessageId,
+      role: 'assistant',
+      text: '',
+      uiMessages: [],
+    }
+
+    // Füge leere Assistant-Nachricht hinzu
+    setMessages((prev) => {
+      const next = [...prev, assistantMessage]
+      saveMessages(threadId, next)
+      return next
+    })
 
     try {
-      const res = await sendChatMessage({
-        tenantId,
-        sessionId,
-        channel: 'web_chat',
-        message: trimmed,
-      })
+      let fullContent = ''
+      setThinkingSteps([])
+      setThinkingNote(null)
+      
+      await sendChatMessageStream(
+        {
+          tenantId,
+          sessionId: threadId,
+          channel: 'web_chat',
+          message: trimmed,
+        },
+        {
+          onStart: (data) => {
+            const steps = (data.steps ?? []) as ThinkingStep[]
+            setThinkingSteps(steps)
+            setThinkingNote('Denke nach …')
+          },
+          onStepUpdate: (data) => {
+            setThinkingSteps((prev) =>
+              prev.map((s) =>
+                s.id === data.stepId ? { ...s, status: data.status as ThinkingStep["status"] } : s
+              )
+            )
+          },
+          onChunk: (data) => {
+            // Füge Chunk zum Inhalt hinzu
+            fullContent += data.content || ''
+            setThinkingNote('Antwort wird erstellt …')
+            
+            // Aktualisiere die Nachricht mit dem neuen Inhalt
+            setMessages((prev) => {
+              const updated = prev.map((msg) =>
+                msg.id === assistantMessageId
+                  ? { ...msg, text: fullContent }
+                  : msg
+              )
+              saveMessages(threadId, updated)
+              return updated
+            })
+          },
+          onEnd: (data) => {
+            // Finalisiere die Nachricht mit vollständigem Inhalt und UI-Messages
+            const finalContent = data.content || fullContent
+            setMessages((prev) => {
+              const updated = prev.map((msg) =>
+                msg.id === assistantMessageId
+                  ? {
+                      ...msg,
+                      text: finalContent,
+                      uiMessages: data.uiMessages,
+                    }
+                  : msg
+              )
+              saveMessages(threadId, updated)
+              return updated
+            })
 
-      const assistantMessage: ChatMessage = {
-        id: String(Date.now()) + '-assistant',
-        role: 'assistant',
-        text: res.content,
-        uiMessages: res.uiMessages,
-      }
-
-      setMessages((prev) => [...prev, assistantMessage])
+            // Preview-Update an Sidebar
+            if (typeof window !== 'undefined') {
+              const title = makeTitle(trimmed)
+              window.dispatchEvent(
+                new CustomEvent('aklow-thread-preview', {
+                  detail: {
+                    threadId,
+                    title,
+                    preview: finalContent.slice(0, 120) || trimmed,
+                    lastMessageAt: Date.now(),
+                  },
+                })
+              )
+            }
+            setThinkingSteps((prev) => prev.map((s) => ({ ...s, status: "done" })))
+            setThinkingNote(null)
+            setIsSending(false)
+          },
+          onError: (error) => {
+            const errorText = error.message || 'Unbekannter Fehler im Chat'
+            setMessages((prev) => {
+              const updated = prev.map((msg) =>
+                msg.id === assistantMessageId
+                  ? {
+                      ...msg,
+                      text: 'Fehler beim Senden: ' + errorText,
+                    }
+                  : msg
+              )
+              saveMessages(threadId, updated)
+              return updated
+            })
+            setThinkingSteps([])
+            setThinkingNote('Fehler beim Streamen')
+            setIsSending(false)
+          },
+        }
+      )
     } catch (err) {
       const errorText = err instanceof Error ? err.message : 'Unbekannter Fehler im Chat'
-      const errorMessage: ChatMessage = {
-        id: String(Date.now()) + '-error',
-        role: 'assistant',
-        text: 'Fehler beim Senden: ' + errorText,
-      }
-      setMessages((prev) => [...prev, errorMessage])
-    } finally {
+      setMessages((prev) => {
+        const updated = prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? {
+                ...msg,
+                text: 'Fehler beim Senden: ' + errorText,
+              }
+            : msg
+        )
+        saveMessages(threadId, updated)
+        return updated
+      })
+      setThinkingSteps([])
+      setThinkingNote('Fehler beim Streamen')
       setIsSending(false)
     }
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 rounded-2xl border border-transparent bg-transparent px-4 pt-4 pb-2">
-      <div className="flex items-center justify-end px-[5%] pt-0 pr-[0%]">
-        <button
-          type="button"
-          onClick={() => {
-            // Öffne Notifications (rechts)
-            const evt = new CustomEvent('aklow-open-module', { detail: { module: 'inbox' } })
-            window.dispatchEvent(evt)
-          }}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors duration-150"
-          aria-label="Benachrichtigungen"
-          style={{ marginTop: '-8px', marginRight: '-10px' }}
-        >
-          <BellIcon className="h-6 w-6" />
-        </button>
-      </div>
+    <div className="flex h-full flex-col gap-4 rounded-2xl border border-transparent bg-white/15 backdrop-blur-2xl px-4 pt-4 pb-2">
 
       <div className="flex-1 overflow-y-auto space-y-6 px-[5%] py-2 pb-28">
         {messages.length === 0 ? (
@@ -321,11 +484,44 @@ export function ChatShell() {
         )}
       </div>
 
+      {(thinkingSteps.length > 0 || thinkingNote) && (
+        <div className="px-[5%] -mb-1 text-[11px] text-[var(--ak-color-text-muted)]">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-[10px] uppercase tracking-wide">Denke nach …</span>
+            {thinkingSteps.map((step) => {
+              const state =
+                step.status === "done" ? "✓" :
+                step.status === "active" ? "…" : "•"
+              return (
+                <span key={step.id} className="inline-flex items-center gap-1">
+                  <span className="text-[10px]">{state}</span>
+                  <span>{step.label}</span>
+                </span>
+              )
+            })}
+            {thinkingNote ? <span>{thinkingNote}</span> : null}
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSend} className="px-[5%]">
         <div 
           className="relative flex items-center gap-2 rounded-full border border-gray-300/70 bg-white/70 px-4 py-3 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.25)] backdrop-blur-md transition-all duration-200 hover:shadow-[0_10px_28px_-14px_rgba(0,0,0,0.28)]"
           style={{ borderWidth: '1px', transform: 'translateY(0)' }}
         >
+          {quickHint ? (
+            <div className="absolute left-2 -top-1 translate-y-[-70%] text-[10px] font-semibold text-green-600 flex items-center gap-1">
+              <span>{quickHint}</span>
+              <button
+                type="button"
+                onClick={() => setQuickHint('')}
+                className="inline-flex h-4 w-4 items-center justify-center rounded-full text-green-600 hover:bg-green-50"
+                aria-label="Hinweis schließen"
+              >
+                ×
+              </button>
+            </div>
+          ) : null}
           <div className="relative">
             <button
               type="button"
@@ -349,16 +545,16 @@ export function ChatShell() {
             {isPlusMenuOpen && (
               <>
                 <div
-                  className="fixed inset-0 z-40"
+                  className="fixed inset-0 z-[9998]"
                   onClick={() => setIsPlusMenuOpen(false)}
                 />
-                <div className="absolute bottom-full left-0 z-50 mb-2 w-64 origin-bottom-left rounded-xl border border-gray-200 bg-white shadow-lg">
+                <div className="absolute bottom-full left-0 z-[9999] mb-2 w-64 origin-bottom-left rounded-xl border border-gray-200 bg-white shadow-lg">
                   <div className="py-1">
                     <button
                       type="button"
                       onClick={() => {
                         setIsPlusMenuOpen(false)
-                        // TODO: Datei oder Foto hochladen
+                        fileInputRef.current?.click()
                       }}
                       className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
@@ -368,7 +564,7 @@ export function ChatShell() {
                       type="button"
                       onClick={() => {
                         setIsPlusMenuOpen(false)
-                        // TODO: Intensive Internetsuche
+                        setQuickHint('Intensive Internetsuche aktiviert')
                       }}
                       className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
@@ -404,6 +600,7 @@ export function ChatShell() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Stelle irgendeine Frage"
+            ref={inputRef}
             className="flex-1 border-none bg-transparent text-[15px] text-gray-900 placeholder:text-gray-500 focus-visible:outline-none"
           />
           <button
@@ -527,6 +724,19 @@ export function ChatShell() {
             </svg>
           </button>
         </div>
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          accept="image/*,application/pdf,audio/*,video/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) {
+              setInput((prev) => prev ? `${prev} [Upload: ${file.name}]` : `[Upload: ${file.name}]`)
+            }
+            e.target.value = ''
+          }}
+        />
       </form>
     </div>
   )

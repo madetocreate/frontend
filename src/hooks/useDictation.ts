@@ -98,7 +98,7 @@ export function useDictation(options: UseDictationOptions = {}) {
               const errorJson = await response.json()
               errorMessage = errorJson.error || errorJson.detail || errorMessage
             } catch {
-              const message = await response.text().catch(() => '')
+            const message = await response.text().catch(() => '')
               errorMessage = message || errorMessage
             }
             throw new Error(errorMessage)
