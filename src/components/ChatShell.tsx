@@ -21,6 +21,13 @@ type ThinkingStep = {
   status: "pending" | "active" | "done";
 };
 
+type QuickCard = {
+  id: string;
+  label: string;
+  text: string;
+  type: "suggestion" | "question" | "confirm";
+};
+
 function createSessionId(): string {
   return "web-session-" + Math.random().toString(36).slice(2);
 }
@@ -34,6 +41,18 @@ export function ChatShell() {
   const [quickHint, setQuickHint] = useState<string>('')
   const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>([])
   const [thinkingNote, setThinkingNote] = useState<string | null>(null)
+  const [quickCardsVisible, setQuickCardsVisible] = useState(true)
+  const quickCards: QuickCard[] = [
+    { id: 'sg1', label: 'Radar Status', text: 'Zeig mir den Radar-Status und offene Punkte.', type: 'suggestion' },
+    { id: 'sg2', label: '4-Button Widget', text: 'Zeig das Widget mit 4 Buttons und deren Zweck.', type: 'question' },
+    { id: 'sg3', label: 'Tabellen-Check', text: 'Kannst du mir eine Tabelle mit den letzten Fragen bauen?', type: 'question' },
+  ]
+  const suggestionCards = [
+    { id: 'sg1', label: 'Radar Status', text: 'Zeig mir den Radar-Status und offene Punkte.' },
+    { id: 'sg2', label: '4-Button Widget', text: 'Zeig das Widget mit 4 Buttons und deren Zweck.' },
+    { id: 'sg3', label: 'Tabellen-Check', text: 'Kannst du mir eine Tabelle mit den letzten Fragen bauen?' },
+    { id: 'sg4', label: 'Kurzes Briefing', text: 'Fasse die letzten Schritte stichpunktartig zusammen.' },
+  ]
   
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null)
   const isLongPressRef = useRef(false)
@@ -316,9 +335,7 @@ export function ChatShell() {
     )
   }
 
-  async function handleSend(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const trimmed = input.trim()
+  async function sendMessage(trimmed: string) {
     if (!trimmed || isSending) return
     const threadId = currentThreadRef.current || 'thread-default'
 
@@ -335,9 +352,8 @@ export function ChatShell() {
     })
     setInput('')
     setIsSending(true)
-    setQuickHint('') // Hinweis zurücksetzen beim Senden
+    setQuickHint('')
 
-    // Erstelle eine temporäre Assistant-Nachricht für Streaming
     const assistantMessageId = String(Date.now()) + '-assistant'
     const assistantMessage: ChatMessage = {
       id: assistantMessageId,
@@ -346,7 +362,6 @@ export function ChatShell() {
       uiMessages: [],
     }
 
-    // Füge leere Assistant-Nachricht hinzu
     setMessages((prev) => {
       const next = [...prev, assistantMessage]
       saveMessages(threadId, next)
@@ -379,11 +394,9 @@ export function ChatShell() {
             )
           },
           onChunk: (data) => {
-            // Füge Chunk zum Inhalt hinzu
             fullContent += data.content || ''
             setThinkingNote('Antwort wird erstellt …')
             
-            // Aktualisiere die Nachricht mit dem neuen Inhalt
             setMessages((prev) => {
               const updated = prev.map((msg) =>
                 msg.id === assistantMessageId
@@ -395,7 +408,6 @@ export function ChatShell() {
             })
           },
           onEnd: (data) => {
-            // Finalisiere die Nachricht mit vollständigem Inhalt und UI-Messages
             const finalContent = data.content || fullContent
             setMessages((prev) => {
               const updated = prev.map((msg) =>
@@ -411,7 +423,6 @@ export function ChatShell() {
               return updated
             })
 
-            // Preview-Update an Sidebar
             if (typeof window !== 'undefined') {
               const title = makeTitle(trimmed)
               window.dispatchEvent(
@@ -425,7 +436,7 @@ export function ChatShell() {
                 })
               )
             }
-            setThinkingSteps((prev) => prev.map((s) => ({ ...s, status: "done" })))
+            setThinkingSteps([])
             setThinkingNote(null)
             setIsSending(false)
           },
@@ -469,6 +480,16 @@ export function ChatShell() {
     }
   }
 
+  async function handleSend(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const trimmed = input.trim()
+    await sendMessage(trimmed)
+  }
+
+  async function handleQuickCardClick(text: string) {
+    await sendMessage(text)
+  }
+
   return (
     <div className="flex h-full flex-col gap-4 rounded-2xl border border-transparent bg-white/15 backdrop-blur-2xl px-4 pt-4 pb-2">
 
@@ -485,16 +506,16 @@ export function ChatShell() {
       </div>
 
       {(thinkingSteps.length > 0 || thinkingNote) && (
-        <div className="px-[5%] -mb-1 text-[11px] text-[var(--ak-color-text-muted)]">
+        <div className="px-[5%] -mb-1 text-[9px] text-gray-400">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-[10px] uppercase tracking-wide">Denke nach …</span>
+            <span className="font-semibold text-[9px] uppercase tracking-wide">Denke nach …</span>
             {thinkingSteps.map((step) => {
               const state =
                 step.status === "done" ? "✓" :
                 step.status === "active" ? "…" : "•"
               return (
                 <span key={step.id} className="inline-flex items-center gap-1">
-                  <span className="text-[10px]">{state}</span>
+                  <span className="text-[9px]">{state}</span>
                   <span>{step.label}</span>
                 </span>
               )
@@ -738,6 +759,41 @@ export function ChatShell() {
           }}
         />
       </form>
+      {quickCardsVisible && quickCards.length > 0 && (
+        <div className="px-[5%] pb-3">
+          <div className="mb-1 flex items-center justify-between text-[11px] text-gray-400">
+            <span>Vorschläge</span>
+            <button
+              type="button"
+              onClick={() => setQuickCardsVisible(false)}
+              className="rounded px-2 py-0.5 text-[11px] text-gray-500 hover:bg-gray-100"
+            >
+              Ausblenden
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {quickCards.map((card) => {
+              const tone =
+                card.type === "confirm"
+                  ? "border-amber-200 bg-amber-50 text-amber-800"
+                  : card.type === "question"
+                  ? "border-blue-200 bg-blue-50 text-blue-800"
+                  : "border-gray-200 bg-white/70 text-gray-800";
+              return (
+                <button
+                  key={card.id}
+                  type="button"
+                  onClick={() => handleQuickCardClick(card.text)}
+                  className={`rounded-xl border px-3 py-2 text-left text-[13px] shadow-[0_6px_14px_-10px_rgba(0,0,0,0.25)] hover:shadow-[0_10px_20px_-12px_rgba(0,0,0,0.28)] transition-all backdrop-blur-md ${tone}`}
+                >
+                  <div className="text-[12px] font-semibold">{card.label}</div>
+                  <div className="text-[12px] mt-0.5 opacity-80">{card.text}</div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
