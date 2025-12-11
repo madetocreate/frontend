@@ -90,8 +90,8 @@ export function SettingsSidebarWidget({ onCategorySelect }: SettingsSidebarWidge
                   className={clsx(
                     'flex flex-1 items-center gap-2 rounded-xl px-3 py-2 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
                     isActive
-                      ? 'bg-[var(--ak-color-bg-surface-muted)]'
-                      : 'bg-transparent hover:bg-[var(--ak-color-bg-surface-muted)]/50'
+                      ? 'bg-[var(--ak-color-selected)]'
+                      : 'bg-transparent hover:bg-[var(--ak-color-hover)]'
                   )}
                 >
                   <Icon
@@ -106,7 +106,7 @@ export function SettingsSidebarWidget({ onCategorySelect }: SettingsSidebarWidge
                   <div
                     className={clsx(
                       'h-1.5 w-1.5 rounded-full transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
-                      isActive ? 'bg-slate-300' : 'bg-transparent'
+                      isActive ? 'bg-[var(--ak-color-selected-strong)]' : 'bg-transparent'
                     )}
                   />
                   <span

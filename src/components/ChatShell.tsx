@@ -528,7 +528,7 @@ export function ChatShell() {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 rounded-2xl border border-transparent bg-white/15 backdrop-blur-2xl px-4 pt-4 pb-2 relative">
+    <div className="ak-glass flex h-full flex-col gap-4 rounded-2xl px-4 pt-4 pb-2 relative">
       {/* Bell Icon - top right */}
       <button
         type="button"

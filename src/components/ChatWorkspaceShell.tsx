@@ -245,8 +245,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
   return (
     <div className="flex h-screen bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)]">
-      <aside className="flex w-16 flex-col items-center gap-y-3 bg-[var(--ak-color-bg-sidebar)]/90 py-4 text-slate-700 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl border-r border-[var(--ak-color-border-subtle)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-blue-500 bg-white ak-caption font-semibold text-slate-700 shadow-sm">
+      <aside className="ak-glass flex w-16 flex-col items-center gap-y-3 py-4 text-slate-700 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white ak-caption font-semibold text-slate-700 shadow-sm">
           <span className="text-xs">AK</span>
         </div>
         <nav className="mt-4 flex flex-1 flex-col items-center gap-y-3">
@@ -274,14 +274,14 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   className={clsx(
                     'ak-sidebar-button flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-slate-500 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
                     isActive
-                      ? 'bg-slate-100 text-slate-900 shadow-sm border-slate-200'
-                      : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-bg-surface)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
+                      ? 'bg-[var(--ak-color-selected)] text-[var(--ak-color-text-primary)] shadow-sm border-[var(--ak-color-border-subtle)]'
+                      : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-hover)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
                   )}
                 >
                   <span className="sr-only">{mod.label}</span>
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </button>
-                <div className="pointer-events-none absolute left-14 top-1/2 z-50 -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-full bg-slate-100 px-3 py-1 ak-caption font-medium text-slate-700 opacity-0 shadow-sm transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100">
+                <div className="pointer-events-none absolute left-14 top-1/2 z-50 -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-full bg-[var(--ak-color-selected)] px-3 py-1 ak-caption font-medium text-[var(--ak-color-text-primary)] opacity-0 shadow-sm transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100">
                   {mod.label}
                 </div>
               </div>
@@ -303,12 +303,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
               className={clsx(
                 'ak-sidebar-button flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-slate-500 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
                 activeModuleToken === 'settings' && leftDrawerOpen
-                  ? 'bg-slate-100 text-slate-900 shadow-sm border-slate-200'
-                  : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-bg-surface)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
+                  ? 'bg-[var(--ak-color-selected)] text-[var(--ak-color-text-primary)] shadow-sm border-[var(--ak-color-border-subtle)]'
+                  : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-hover)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
               )}
               aria-label="Einstellungen"
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 ak-caption font-semibold text-slate-700 shadow-sm border border-slate-200">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--ak-color-selected)] ak-caption font-semibold text-[var(--ak-color-text-primary)] shadow-sm border border-[var(--ak-color-border-subtle)]">
                 {profileUser.initials ?? 'N'}
               </span>
             </button>
@@ -333,7 +333,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
           >
             <div
               className={clsx(
-                'pointer-events-auto flex h-full flex-col bg-[var(--ak-color-bg-surface)]/95 border-r border-[var(--ak-color-border-subtle)] shadow-[var(--ak-shadow-soft)] transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] backdrop-blur-xl',
+                'ak-glass pointer-events-auto flex h-full flex-col border-r transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
                 showLeft ? 'translate-x-0' : '-translate-x-full'
               )}
               style={leftDrawerStyle}
@@ -347,7 +347,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 <button
                   type="button"
                   onClick={() => setLeftDrawerOpen(false)}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm hover:bg-slate-50 hover:text-slate-900 transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm hover:bg-[var(--ak-color-hover)] hover:text-[var(--ak-color-text-primary)] transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
                 >
                   <span className="sr-only">Panel einklappen</span>
                   <span aria-hidden="true" className="text-xs">
@@ -396,7 +396,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
           >
             <div
               className={clsx(
-                'pointer-events-auto flex h-full flex-col bg-[var(--ak-color-bg-surface)]/97 border-l border-[var(--ak-color-border-subtle)] shadow-[var(--ak-shadow-strong)] transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] backdrop-blur-xl',
+                'ak-glass pointer-events-auto flex h-full flex-col border-l transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
                 showRight ? 'translate-x-0' : 'translate-x-full',
                 showNotifications ? 'w-full' : 'w-full' // Vollbild bei Benachrichtigungen
               )}
@@ -405,7 +405,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 <button
                   type="button"
                   onClick={handleCloseDetails}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm hover:bg-slate-50 hover:text-slate-900 transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm hover:bg-[var(--ak-color-hover)] hover:text-[var(--ak-color-text-primary)] transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
                 >
                   <span className="sr-only">Detailpanel einklappen</span>
                   <span aria-hidden="true" className="text-xs">

@@ -11,6 +11,7 @@
   /* Linien - sehr subtil hellgrau */
   --ak-color-border-subtle: rgba(0, 0, 0, 0.06);
   --ak-color-border-strong: rgba(0, 0, 0, 0.12);
+  --ak-color-border-fine: rgba(0, 0, 0, 0.04); /* Sehr feine Kante */
 
   /* Text */
   --ak-color-text-primary: #0a0a0a;
@@ -21,6 +22,12 @@
   --ak-color-accent: #737373;
   --ak-color-accent-soft: rgba(115, 115, 115, 0.08);
   --ak-color-accent-strong: rgba(115, 115, 115, 0.15);
+
+  /* Hover & Selection - einheitlich leicht grau */
+  --ak-color-hover: rgba(0, 0, 0, 0.04);
+  --ak-color-hover-strong: rgba(0, 0, 0, 0.06);
+  --ak-color-selected: rgba(0, 0, 0, 0.06);
+  --ak-color-selected-strong: rgba(0, 0, 0, 0.08);
 
   /* Chat-Bubbles - Glassmorphism ohne Border */
   --ak-color-chat-user-bg: rgba(245, 245, 245, 0.8);
@@ -37,6 +44,7 @@
   --ak-shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.06);
   --ak-shadow-hover: 0 18px 36px rgba(15, 23, 42, 0.08);
   --ak-shadow-strong: 0 28px 72px rgba(15, 23, 42, 0.14);
+  --ak-shadow-glass: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02); /* Sehr leichter Schatten für Glass */
 
   /* Typography - feste Skala */
   --ak-font-size-heading: 1.375rem;    /* 22px - Hauptüberschriften */
@@ -171,12 +179,21 @@ p, span, div, li, td, th, label, input, textarea, select, button {
 }
 
 .ak-glass-surface {
-  background-color: var(--ak-color-bg-sidebar);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--ak-shadow-soft);
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: var(--ak-shadow-glass);
   border-radius: var(--ak-radius-card);
-  border: 1px solid var(--ak-color-border-subtle);
+  border: 1px solid var(--ak-color-border-fine);
+}
+
+/* Glass-Effekt für alle Bereiche */
+.ak-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--ak-color-border-fine);
+  box-shadow: var(--ak-shadow-glass);
 }
 
 .ak-card {
@@ -191,6 +208,7 @@ p, span, div, li, td, th, label, input, textarea, select, button {
 }
 
 .ak-card:hover {
+  background-color: var(--ak-color-hover);
   transform: translateY(-1px);
   box-shadow: var(--ak-shadow-hover);
 }
@@ -324,10 +342,12 @@ openai-chatkit [data-thoughts] {
 }
 
 .ak-sidebar-button:hover {
+  background-color: var(--ak-color-hover);
   transform: scale(1.05);
 }
 
 .ak-sidebar-button:active {
+  background-color: var(--ak-color-selected);
   transform: scale(0.98);
   transition-duration: var(--ak-motion-duration-fast);
 }
