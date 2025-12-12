@@ -116,33 +116,15 @@ export function ChatSidebarContent() {
     }
   };
 
-  const handleDeleteThread = async (threadId: string) => {
-    try {
-      // Backend-API aufrufen
-      const response = await fetch(`/api/chatkit/threads/${threadId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Fehler beim Löschen des Threads');
-      }
-
-      setThreads((prev) => prev.filter((t) => t.id !== threadId));
-      saveThreads(threads.filter((t) => t.id !== threadId));
-      setOpenKebabId(null);
-      if (activeThreadId === threadId) {
-        handleNewChat();
-      }
-    } catch (error) {
-      console.error('Fehler beim Löschen:', error);
-      // Fallback: Lokal löschen
-      setThreads((prev) => prev.filter((t) => t.id !== threadId));
-      saveThreads(threads.filter((t) => t.id !== threadId));
-      setOpenKebabId(null);
-      if (activeThreadId === threadId) {
-        handleNewChat();
-      }
+  const handleDeleteThread = (threadId: string) => {
+    setThreads((prev) => {
+      const next = prev.filter((t) => t.id !== threadId)
+      saveThreads(next)
+      return next
+    })
+    setOpenKebabId(null)
+    if (activeThreadId === threadId) {
+      handleNewChat()
     }
   };
 
@@ -155,55 +137,21 @@ export function ChatSidebarContent() {
     }
   };
 
-  const handleSaveRename = async (threadId: string) => {
-    const trimmedTitle = editingTitle.trim();
+  const handleSaveRename = (threadId: string) => {
+    const trimmedTitle = editingTitle.trim()
     if (!trimmedTitle) {
-      setEditingThreadId(null);
-      return;
+      setEditingThreadId(null)
+      return
     }
 
-    try {
-      // Backend-API aufrufen
-      const response = await fetch(`/api/chatkit/threads/${threadId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ title: trimmedTitle }),
-      });
+    setThreads((prev) => {
+      const next = prev.map((t) => (t.id === threadId ? { ...t, title: trimmedTitle } : t))
+      saveThreads(next)
+      return next
+    })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unbekannter Fehler' }));
-        const errorMessage = errorData?.error || errorData?.detail || `HTTP ${response.status}`;
-        console.error(`Fehler beim Umbenennen des Threads (${response.status}):`, errorMessage);
-        // Fallback: Lokal umbenennen trotz Fehler
-        setThreads((prev) =>
-          prev.map((t) => (t.id === threadId ? { ...t, title: trimmedTitle } : t))
-        );
-        setEditingThreadId(null);
-        setEditingTitle("");
-        return;
-      }
-
-      setThreads((prev) => {
-        const next = prev.map((t) => (t.id === threadId ? { ...t, title: trimmedTitle } : t));
-        saveThreads(next);
-        return next;
-      });
-      setEditingThreadId(null);
-      setEditingTitle("");
-    } catch (error) {
-      console.error('Fehler beim Umbenennen:', error);
-      // Fallback: Lokal umbenennen
-      setThreads((prev) => {
-        const next = prev.map((t) => (t.id === threadId ? { ...t, title: trimmedTitle } : t));
-        saveThreads(next);
-        return next;
-      });
-      setEditingThreadId(null);
-      setEditingTitle("");
-    }
+    setEditingThreadId(null)
+    setEditingTitle("")
   };
 
   const handleCancelRename = () => {
