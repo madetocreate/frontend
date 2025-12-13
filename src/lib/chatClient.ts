@@ -201,19 +201,19 @@ export async function sendChatMessageStream(
 
     switch (effectiveEvent) {
       case 'start':
-        callbacks.onStart?.(data)
+        callbacks.onStart?.(data as { steps: OrchestratorStep[] })
         return
       case 'step_update':
-        callbacks.onStepUpdate?.(data)
+        callbacks.onStepUpdate?.(data as { stepId: string; status: string })
         return
       case 'chunk':
-        callbacks.onChunk?.(data)
+        callbacks.onChunk?.(data as { content: string })
         return
       case 'end':
-        callbacks.onEnd?.(data)
+        callbacks.onEnd?.(data as { content: string; steps?: OrchestratorStep[]; uiMessages?: UIMessage[] })
         return
       case 'error':
-        callbacks.onError?.(data)
+        callbacks.onError?.(data as { message: string })
         return
       default:
         return

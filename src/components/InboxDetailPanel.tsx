@@ -24,10 +24,10 @@ export function InboxDetailPanel({ item }: InboxDetailPanelProps) {
     <div className="flex h-full flex-col gap-4 p-4">
       <div className="space-y-1">
         <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-          {item.channel} · {item.source}
+          {item.channel}
         </p>
         <h2 className="text-sm font-semibold text-slate-900">{item.title}</h2>
-        <p className="text-xs text-slate-600">{item.preview}</p>
+        <p className="text-xs text-slate-600">{item.snippet}</p>
       </div>
 
       <div className="flex-1 rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-xs text-slate-600">

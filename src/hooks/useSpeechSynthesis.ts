@@ -108,7 +108,7 @@ export function useSpeechSynthesis(defaultLang: string = 'de-DE') {
               if (done) {
                 // Wenn Audio noch nicht gestartet wurde, starte es jetzt mit allen Daten
                 if (!audioStarted && chunks.length > 0) {
-                  const finalBlob = new Blob(chunks, { type: 'audio/mpeg' })
+                  const finalBlob = new Blob(chunks as BlobPart[], { type: 'audio/mpeg' })
                   const audioUrl = URL.createObjectURL(finalBlob)
                   
                   const audio = new Audio(audioUrl)
@@ -163,7 +163,7 @@ export function useSpeechSynthesis(defaultLang: string = 'de-DE') {
               // Starte Wiedergabe sobald genug Daten vorhanden sind (64KB für schnellen Start)
               if (!audioStarted && totalLength >= 65536) {
                 // Erstelle Blob aus bisherigen Chunks
-                const partialBlob = new Blob(chunks, { type: 'audio/mpeg' })
+                const partialBlob = new Blob(chunks as BlobPart[], { type: 'audio/mpeg' })
                 const audioUrl = URL.createObjectURL(partialBlob)
                 
                 const audio = new Audio(audioUrl)

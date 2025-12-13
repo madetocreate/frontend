@@ -1,0 +1,202 @@
+/**
+ * AKLOW Design Tokens - "Calm Glass" System
+ * 
+ * North Star: "Quiet Power"
+ * - Alles hat einen Platz (Rhythmus, Raster, gleiche Abstände)
+ * - Farbe ist Bedeutung, nicht Deko
+ * - Motion ist Feedback, nicht Entertainment
+ */
+
+:root {
+  /* ============================================
+     SURFACE LEVELS (4 Levels)
+     ============================================ */
+  
+  /* Surface 0 - Hintergrund (ruhige Basis) */
+  --ak-surface-0: #fafafa;
+  --ak-surface-0-dark: #1c1c1e;
+  
+  /* Surface 1 - Panels (Linkes Panel, Chat-Canvas, Drawer-Body) */
+  --ak-surface-1: #ffffff;
+  --ak-surface-1-dark: #2c2c2e;
+  
+  /* Surface 2 - Interactive Containers (Kontexte, List-Rows bei Hover/Selected) */
+  --ak-surface-2: rgba(0, 0, 0, 0.02);
+  --ak-surface-2-dark: rgba(255, 255, 255, 0.05);
+  --ak-surface-2-hover: rgba(0, 0, 0, 0.04);
+  --ak-surface-2-hover-dark: rgba(255, 255, 255, 0.08);
+  --ak-surface-2-selected: rgba(0, 0, 0, 0.06);
+  --ak-surface-2-selected-dark: rgba(255, 255, 255, 0.12);
+  
+  /* Surface 3 - Glass (nur für transient UI: Popover, Tooltips, Drawer-Header) */
+  --ak-glass-bg: rgba(255, 255, 255, 0.85);
+  --ak-glass-bg-dark: rgba(28, 28, 30, 0.85);
+  --ak-glass-blur: 16px;
+  --ak-glass-border: rgba(0, 0, 0, 0.08);
+  --ak-glass-border-dark: rgba(255, 255, 255, 0.12);
+  --ak-glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --ak-glass-shadow-dark: 0 4px 20px rgba(0, 0, 0, 0.5);
+  
+  /* ============================================
+     SPACING (4pt Grid)
+     ============================================ */
+  --ak-space-1: 4px;
+  --ak-space-2: 8px;
+  --ak-space-3: 12px;
+  --ak-space-4: 16px;
+  --ak-space-5: 20px;
+  --ak-space-6: 24px;
+  --ak-space-8: 32px;
+  --ak-space-10: 40px;
+  --ak-space-12: 48px;
+  --ak-space-16: 64px;
+  
+  /* ============================================
+     RADIUS
+     ============================================ */
+  --ak-radius-sm: 6px;
+  --ak-radius-md: 8px;
+  --ak-radius-lg: 12px;
+  --ak-radius-xl: 16px;
+  --ak-radius-pill: 9999px;
+  
+  /* ============================================
+     BORDERS
+     ============================================ */
+  --ak-border-hairline: 0.5px solid rgba(0, 0, 0, 0.08);
+  --ak-border-hairline-dark: 0.5px solid rgba(255, 255, 255, 0.12);
+  --ak-border-default: 1px solid rgba(0, 0, 0, 0.1);
+  --ak-border-default-dark: 1px solid rgba(255, 255, 255, 0.12);
+  --ak-border-strong: 1px solid rgba(0, 0, 0, 0.12);
+  --ak-border-strong-dark: 1px solid rgba(255, 255, 255, 0.16);
+  
+  /* ============================================
+     ELEVATION (Shadows)
+     ============================================ */
+  --ak-elev-0: none;
+  --ak-elev-1: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --ak-elev-1-dark: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --ak-elev-2: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --ak-elev-2-dark: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --ak-elev-3: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+  --ak-elev-3-dark: 0 8px 24px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.4);
+  
+  /* ============================================
+     TYPOGRAPHY
+     ============================================ */
+  --ak-font-size-xs: 11px;
+  --ak-font-size-sm: 13px;
+  --ak-font-size-base: 15px;
+  --ak-font-size-lg: 17px;
+  --ak-font-size-xl: 20px;
+  --ak-font-size-2xl: 24px;
+  
+  --ak-line-height-tight: 1.3;
+  --ak-line-height-normal: 1.45;
+  --ak-line-height-relaxed: 1.6;
+  
+  --ak-font-weight-normal: 400;
+  --ak-font-weight-medium: 500;
+  --ak-font-weight-semibold: 600;
+  --ak-font-weight-bold: 700;
+  
+  /* ============================================
+     COLORS - Text
+     ============================================ */
+  --ak-text-primary: #1d1d1f;
+  --ak-text-primary-dark: #f2f2f7;
+  --ak-text-secondary: #6e6e73;
+  --ak-text-secondary-dark: rgba(242, 242, 247, 0.7);
+  --ak-text-muted: #86868b;
+  --ak-text-muted-dark: rgba(242, 242, 247, 0.5);
+  --ak-text-low-white: rgba(0, 0, 0, 0.9);
+  --ak-text-low-white-dark: rgba(255, 255, 255, 0.95);
+  
+  /* ============================================
+     COLORS - Accents (pro Bereich)
+     ============================================ */
+  /* Posteingang: neutral + Status-Farben */
+  --ak-accent-inbox: #007aff;
+  --ak-accent-inbox-soft: rgba(0, 122, 255, 0.1);
+  
+  /* Kunden */
+  --ak-accent-customers: #5856d6;
+  --ak-accent-customers-soft: rgba(88, 86, 214, 0.1);
+  
+  /* Dokumente */
+  --ak-accent-documents: #af52de;
+  --ak-accent-documents-soft: rgba(175, 82, 222, 0.1);
+  
+  /* Wachstum */
+  --ak-accent-growth: #ff9500;
+  --ak-accent-growth-soft: rgba(255, 149, 0, 0.1);
+  
+  /* ============================================
+     COLORS - Semantic
+     ============================================ */
+  --ak-semantic-success: #34c759;
+  --ak-semantic-success-soft: rgba(52, 199, 89, 0.1);
+  --ak-semantic-warning: #ff9500;
+  --ak-semantic-warning-soft: rgba(255, 149, 0, 0.1);
+  --ak-semantic-danger: #ff3b30;
+  --ak-semantic-danger-soft: rgba(255, 59, 48, 0.1);
+  --ak-semantic-info: #007aff;
+  --ak-semantic-info-soft: rgba(0, 122, 255, 0.1);
+  
+  /* ============================================
+     MOTION
+     ============================================ */
+  --ak-motion-duration-fast: 160ms;
+  --ak-motion-duration: 220ms;
+  --ak-motion-duration-slow: 300ms;
+  --ak-motion-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ak-motion-ease-out: cubic-bezier(0.0, 0, 0.2, 1);
+  
+  /* ============================================
+     COMPONENT SPECIFICS
+     ============================================ */
+  /* List Rows */
+  --ak-row-height: 52px;
+  --ak-row-height-compact: 44px;
+  --ak-row-padding-x: var(--ak-space-4);
+  --ak-row-padding-y: var(--ak-space-3);
+  
+  /* Buttons */
+  --ak-button-height-sm: 32px;
+  --ak-button-height-md: 40px;
+  --ak-button-height-lg: 44px;
+  --ak-button-padding-x-sm: var(--ak-space-3);
+  --ak-button-padding-x-md: var(--ak-space-4);
+  --ak-button-padding-x-lg: var(--ak-space-5);
+  
+  /* Cards */
+  --ak-card-padding: var(--ak-space-4);
+  --ak-card-radius: var(--ak-radius-lg);
+  
+  /* Drawer */
+  --ak-drawer-width: clamp(320px, 30vw, 480px);
+  --ak-drawer-header-height: 56px;
+}
+
+/* Dark Mode Overrides */
+.ak-theme-dark {
+  --ak-surface-0: var(--ak-surface-0-dark);
+  --ak-surface-1: var(--ak-surface-1-dark);
+  --ak-surface-2: var(--ak-surface-2-dark);
+  --ak-surface-2-hover: var(--ak-surface-2-hover-dark);
+  --ak-surface-2-selected: var(--ak-surface-2-selected-dark);
+  --ak-glass-bg: var(--ak-glass-bg-dark);
+  --ak-glass-border: var(--ak-glass-border-dark);
+  --ak-glass-shadow: var(--ak-glass-shadow-dark);
+  --ak-border-hairline: var(--ak-border-hairline-dark);
+  --ak-border-default: var(--ak-border-default-dark);
+  --ak-border-strong: var(--ak-border-strong-dark);
+  --ak-elev-1: var(--ak-elev-1-dark);
+  --ak-elev-2: var(--ak-elev-2-dark);
+  --ak-elev-3: var(--ak-elev-3-dark);
+  --ak-text-primary: var(--ak-text-primary-dark);
+  --ak-text-secondary: var(--ak-text-secondary-dark);
+  --ak-text-muted: var(--ak-text-muted-dark);
+  --ak-text-low-white: var(--ak-text-low-white-dark);
+}
+

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./ak-typography.css";
+@import "./ak-tokens.css";
 
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -102,13 +103,180 @@
 }
 
 @layer utilities {
-  .ak-glass {
-    @apply backdrop-blur-md bg-[var(--ak-color-bg-surface)]/80 border-r border-[var(--ak-color-border-subtle)];
-    /* Spezifische Anpassungen für Glassmorphism */
-    background-color: color-mix(in srgb, var(--ak-color-bg-surface) 80%, transparent);
+  /* ============================================
+     SURFACE LEVELS
+     ============================================ */
+  .ak-surface-0 {
+    background: var(--ak-surface-0);
   }
   
-  /* Remove scrollbars for clean look but allow scrolling */
+  .ak-surface-1 {
+    background: var(--ak-surface-1);
+  }
+  
+  .ak-surface-2 {
+    background: var(--ak-surface-2);
+  }
+  
+  .ak-surface-2-hover:hover {
+    background: var(--ak-surface-2-hover);
+  }
+  
+  .ak-surface-2-selected {
+    background: var(--ak-surface-2-selected);
+  }
+  
+  /* ============================================
+     GLASS (nur für transient UI)
+     ============================================ */
+  .ak-glass {
+    background: var(--ak-glass-bg);
+    backdrop-filter: blur(var(--ak-glass-blur));
+    -webkit-backdrop-filter: blur(var(--ak-glass-blur));
+    border: var(--ak-glass-border);
+    box-shadow: var(--ak-glass-shadow);
+  }
+  
+  /* Glass nur für Popover, Tooltips, Drawer-Header */
+  .ak-glass-popover {
+    background: var(--ak-glass-bg);
+    backdrop-filter: blur(var(--ak-glass-blur));
+    -webkit-backdrop-filter: blur(var(--ak-glass-blur));
+    border: var(--ak-glass-border);
+    box-shadow: var(--ak-glass-shadow);
+    border-radius: var(--ak-radius-lg);
+  }
+  
+  .ak-glass-drawer-header {
+    background: var(--ak-glass-bg);
+    backdrop-filter: blur(var(--ak-glass-blur));
+    -webkit-backdrop-filter: blur(var(--ak-glass-blur));
+    border: var(--ak-glass-border);
+    box-shadow: var(--ak-glass-shadow);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  /* ============================================
+     BORDERS
+     ============================================ */
+  .ak-border-hairline {
+    border: var(--ak-border-hairline);
+  }
+  
+  .ak-border-default {
+    border: var(--ak-border-default);
+  }
+  
+  .ak-border-strong {
+    border: var(--ak-border-strong);
+  }
+  
+  /* ============================================
+     ELEVATION
+     ============================================ */
+  .ak-elev-0 {
+    box-shadow: var(--ak-elev-0);
+  }
+  
+  .ak-elev-1 {
+    box-shadow: var(--ak-elev-1);
+  }
+  
+  .ak-elev-2 {
+    box-shadow: var(--ak-elev-2);
+  }
+  
+  .ak-elev-3 {
+    box-shadow: var(--ak-elev-3);
+  }
+  
+  /* ============================================
+     LIST ROWS (konsistente Höhe)
+     ============================================ */
+  .ak-list-row {
+    min-height: var(--ak-row-height);
+    padding: var(--ak-row-padding-y) var(--ak-row-padding-x);
+    transition: background-color var(--ak-motion-duration) var(--ak-motion-ease),
+                transform var(--ak-motion-duration-fast) var(--ak-motion-ease);
+  }
+  
+  .ak-list-row-compact {
+    min-height: var(--ak-row-height-compact);
+    padding: var(--ak-space-2) var(--ak-row-padding-x);
+  }
+  
+  .ak-list-row-hover:hover {
+    background: var(--ak-surface-2-hover);
+    transform: translateY(-1px);
+  }
+  
+  .ak-list-row-selected {
+    background: var(--ak-surface-2-selected);
+  }
+  
+  /* ============================================
+     BUTTONS (konsistente Größen)
+     ============================================ */
+  .ak-button-sm {
+    height: var(--ak-button-height-sm);
+    padding: 0 var(--ak-button-padding-x-sm);
+    font-size: var(--ak-font-size-sm);
+    border-radius: var(--ak-radius-md);
+  }
+  
+  .ak-button-md {
+    height: var(--ak-button-height-md);
+    padding: 0 var(--ak-button-padding-x-md);
+    font-size: var(--ak-font-size-base);
+    border-radius: var(--ak-radius-md);
+  }
+  
+  .ak-button-lg {
+    height: var(--ak-button-height-lg);
+    padding: 0 var(--ak-button-padding-x-lg);
+    font-size: var(--ak-font-size-base);
+    border-radius: var(--ak-radius-md);
+  }
+  
+  /* ============================================
+     CARDS (selten, aber konsistent)
+     ============================================ */
+  .ak-card {
+    padding: var(--ak-card-padding);
+    border-radius: var(--ak-card-radius);
+    background: var(--ak-surface-1);
+    border: var(--ak-border-default);
+    box-shadow: var(--ak-elev-1);
+  }
+  
+  /* ============================================
+     MICRO-INTERACTIONS (minimal, präzise)
+     ============================================ */
+  .ak-button-interactive {
+    transition: all var(--ak-motion-duration-fast) var(--ak-motion-ease);
+  }
+  
+  .ak-button-interactive:hover {
+    transform: translateY(-1px);
+  }
+  
+  .ak-button-interactive:active {
+    transform: translateY(0);
+  }
+  
+  .ak-icon-interactive {
+    transition: transform var(--ak-motion-duration-fast) var(--ak-motion-ease);
+  }
+  
+  .ak-icon-interactive:hover {
+    transform: scale(1.05);
+  }
+  
+  /* ============================================
+     SCROLLBAR
+     ============================================ */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -117,7 +285,6 @@
     scrollbar-width: none;
   }
 
-  /* Custom subtle scrollbar */
   .ak-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -127,15 +294,6 @@
   }
   .ak-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-zinc-400/30 rounded-full hover:bg-zinc-400/50 transition-colors;
-  }
-  
-  /* Micro-interactions */
-  .ak-button-interactive {
-    @apply transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] active:scale-[0.96] hover:scale-[1.02];
-  }
-  
-  .ak-icon-interactive {
-    @apply transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] group-hover:scale-110;
   }
 }
 

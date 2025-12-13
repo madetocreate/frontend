@@ -49,12 +49,14 @@ export function useKeyboardShortcuts({
   }, [shortcuts])
 
   const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
+    (event: Event) => {
       if (!enabled) return
+      
+      const keyboardEvent = event as KeyboardEvent
 
-      const key = event.key.toLowerCase()
+      const key = keyboardEvent.key.toLowerCase()
       const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform)
-      const ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey
+      const ctrlOrCmd = isMac ? keyboardEvent.metaKey : keyboardEvent.ctrlKey
 
       for (const shortcut of shortcutsRef.current) {
         // Skip disabled shortcuts
@@ -64,10 +66,10 @@ export function useKeyboardShortcuts({
         const keyMatches = shortcut.key.toLowerCase() === key
 
         // Check modifiers
-        const ctrlOrCmdMatches = shortcut.ctrlOrCmd ? ctrlOrCmd : !ctrlOrCmd && !event.metaKey && !event.ctrlKey
-        const shiftMatches = shortcut.shift ? event.shiftKey : !event.shiftKey
-        const altMatches = shortcut.alt ? event.altKey : !event.altKey
-        const metaMatches = shortcut.meta !== undefined ? (shortcut.meta === event.metaKey) : true
+        const ctrlOrCmdMatches = shortcut.ctrlOrCmd ? ctrlOrCmd : !ctrlOrCmd && !keyboardEvent.metaKey && !keyboardEvent.ctrlKey
+        const shiftMatches = shortcut.shift ? keyboardEvent.shiftKey : !keyboardEvent.shiftKey
+        const altMatches = shortcut.alt ? keyboardEvent.altKey : !keyboardEvent.altKey
+        const metaMatches = shortcut.meta !== undefined ? (shortcut.meta === keyboardEvent.metaKey) : true
 
         if (
           keyMatches &&
@@ -77,10 +79,10 @@ export function useKeyboardShortcuts({
           metaMatches
         ) {
           if (shortcut.preventDefault !== false) {
-            event.preventDefault()
+            keyboardEvent.preventDefault()
           }
           if (shortcut.stopPropagation) {
-            event.stopPropagation()
+            keyboardEvent.stopPropagation()
           }
           shortcut.action()
           break
