@@ -9,11 +9,13 @@ import {
   MegaphoneIcon,
   DocumentIcon,
   UserGroupIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline'
 import { ChatSidebarContent } from '@/components/chat/ChatSidebarContent'
 import { InboxDrawerWidget } from '@/components/InboxDrawerWidget'
 import type { InboxItem } from '@/components/InboxDrawerWidget'
 import { InboxDetailPanel } from '@/components/InboxDetailPanel'
+import { InboxDetailsDrawer } from '@/components/InboxDetailsDrawer'
 import { NotificationsDetailPanel } from '@/components/NotificationsDetailPanel'
 import type { ProfileUserState } from '@/components/ProfileMenu'
 import { SettingsSidebarWidget } from '@/components/SettingsSidebarWidget'
@@ -88,6 +90,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
   const [selectedGrowthItemId, setSelectedGrowthItemId] = useState<string | null>(null)
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null)
+  const [selectedInboxThreadId, setSelectedInboxThreadId] = useState<string | null>(null)
   const [showInboxOverview, setShowInboxOverview] = useState(false)
   const [showGrowthOverview, setShowGrowthOverview] = useState(false)
   const [showDocumentsOverview, setShowDocumentsOverview] = useState(false)
@@ -118,6 +121,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setRightDrawerOpen(false)
 
     setSelectedInboxItem(null)
+    setSelectedInboxThreadId(null)
     setSelectedSettingsCategory(null)
     setSelectedAutomationItem(null)
     setSelectedMemoryCategory(null)
@@ -172,10 +176,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     if (selectedInboxItem?.id === item.id && rightDrawerOpen) {
       setRightDrawerOpen(false)
       setSelectedInboxItem(null)
+      setSelectedInboxThreadId(null)
       return
     }
     
     setSelectedInboxItem(item)
+    setSelectedInboxThreadId(item.threadId || null)
     setSelectedSettingsCategory(null)
     setSelectedAutomationItem(null)
     setSelectedMemoryCategory(null)
@@ -328,6 +334,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setRightDrawerOpen(false)
     setShowNotifications(false)
     setSelectedInboxItem(null)
+    setSelectedInboxThreadId(null)
     setSelectedSettingsCategory(null)
     setSelectedAutomationItem(null)
     setSelectedMemoryCategory(null)
@@ -346,6 +353,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     } else {
       setShowInboxOverview(true)
       setSelectedInboxItem(null)
+      setSelectedInboxThreadId(null)
       setSelectedSettingsCategory(null)
       setSelectedAutomationItem(null)
       setSelectedMemoryCategory(null)
@@ -355,6 +363,39 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       setShowGrowthOverview(false)
       setShowDocumentsOverview(false)
       handleOpenDetails()
+    }
+  }
+
+  const handleInboxInfoClick = () => {
+    // Öffne InboxDetailsDrawer für ersten Thread mit threadId
+    // Mock-Daten: Erster Thread aus DEFAULT_ITEMS
+    const mockFirstItem = {
+      id: 't_101',
+      channel: 'email' as const,
+      icon: 'mail',
+      title: 'Re: Angebot für Q1',
+      snippet: 'Max Mustermann – Können wir den Umfang am Montag finalisieren?',
+      time: '09:12',
+      unread: true,
+      badge: 'Wichtig' as const,
+      threadId: 'th_12345',
+    }
+    
+    if (mockFirstItem.threadId) {
+      setSelectedInboxThreadId(mockFirstItem.threadId)
+      setSelectedInboxItem(mockFirstItem)
+      setShowInboxOverview(false)
+      setSelectedSettingsCategory(null)
+      setSelectedAutomationItem(null)
+      setSelectedMemoryCategory(null)
+      setSelectedCustomerId(null)
+      setSelectedGrowthItemId(null)
+      setSelectedDocumentId(null)
+      setShowGrowthOverview(false)
+      setShowDocumentsOverview(false)
+      handleOpenDetails()
+    } else {
+      handleInboxOverviewToggle()
     }
   }
 
@@ -401,6 +442,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     rightDrawerOpen &&
     (showNotifications ||
       selectedInboxItem !== null ||
+      selectedInboxThreadId !== null ||
       selectedSettingsCategory !== null ||
       selectedAutomationItem !== null ||
       selectedMemoryCategory !== null ||
@@ -537,10 +579,72 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     ? 'Speicher & CRM'
                     : getModuleLabel(activeModuleToken)}
                 </div>
+                
+                <div className="flex-1 flex justify-center">
+                  {/* Info Button - öffnet rechten Drawer mit Details */}
+                  {(activeModuleToken === 'inbox' || activeModuleToken === 'new1' || activeModuleToken === 'new2' || activeModuleToken === 'automation') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (activeModuleToken === 'inbox') {
+                          handleInboxInfoClick()
+                        } else if (activeModuleToken === 'new1') {
+                          // Öffne GrowthDetailsDrawer
+                          setSelectedGrowthItemId('gi_2025_001')
+                          setSelectedInboxItem(null)
+                          setSelectedInboxThreadId(null)
+                          setSelectedSettingsCategory(null)
+                          setSelectedAutomationItem(null)
+                          setSelectedMemoryCategory(null)
+                          setSelectedCustomerId(null)
+                          setSelectedDocumentId(null)
+                          setShowInboxOverview(false)
+                          setShowGrowthOverview(false)
+                          setShowDocumentsOverview(false)
+                          handleOpenDetails()
+                        } else if (activeModuleToken === 'new2') {
+                          // Öffne DocumentDetailsDrawer
+                          setSelectedDocumentId('d_123')
+                          setSelectedInboxItem(null)
+                          setSelectedInboxThreadId(null)
+                          setSelectedSettingsCategory(null)
+                          setSelectedAutomationItem(null)
+                          setSelectedMemoryCategory(null)
+                          setSelectedCustomerId(null)
+                          setSelectedGrowthItemId(null)
+                          setShowInboxOverview(false)
+                          setShowGrowthOverview(false)
+                          setShowDocumentsOverview(false)
+                          handleOpenDetails()
+                        } else if (activeModuleToken === 'automation') {
+                          // Öffne CustomerDetailsDrawer
+                          setSelectedCustomerId('c1')
+                          setSelectedInboxItem(null)
+                          setSelectedInboxThreadId(null)
+                          setSelectedSettingsCategory(null)
+                          setSelectedAutomationItem(null)
+                          setSelectedMemoryCategory(null)
+                          setSelectedGrowthItemId(null)
+                          setSelectedDocumentId(null)
+                          setShowInboxOverview(false)
+                          setShowGrowthOverview(false)
+                          setShowDocumentsOverview(false)
+                          handleOpenDetails()
+                        }
+                      }}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[var(--ak-color-text-secondary)] transition-colors hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
+                      aria-label="Details öffnen"
+                    >
+                      <InformationCircleIcon className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Collapse Button */}
                 <button
                   type="button"
                   onClick={() => setLeftDrawerOpen(false)}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] shadow-sm hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] shadow-sm hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
                 >
                   <span className="sr-only">Panel einklappen</span>
                   <span aria-hidden="true" className="text-xs">
@@ -552,9 +656,29 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 {activeModuleToken === 'chat' ? (
                   <ChatSidebarContent />
                 ) : activeModuleToken === 'inbox' ? (
-                  <InboxDrawerWidget onItemClick={handleInboxItemClick} />
+                  <InboxDrawerWidget 
+                    onItemClick={handleInboxItemClick} 
+                    onInfoClick={handleInboxInfoClick}
+                  />
                 ) : activeModuleToken === 'automation' ? (
-                  <CustomersSidebarWidget />
+                  <CustomersSidebarWidget 
+                    onCustomerClick={handleCustomerClick}
+                    onOverviewClick={() => {
+                      // Öffne CustomerDetailsDrawer für ersten Kunden
+                      setSelectedCustomerId('c1')
+                      setSelectedInboxItem(null)
+                      setSelectedInboxThreadId(null)
+                      setSelectedSettingsCategory(null)
+                      setSelectedAutomationItem(null)
+                      setSelectedMemoryCategory(null)
+                      setSelectedGrowthItemId(null)
+                      setSelectedDocumentId(null)
+                      setShowInboxOverview(false)
+                      setShowGrowthOverview(false)
+                      setShowDocumentsOverview(false)
+                      handleOpenDetails()
+                    }}
+                  />
                 ) : activeModuleToken === 'settings' ? (
                   selectedSettingsCategory === 'memory_crm' ? (
                     <MemorySidebarWidget onCategoryClick={handleMemoryCategoryClick} />
@@ -562,9 +686,43 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     <SettingsSidebarWidget onCategorySelect={handleSettingsCategorySelect} />
                   )
                 ) : activeModuleToken === 'new1' ? (
-                  <GrowthSidebarWidget onItemClick={handleGrowthItemClick} />
+                  <GrowthSidebarWidget 
+                    onItemClick={handleGrowthItemClick}
+                    onOverviewClick={() => {
+                      // Öffne GrowthDetailsDrawer für erstes Item
+                      setSelectedGrowthItemId('gi_2025_001')
+                      setSelectedInboxItem(null)
+                      setSelectedInboxThreadId(null)
+                      setSelectedSettingsCategory(null)
+                      setSelectedAutomationItem(null)
+                      setSelectedMemoryCategory(null)
+                      setSelectedCustomerId(null)
+                      setSelectedDocumentId(null)
+                      setShowInboxOverview(false)
+                      setShowGrowthOverview(false)
+                      setShowDocumentsOverview(false)
+                      handleOpenDetails()
+                    }}
+                  />
                 ) : activeModuleToken === 'new2' ? (
-                  <DocumentsSidebarWidget onDocumentClick={handleDocumentClick} onOverviewClick={handleDocumentsOverviewToggle} />
+                  <DocumentsSidebarWidget 
+                    onDocumentClick={handleDocumentClick} 
+                    onOverviewClick={() => {
+                      // Öffne DocumentDetailsDrawer für erstes Dokument
+                      setSelectedDocumentId('d_123')
+                      setSelectedInboxItem(null)
+                      setSelectedInboxThreadId(null)
+                      setSelectedSettingsCategory(null)
+                      setSelectedAutomationItem(null)
+                      setSelectedMemoryCategory(null)
+                      setSelectedCustomerId(null)
+                      setSelectedGrowthItemId(null)
+                      setShowInboxOverview(false)
+                      setShowGrowthOverview(false)
+                      setShowDocumentsOverview(false)
+                      handleOpenDetails()
+                    }}
+                  />
                 ) : (
                   <>
                     <p className="ak-body text-[var(--ak-color-text-muted)]">
@@ -598,18 +756,18 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
             )}
             style={{ width: '100%' }} // Füllt immer den gesamten Container
             >
-              <div className="flex items-center justify-between px-3 py-2">
+              <div className="ak-glass-drawer-header flex items-center justify-between" style={{ padding: 'var(--ak-space-3) var(--ak-space-4)' }}>
                 <button
                   type="button"
                   onClick={handleCloseDetails}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] shadow-sm hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md ak-surface-2 text-[var(--ak-text-secondary)] transition-colors hover:ak-surface-2-hover hover:text-[var(--ak-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-accent-inbox)]/25 focus-visible:ring-offset-2"
                 >
                   <span className="sr-only">Detailpanel einklappen</span>
                   <span aria-hidden="true" className="text-xs">
                     ›
                   </span>
                 </button>
-                <div className="truncate ak-caption font-medium text-[var(--ak-color-text-primary)]">
+                <div className="truncate ak-caption font-medium text-[var(--ak-text-primary)]" style={{ fontSize: 'var(--ak-font-size-sm)' }}>
                   {showNotifications
                     ? 'Benachrichtigungen'
                     : showInboxOverview
@@ -654,7 +812,57 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     </p>
                   </div>
                 ) : activeModuleToken === 'inbox' ? (
-                  <InboxDetailPanel item={selectedInboxItem} />
+                  selectedInboxThreadId && selectedInboxItem ? (
+                    <InboxDetailsDrawer
+                      threadId={selectedInboxThreadId}
+                      channel={selectedInboxItem.channel}
+                      sender={selectedInboxItem.snippet.split(' – ')[0] || selectedInboxItem.title}
+                      dateShort={selectedInboxItem.time}
+                      statusOptions={[
+                        { label: 'Offen', value: 'open' },
+                        { label: 'In Arbeit', value: 'in_progress' },
+                        { label: 'Erledigt', value: 'done' },
+                      ]}
+                      status="open"
+                      important={false}
+                      assigneeOptions={[
+                        { label: 'Unzugewiesen', value: '' },
+                        { label: 'Anna', value: 'anna' },
+                        { label: 'Ben', value: 'ben' },
+                        { label: 'Du', value: 'me' },
+                      ]}
+                      assignee=""
+                      tags="onboarding, follow-up"
+                      customer="Acme GmbH"
+                      project=""
+                      lastSync="13:22 Uhr"
+                      connectionStatus="OK"
+                      advancedVisible={false}
+                      ids={{
+                        conversationId: 'conv_987654',
+                        providerId: 'gmail',
+                        messageId: '174a-ef23-9912',
+                      }}
+                      canSpamControls={true}
+                      state="loaded"
+                      onClose={() => {
+                        setSelectedInboxThreadId(null)
+                        setSelectedInboxItem(null)
+                        setRightDrawerOpen(false)
+                      }}
+                    />
+                  ) : selectedInboxItem ? (
+                    <InboxDetailPanel item={selectedInboxItem} />
+                  ) : (
+                    <div className="flex h-full items-center justify-center px-4">
+                      <div className="max-w-xs text-center text-xs text-slate-500">
+                        <p className="font-medium text-slate-600">Kein Thread ausgewählt</p>
+                        <p className="mt-1">
+                          Wähle links im Posteingang eine Nachricht aus, um Details anzuzeigen.
+                        </p>
+                      </div>
+                    </div>
+                  )
                 ) : showGrowthOverview ? (
                   <div className="space-y-2">
                     <h3 className="ak-heading text-base">Wachstum Übersicht</h3>

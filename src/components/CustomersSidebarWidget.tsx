@@ -9,6 +9,7 @@ import {
   MagnifyingGlassIcon,
   BookOpenIcon,
   UserIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline'
 
 type CustomerItem = {
@@ -27,6 +28,7 @@ type QuickAction = {
 type CustomersSidebarWidgetProps = {
   onCustomerClick?: (customerId: string) => void
   onOpenDetail?: (customerId: string) => void
+  onOverviewClick?: () => void
 }
 
 // Icon-Mapping für Quick Actions
@@ -92,6 +94,7 @@ const MOCK_CUSTOMERS: CustomerItem[] = [
 export function CustomersSidebarWidget({
   onCustomerClick,
   onOpenDetail,
+  onOverviewClick,
 }: CustomersSidebarWidgetProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSegment, setSelectedSegment] = useState<string>('Alle')
@@ -136,29 +139,18 @@ export function CustomersSidebarWidget({
 
   return (
     <div className="flex h-full flex-col gap-3 p-3">
-      {/* Header mit Titel und Details-Button */}
-      <div className="flex items-center justify-between">
-        <h2 className="ak-heading text-base">Kunden</h2>
-        <button
-          type="button"
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--ak-color-text-primary)] transition-colors hover:bg-[var(--ak-color-bg-hover)]"
-          aria-label="Details öffnen"
-        >
-          <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-          Details
-        </button>
-      </div>
-
-      {/* Suchfeld in Form */}
+      {/* Suchfeld ganz oben */}
       <form onSubmit={handleSearchSubmit}>
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Kunden suchen…"
-          className="w-full rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-4 py-2 text-sm text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-muted)] focus:border-[var(--ak-color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--ak-color-accent)]"
+          className="w-full rounded-md border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-2 text-[var(--ak-font-size-sm)] text-[var(--ak-text-primary)] placeholder:text-[var(--ak-text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--ak-accent-inbox)]"
         />
       </form>
+
+      {/* Info-Button entfernt */}
 
       {/* Quick Actions */}
       <div className="flex flex-wrap items-center gap-2">
@@ -222,24 +214,33 @@ export function CustomersSidebarWidget({
             </button>
           </div>
         ) : (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col">
             {filteredCustomers.map((customer) => (
               <div
                 key={customer.id}
                 onClick={() => handleCustomerClick(customer)}
-                className="group flex w-full items-center gap-3 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 p-3 text-left transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)] hover:shadow-[var(--ak-shadow-card)] cursor-pointer"
+                className={clsx(
+                  'group ak-list-row flex w-full items-center gap-3 ak-surface-1 ak-border-hairline cursor-pointer',
+                  'hover:ak-surface-2-hover hover:ak-elev-1'
+                )}
+                style={{
+                  borderTop: 'none',
+                  borderLeft: 'none',
+                  borderRight: 'none',
+                  borderBottom: 'var(--ak-border-hairline)',
+                }}
               >
                 {/* User Icon Box (32px, full radius) */}
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[var(--ak-color-bg-surface-muted)]">
-                  <UserIcon className="h-4 w-4 text-[var(--ak-color-text-primary)]" />
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ak-surface-2">
+                  <UserIcon className="h-4 w-4 text-[var(--ak-text-primary)]" />
                 </div>
 
                 {/* Content */}
-                <div className="flex min-w-0 flex-1 flex-col gap-0">
-                  <p className="ak-body truncate text-sm font-semibold text-[var(--ak-color-text-primary)]">
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <p className="ak-body truncate text-[var(--ak-font-size-sm)] font-semibold leading-tight text-[var(--ak-text-primary)]">
                     {customer.name}
                   </p>
-                  <p className="ak-caption text-[var(--ak-color-text-secondary)]">
+                  <p className="ak-caption text-[var(--ak-font-size-xs)] text-[var(--ak-text-secondary)]">
                     {customer.context}
                   </p>
                 </div>

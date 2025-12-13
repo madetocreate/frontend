@@ -40,6 +40,7 @@ type InboxApiResponse = {
 type InboxDrawerWidgetProps = {
   onItemClick?: (item: InboxItem) => void
   onOverviewClick?: () => void
+  onInfoClick?: () => void
 }
 
 // Icon-Mapping
@@ -65,47 +66,52 @@ const DEFAULT_ITEMS: InboxItem[] = [
     channel: 'email',
     icon: 'mail',
     title: 'Re: Angebot für Q1',
-    snippet: 'Können wir den Umfang am Montag finalisieren?',
+    snippet: 'Max Mustermann – Können wir den Umfang am Montag finalisieren?',
     time: '09:12',
     unread: true,
     badge: 'Wichtig',
+    threadId: 'th_12345',
   },
   {
     id: 't_102',
     channel: 'messenger',
     icon: 'mobile',
     title: 'Neue Chat-Anfrage',
-    snippet: 'Hallo! Ich habe eine kurze Frage zu Ihrer Preisliste…',
+    snippet: 'Anna Schmidt – Hallo! Ich habe eine kurze Frage zu Ihrer Preisliste…',
     time: '08:47',
     unread: true,
     badge: 'Neu',
+    threadId: 'th_12346',
   },
   {
     id: 't_103',
     channel: 'reviews',
     icon: 'star',
     title: 'Bewertung (4★) – Super schneller Support',
-    snippet: 'Das Team hat mir innerhalb von 10 Minuten geholfen!',
+    snippet: 'Trustpilot – Das Team hat mir innerhalb von 10 Minuten geholfen!',
     time: 'Gestern',
     unread: false,
+    threadId: 'th_12347',
   },
   {
     id: 't_104',
     channel: 'support',
     icon: 'lifesaver',
     title: 'Ticket #4821: Rechnung korrigieren',
-    snippet: 'Bitte prüfen Sie Position 3 – falscher Betrag ausgewiesen.',
+    snippet: 'Support – Bitte prüfen Sie Position 3 – falscher Betrag ausgewiesen.',
     time: 'Mi',
     unread: true,
+    threadId: 'th_12348',
   },
   {
     id: 't_105',
     channel: 'email',
     icon: 'mail',
     title: 'Newsletter Dezember',
-    snippet: 'Highlights: Produkt-Updates, Roadmap und Termine…',
+    snippet: 'Newsletter – Highlights: Produkt-Updates, Roadmap und Termine…',
     time: 'Mo',
     unread: false,
+    threadId: 'th_12349',
   },
 ]
 
@@ -140,7 +146,7 @@ const BADGE_COLOR_MAP = {
   Wichtig: 'border-[var(--ak-color-border-warning)] bg-[var(--ak-color-bg-warning)] text-[var(--ak-color-text-warning)]',
 }
 
-export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerWidgetProps) {
+export function InboxDrawerWidget({ onItemClick, onOverviewClick, onInfoClick }: InboxDrawerWidgetProps) {
   const [currentChannel, setCurrentChannel] = useState<InboxChannel>('all')
   const [items, setItems] = useState<InboxItem[]>(DEFAULT_ITEMS)
   const [, setIsLoading] = useState(false)
@@ -257,27 +263,8 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
   }
 
   return (
-    <div className="flex h-full flex-col gap-3 p-3">
-      {/* Header mit Titel, Badge und Info-Button */}
-      <div className="flex items-center gap-2">
-        <h2 className="ak-heading text-base">Posteingang</h2>
-        {unreadCount > 0 && (
-          <span className="inline-flex items-center rounded-full border border-[var(--ak-color-border-info)] bg-[var(--ak-color-bg-info)] px-2 py-0.5 text-[10px] font-medium text-[var(--ak-color-text-info)]">
-            {unreadCount}
-          </span>
-        )}
-        <div className="flex-1" />
-        <button
-          type="button"
-          onClick={onOverviewClick}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] transition-colors hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]"
-          aria-label="Details öffnen"
-        >
-          <InformationCircleIcon className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Suchfeld (optional) */}
+    <div className="flex h-full flex-col ak-surface-1" style={{ padding: 'var(--ak-space-3)' }}>
+      {/* Suchfeld ganz oben */}
       {showSearch && (
         <input
           type="text"
@@ -285,12 +272,23 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Suchen…"
-          className="w-full rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-4 py-2 text-sm text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-muted)] focus:border-[var(--ak-color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--ak-color-accent)]"
+          className="w-full rounded-md border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-2 text-[var(--ak-font-size-sm)] text-[var(--ak-text-primary)] placeholder:text-[var(--ak-text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--ak-accent-inbox)]"
+          style={{ marginBottom: 'var(--ak-space-3)' }}
         />
       )}
 
+      {/* Header mit Badge (Info-Button entfernt) */}
+      <div className="flex items-center gap-2" style={{ marginBottom: 'var(--ak-space-3)' }}>
+        {unreadCount > 0 && (
+          <span className="inline-flex items-center rounded-md border px-2 py-0.5 text-[var(--ak-font-size-xs)] font-medium" style={{ borderColor: 'var(--ak-semantic-info)', backgroundColor: 'var(--ak-semantic-info-soft)', color: 'var(--ak-semantic-info)' }}>
+            {unreadCount}
+          </span>
+        )}
+        <div className="flex-1" />
+      </div>
+
       {/* Channel Filter Buttons */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1" style={{ marginBottom: 'var(--ak-space-3)' }}>
         {CHANNELS.map((channel) => {
           const IconComponent = ICON_MAP[channel.icon] || GlobeAltIcon
           return (
@@ -299,10 +297,10 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
               type="button"
               onClick={() => setCurrentChannel(channel.key)}
               className={clsx(
-                'inline-flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors',
+                'ak-button-sm inline-flex items-center justify-center gap-1.5 ak-border-default font-medium transition-colors',
                 currentChannel === channel.key
-                  ? 'border-[var(--ak-color-border-strong)] bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-primary)] shadow-sm'
-                  : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
+                  ? 'ak-surface-2-selected ak-border-strong text-[var(--ak-text-primary)] ak-elev-1'
+                  : 'ak-surface-1 text-[var(--ak-text-secondary)] hover:ak-surface-2-hover'
               )}
             >
               <IconComponent className="h-4 w-4" />
@@ -313,7 +311,7 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
       </div>
 
       {/* Actions Dock */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1" style={{ marginBottom: 'var(--ak-space-3)' }}>
         {ACTIONS_DOCK.map((action) => {
           const IconComponent = ICON_MAP[action.icon] || BoltIcon
           return (
@@ -321,7 +319,7 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
               key={action.key}
               type="button"
               onClick={(e) => handleActionClick(e, action.key)}
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--ak-color-text-primary)] transition-colors hover:bg-[var(--ak-color-bg-hover)]"
+              className="ak-button-sm inline-flex items-center justify-center gap-1.5 ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
             >
               <IconComponent className="h-4 w-4" />
               {action.label}
@@ -332,7 +330,7 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
         <button
           type="button"
           onClick={handleMenuClick}
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--ak-color-text-primary)] transition-colors hover:bg-[var(--ak-color-bg-hover)]"
+          className="ak-button-sm inline-flex items-center justify-center gap-1.5 ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
         >
           <PlusIcon className="h-4 w-4" />
           Mehr…
@@ -341,16 +339,16 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
 
       {/* Error State */}
       {uiState === 'error' && (
-        <div className="rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-elevated-secondary)] p-3">
+        <div className="ak-card ak-surface-2" style={{ marginBottom: 'var(--ak-space-3)' }}>
           <div className="flex items-center gap-2">
-            <ArrowPathIcon className="h-4 w-4 text-[var(--ak-color-text-secondary)]" />
-            <p className="ak-body flex-1 text-sm text-[var(--ak-color-text-primary)]">
+            <ArrowPathIcon className="h-4 w-4 text-[var(--ak-text-secondary)]" />
+            <p className="ak-body flex-1 text-[var(--ak-font-size-sm)] text-[var(--ak-text-primary)]">
               Posteingang gerade nicht erreichbar
             </p>
             <button
               type="button"
               onClick={handleReload}
-              className="inline-flex items-center justify-center rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--ak-color-text-primary)] transition-colors hover:bg-[var(--ak-color-bg-hover)]"
+              className="ak-button-sm inline-flex items-center justify-center ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
             >
               Neu laden
             </button>
@@ -360,8 +358,8 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
 
       {/* Empty State */}
       {uiState === 'empty' && (
-        <div className="rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-4">
-          <p className="ak-body text-center text-sm text-[var(--ak-color-text-secondary)]">
+        <div className="ak-card ak-surface-1" style={{ marginBottom: 'var(--ak-space-3)' }}>
+          <p className="ak-body text-center text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">
             Noch keine Nachrichten – sobald etwas reinkommt, landet es hier.
           </p>
         </div>
@@ -375,7 +373,7 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
               Keine Einträge für diesen Filter.
             </div>
           ) : (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col">
               {filteredItems.map((item) => {
                 const IconComponent = ICON_MAP[item.icon] || EnvelopeIcon
 
@@ -383,24 +381,34 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
                   <div
                     key={item.id}
                     onClick={() => handleItemClick(item)}
-                    className="group flex w-full items-center gap-2 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 p-2 text-left transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)] hover:shadow-[var(--ak-shadow-card)] cursor-pointer"
+                    className={clsx(
+                      'group ak-list-row flex w-full items-center gap-3 ak-surface-1 ak-border-hairline cursor-pointer',
+                      'hover:ak-surface-2-hover hover:ak-elev-1',
+                      item.unread && 'ak-surface-2-selected'
+                    )}
+                    style={{
+                      borderTop: 'none',
+                      borderLeft: 'none',
+                      borderRight: 'none',
+                      borderBottom: 'var(--ak-border-hairline)',
+                    }}
                   >
                     {/* Icon Box */}
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded bg-[var(--ak-color-bg-surface-muted)]/50">
-                      <IconComponent className="h-5 w-5 text-[var(--ak-color-text-primary)]" />
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md ak-surface-2">
+                      <IconComponent className="h-5 w-5 text-[var(--ak-text-primary)]" />
                     </div>
 
                     {/* Content Col mit flex: 1 */}
-                    <div className="flex min-w-0 flex-1 flex-col gap-0">
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                       {/* Row mit Titel und Badge */}
                       <div className="flex items-baseline gap-2">
-                        <p className="ak-body flex-1 truncate text-sm font-semibold text-[var(--ak-color-text-primary)]">
+                        <p className="ak-body flex-1 truncate text-[var(--ak-font-size-sm)] font-semibold leading-tight text-[var(--ak-text-primary)]">
                           {item.title}
                         </p>
                         {item.badge && (
                           <span
                             className={clsx(
-                              'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium',
+                              'inline-flex items-center rounded-full border px-2 py-0.5 text-[var(--ak-font-size-xs)] font-medium',
                               BADGE_COLOR_MAP[item.badge]
                             )}
                           >
@@ -409,30 +417,30 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
                         )}
                       </div>
                       {/* Snippet */}
-                      <p className="ak-body truncate text-sm text-[var(--ak-color-text-secondary)]">
+                      <p className="ak-body truncate text-[var(--ak-font-size-sm)] leading-tight text-[var(--ak-text-secondary)]">
                         {item.snippet}
                       </p>
                     </div>
 
                     {/* Col mit Zeit und unread-Punkt */}
                     <div className="flex flex-col items-end gap-1">
-                      <span className="ak-caption text-sm text-[var(--ak-color-text-secondary)]">
+                      <span className="ak-caption text-[var(--ak-font-size-xs)] text-[var(--ak-text-secondary)]">
                         {item.time}
                       </span>
                       {item.unread && (
-                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                        <div className="h-1.5 w-1.5 rounded-full bg-[var(--ak-semantic-info)]" />
                       )}
                     </div>
 
-                    {/* Action Buttons Row */}
-                    <div className="flex items-center gap-1">
+                    {/* Action Buttons Row - nur bei Hover sichtbar */}
+                    <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleMenuClick(e)
                         }}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-colors hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]"
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--ak-text-secondary)] transition-colors hover:bg-[var(--ak-surface-2-hover)] hover:text-[var(--ak-text-primary)]"
                         aria-label="Aktionen"
                       >
                         <BoltIcon className="h-4 w-4" />
@@ -443,7 +451,7 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
                           e.stopPropagation()
                           // TODO: Open thread details
                         }}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-colors hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]"
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--ak-text-secondary)] transition-colors hover:bg-[var(--ak-surface-2-hover)] hover:text-[var(--ak-text-primary)]"
                         aria-label="Details"
                       >
                         <InformationCircleIcon className="h-4 w-4" />
@@ -454,7 +462,7 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
                           e.stopPropagation()
                           // TODO: Archive thread
                         }}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-colors hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]"
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--ak-text-secondary)] transition-colors hover:bg-[var(--ak-surface-2-hover)] hover:text-[var(--ak-text-primary)]"
                         aria-label="Archivieren"
                       >
                         <DocumentTextIcon className="h-4 w-4" />
@@ -465,7 +473,7 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick }: InboxDrawerW
                           e.stopPropagation()
                           // TODO: Mark as read
                         }}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-colors hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]"
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--ak-text-secondary)] transition-colors hover:bg-[var(--ak-surface-2-hover)] hover:text-[var(--ak-text-primary)]"
                         aria-label="Als gelesen markieren"
                       >
                         <CheckCircleIcon className="h-4 w-4" />
