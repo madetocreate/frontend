@@ -210,8 +210,8 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
               key={tab.id}
               type="button"
               onClick={() => setActiveChannel(tab.id)}
-              className={clsx(
-                'inline-flex w-full items-center justify-center rounded-lg border px-1.5 py-0.5 text-[9px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] ak-button-interactive',
+                className={clsx(
+                  'inline-flex w-full items-center justify-center rounded-lg border px-1.5 py-0.5 text-[8px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] ak-button-interactive',
                 isActive
                   ? 'border-[var(--ak-color-border-strong)] bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-primary)] shadow-[var(--ak-shadow-soft)]'
                   : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
