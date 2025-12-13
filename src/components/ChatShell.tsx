@@ -2,7 +2,7 @@
 
 import { useState, FormEvent, useRef, useEffect, useCallback } from "react";
 import clsx from "clsx";
-import { BellIcon, RectangleStackIcon, ClipboardDocumentIcon, BookmarkIcon, ArrowPathIcon, SpeakerWaveIcon } from "@heroicons/react/24/outline";
+import { BellIcon, RectangleStackIcon, ClipboardDocumentIcon, BookmarkIcon, ArrowPathIcon, SpeakerWaveIcon, PencilSquareIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { WidgetRenderer } from "./chat/WidgetRenderer";
 import { sendChatMessageStream, ChatResponse } from "../lib/chatClient";
 import { useDictation } from "../hooks/useDictation";
@@ -39,6 +39,10 @@ export function ChatShell() {
   const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const hoverMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [hoveredUserMessageId, setHoveredUserMessageId] = useState<string | null>(null);
+  const hoverUserMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [hoveredBell, setHoveredBell] = useState(false);
+  const bellTooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressRef = useRef(false);
@@ -179,10 +183,39 @@ export function ChatShell() {
     const isUser = message.role === "user";
 
     if (isUser) {
+      const handleUserCopy = () => {
+        navigator.clipboard.writeText(message.text);
+      };
+
+      const handleUserEdit = () => {
+        // TODO: Implement edit functionality
+        console.log("Edit message:", message.id);
+      };
+
       return (
         <div
           key={message.id}
-          className="flex justify-end"
+          className="group flex justify-end"
+          onMouseEnter={() => {
+            if (hoverUserMenuTimeoutRef.current) {
+              clearTimeout(hoverUserMenuTimeoutRef.current);
+            }
+            hoverUserMenuTimeoutRef.current = setTimeout(() => {
+              setHoveredUserMessageId(message.id);
+            }, 500);
+          }}
+          onMouseLeave={() => {
+            if (hoverUserMenuTimeoutRef.current) {
+              clearTimeout(hoverUserMenuTimeoutRef.current);
+              hoverUserMenuTimeoutRef.current = null;
+            }
+            setHoveredUserMessageId(null);
+            if (tooltipTimeoutRef.current) {
+              clearTimeout(tooltipTimeoutRef.current);
+              tooltipTimeoutRef.current = null;
+            }
+            setHoveredTooltip(null);
+          }}
           style={{ marginLeft: "auto", maxWidth: "60%", marginRight: "3%" }}
         >
           <div className="flex flex-col gap-2" style={{ alignItems: "flex-end", width: "100%" }}>
@@ -191,6 +224,72 @@ export function ChatShell() {
               style={{ color: "var(--ak-color-text-primary)", fontSize: "16px" }}
             >
               {message.text}
+            </div>
+            
+            {/* Hover Menu für Benutzernachrichten */}
+            <div 
+              className={`${hoveredUserMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-1 -mt-1`}
+            >
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleUserEdit}
+                  onMouseEnter={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                    }
+                    tooltipTimeoutRef.current = setTimeout(() => {
+                      setHoveredTooltip({ messageId: message.id, icon: 'edit' });
+                    }, 500);
+                  }}
+                  onMouseLeave={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                      tooltipTimeoutRef.current = null;
+                    }
+                    setHoveredTooltip(null);
+                  }}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  aria-label="Nachricht bearbeiten"
+                >
+                  <PencilSquareIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'edit' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
+                    Bearbeiten
+                  </span>
+                )}
+              </div>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleUserCopy}
+                  onMouseEnter={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                    }
+                    tooltipTimeoutRef.current = setTimeout(() => {
+                      setHoveredTooltip({ messageId: message.id, icon: 'copy' });
+                    }, 500);
+                  }}
+                  onMouseLeave={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                      tooltipTimeoutRef.current = null;
+                    }
+                    setHoveredTooltip(null);
+                  }}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  aria-label="Nachricht kopieren"
+                >
+                  <ClipboardDocumentIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'copy' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
+                    Kopieren
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -219,6 +318,11 @@ export function ChatShell() {
       } else {
         toggleTts({ id: message.id, text: message.text, lang: "de-DE" });
       }
+    };
+
+    const handleQuickActions = () => {
+      // TODO: Implement quick actions functionality
+      console.log("Quick actions for message:", message.id);
     };
 
     return (
@@ -266,7 +370,7 @@ export function ChatShell() {
 
             {/* Hover Menu - nur bei Hover sichtbar */}
             <div 
-              className={`${hoveredMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-1.5 -mt-2`}
+              className={`${hoveredMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-1 -mt-3`}
               onMouseLeave={() => {
                 if (tooltipTimeoutRef.current) {
                   clearTimeout(tooltipTimeoutRef.current);
@@ -294,10 +398,10 @@ export function ChatShell() {
                     }
                     setHoveredTooltip(null);
                   }}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
                   aria-label="Nachricht kopieren"
                 >
-                  <ClipboardDocumentIcon className="h-5 w-5" aria-hidden="true" />
+                  <ClipboardDocumentIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'copy' && (
                   <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
@@ -324,10 +428,10 @@ export function ChatShell() {
                     }
                     setHoveredTooltip(null);
                   }}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
                   aria-label="Nachricht speichern"
                 >
-                  <BookmarkIcon className="h-5 w-5" aria-hidden="true" />
+                  <BookmarkIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'save' && (
                   <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
@@ -354,10 +458,10 @@ export function ChatShell() {
                     }
                     setHoveredTooltip(null);
                   }}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
                   aria-label="Nachricht aktualisieren"
                 >
-                  <ArrowPathIcon className="h-5 w-5" aria-hidden="true" />
+                  <ArrowPathIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'update' && (
                   <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
@@ -386,16 +490,46 @@ export function ChatShell() {
                     setHoveredTooltip(null);
                   }}
                   className={clsx(
-                    "inline-flex h-7 w-7 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] disabled:opacity-50",
+                    "inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] disabled:opacity-50",
                     ttsActive && "text-[var(--ak-color-accent)]"
                   )}
                   aria-label={ttsActive ? "Vorlesen stoppen" : "Vorlesen"}
                 >
-                  <SpeakerWaveIcon className="h-5 w-5" aria-hidden="true" />
+                  <SpeakerWaveIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'read' && (
                   <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
                     {ttsActive ? "Stoppen" : "Vorlesen"}
+                  </span>
+                )}
+              </div>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleQuickActions}
+                  onMouseEnter={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                    }
+                    tooltipTimeoutRef.current = setTimeout(() => {
+                      setHoveredTooltip({ messageId: message.id, icon: 'quick-actions' });
+                    }, 500);
+                  }}
+                  onMouseLeave={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                      tooltipTimeoutRef.current = null;
+                    }
+                    setHoveredTooltip(null);
+                  }}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  aria-label="Schnellaktionen"
+                >
+                  <SparklesIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'quick-actions' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
+                    Schnellaktionen
                   </span>
                 )}
               </div>
@@ -623,14 +757,36 @@ export function ChatShell() {
         boxShadow: "var(--ak-shadow-glass)",
       }}
     >
-      <button
-        type="button"
-        onClick={handleBellClick}
-        className="absolute top-3 right-3 z-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition-all duration-200 hover:bg-white/30 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25 focus-visible:ring-offset-2"
-        aria-label="Benachrichtigungen"
-      >
-        <BellIcon className="h-6 w-6" aria-hidden="true" />
-      </button>
+      <div className="absolute top-3 right-3 z-10">
+        <button
+          type="button"
+          onClick={handleBellClick}
+          onMouseEnter={() => {
+            if (bellTooltipTimeoutRef.current) {
+              clearTimeout(bellTooltipTimeoutRef.current);
+            }
+            bellTooltipTimeoutRef.current = setTimeout(() => {
+              setHoveredBell(true);
+            }, 500);
+          }}
+          onMouseLeave={() => {
+            if (bellTooltipTimeoutRef.current) {
+              clearTimeout(bellTooltipTimeoutRef.current);
+              bellTooltipTimeoutRef.current = null;
+            }
+            setHoveredBell(false);
+          }}
+          className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition-all duration-200 hover:bg-white/30 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25 focus-visible:ring-offset-2"
+          aria-label="Benachrichtigungen"
+        >
+          <BellIcon className="h-6 w-6" aria-hidden="true" />
+          {hoveredBell && (
+            <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
+              Benachrichtigungen
+            </span>
+          )}
+        </button>
+      </div>
 
       <ThinkingStepsDrawer
         open={isStepsOpen}
