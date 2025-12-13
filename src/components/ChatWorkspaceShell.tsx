@@ -10,19 +10,21 @@ import {
   DocumentIcon,
   UserGroupIcon,
   InformationCircleIcon,
+  BellIcon,
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline'
 import { ChatSidebarContent } from '@/components/chat/ChatSidebarContent'
 import { InboxDrawerWidget } from '@/components/InboxDrawerWidget'
 import type { InboxItem } from '@/components/InboxDrawerWidget'
 import { InboxDetailPanel } from '@/components/InboxDetailPanel'
 import { InboxDetailsDrawer } from '@/components/InboxDetailsDrawer'
-import { NotificationsDetailPanel } from '@/components/NotificationsDetailPanel'
+import { NotificationsSidebarWidget } from '@/components/NotificationsSidebarWidget'
+import { NotificationsSettingsDrawer } from '@/components/NotificationsSettingsDrawer'
 import type { ProfileUserState } from '@/components/ProfileMenu'
 import { SettingsSidebarWidget } from '@/components/SettingsSidebarWidget'
 import { SettingsDetailPanel, type SettingsCategory } from '@/components/SettingsDetailPanel'
 import { MemorySidebarWidget, type MemoryCategory } from '@/components/MemorySidebarWidget'
 import { MemoryDetailPanel } from '@/components/MemoryDetailPanel'
-import { AutomationQuickActionsWidget } from '@/components/AutomationQuickActionsWidget'
 import { AutomationDetailPanel } from '@/components/AutomationDetailPanel'
 import { GrowthSidebarWidget } from '@/components/GrowthSidebarWidget'
 import { DocumentsSidebarWidget } from '@/components/DocumentsSidebarWidget'
@@ -39,6 +41,7 @@ type WorkspaceModuleToken =
   | 'new1'
   | 'new2'
   | 'automation'
+  | 'notifications'
   | 'settings'
 
 type ModuleConfig = {
@@ -52,8 +55,8 @@ const MODULES: ModuleConfig[] = [
   { id: 'chat', label: 'Chat', icon: ChatBubbleLeftRightIcon, href: '/' },
   { id: 'inbox', label: 'Posteingang', icon: PaperAirplaneIcon },
   { id: 'new2', label: 'Dokumente', icon: DocumentIcon },
-  { id: 'automation', label: 'Kunden', icon: UserGroupIcon },
   { id: 'new1', label: 'Wachstum', icon: MegaphoneIcon },
+  { id: 'automation', label: 'Kunden', icon: UserGroupIcon },
 ]
 
 // Layout-Konstanten
@@ -67,6 +70,7 @@ function getModuleLabel(token: WorkspaceModuleToken): string {
   if (match) return match.label
 
   if (token === 'settings') return 'Einstellungen'
+  if (token === 'notifications') return 'Benachrichtigungen'
   if (token === 'new1') return 'Wachstum'
   if (token === 'new2') return 'Dokumente'
   return token
@@ -107,6 +111,22 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   }
 
   const handleModuleClick = (token: WorkspaceModuleToken) => {
+    // Notifications öffnen - linke Sidebar öffnen, rechte leer lassen
+    if (token === 'notifications') {
+      const wasNotifications = activeModuleToken === 'notifications'
+      setActiveModuleToken('notifications')
+      setShowNotifications(true)
+      setLeftDrawerOpen((prev) => {
+        if (prev && wasNotifications) {
+          return false
+        }
+        return true
+      })
+      // Rechten Drawer schließen
+      setRightDrawerOpen(false)
+      return
+    }
+
     setActiveModuleToken(token)
     setShowNotifications(false) // Reset notifications when switching modules
 
@@ -131,6 +151,28 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setShowInboxOverview(false)
     setShowGrowthOverview(false)
     setShowDocumentsOverview(false)
+  }
+
+  const handleNotificationsInfoClick = () => {
+    // Toggle rechten Drawer für Notifications
+    if (rightDrawerOpen && showNotifications) {
+      setRightDrawerOpen(false)
+    } else {
+      setRightDrawerOpen(true)
+      // Alle anderen States zurücksetzen
+      setSelectedInboxItem(null)
+      setSelectedInboxThreadId(null)
+      setSelectedSettingsCategory(null)
+      setSelectedAutomationItem(null)
+      setSelectedMemoryCategory(null)
+      setSelectedCustomerId(null)
+      setSelectedGrowthItemId(null)
+      setSelectedDocumentId(null)
+      setShowInboxOverview(false)
+      setShowGrowthOverview(false)
+      setShowDocumentsOverview(false)
+      setShowNotifications(true)
+    }
   }
 
 
@@ -162,8 +204,75 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
     window.addEventListener('aklow-open-module', handleOpenModule as EventListener)
 
+    // Command Palette Event Handlers
+    const handleArchiveThread = () => {
+      // Trigger archive for active thread - handled by ChatSidebarContent
+      window.dispatchEvent(new CustomEvent('aklow-archive-thread-command'))
+    }
+
+    const handleDeleteThread = () => {
+      // Trigger delete for active thread - handled by ChatSidebarContent
+      window.dispatchEvent(new CustomEvent('aklow-delete-thread-command'))
+    }
+
+    const handleRenameThread = () => {
+      // Trigger rename for active thread - handled by ChatSidebarContent
+      window.dispatchEvent(new CustomEvent('aklow-rename-thread-command'))
+    }
+
+    const handleFocusThreadSearch = () => {
+      // Focus on thread search in sidebar
+      const searchInput = document.querySelector('input[placeholder*="Suchen"], input[placeholder*="suchen"]') as HTMLInputElement
+      if (searchInput) {
+        searchInput.focus()
+      }
+    }
+
+    const handleToggleSidebar = () => {
+      setLeftDrawerOpen((prev) => !prev)
+    }
+
+    const handleToggleDrawer = () => {
+      setRightDrawerOpen((prev) => !prev)
+    }
+
+    const handleShowNotifications = () => {
+      setShowNotifications(true)
+      setRightDrawerOpen(true)
+      setLeftDrawerOpen(false)
+      setActiveModuleToken('inbox')
+    }
+
+    // Quick Actions - switch to chat and forward to ChatShell
+    const handleQuickAction = (e: CustomEvent<{ actionId: string }>) => {
+      const actionId = e.detail?.actionId
+      if (actionId) {
+        // Switch to chat module
+        setActiveModuleToken('chat')
+        setLeftDrawerOpen(false)
+        // Forward to ChatShell (it will handle the message)
+      }
+    }
+
+    window.addEventListener('aklow-archive-thread-command', handleArchiveThread as EventListener)
+    window.addEventListener('aklow-delete-thread-command', handleDeleteThread as EventListener)
+    window.addEventListener('aklow-rename-thread-command', handleRenameThread as EventListener)
+    window.addEventListener('aklow-focus-thread-search', handleFocusThreadSearch as EventListener)
+    window.addEventListener('aklow-toggle-sidebar', handleToggleSidebar as EventListener)
+    window.addEventListener('aklow-toggle-drawer', handleToggleDrawer as EventListener)
+    window.addEventListener('aklow-show-notifications', handleShowNotifications as EventListener)
+    window.addEventListener('aklow-send-quick-action', handleQuickAction as EventListener)
+
     return () => {
       window.removeEventListener('aklow-open-module', handleOpenModule as EventListener)
+      window.removeEventListener('aklow-archive-thread-command', handleArchiveThread as EventListener)
+      window.removeEventListener('aklow-delete-thread-command', handleDeleteThread as EventListener)
+      window.removeEventListener('aklow-rename-thread-command', handleRenameThread as EventListener)
+      window.removeEventListener('aklow-focus-thread-search', handleFocusThreadSearch as EventListener)
+      window.removeEventListener('aklow-toggle-sidebar', handleToggleSidebar as EventListener)
+      window.removeEventListener('aklow-toggle-drawer', handleToggleDrawer as EventListener)
+      window.removeEventListener('aklow-show-notifications', handleShowNotifications as EventListener)
+      window.removeEventListener('aklow-send-quick-action', handleQuickAction as EventListener)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -192,25 +301,6 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setShowGrowthOverview(false)
     setShowDocumentsOverview(false)
     handleOpenDetails()
-  }
-
-  const handleAutomationItemClick = (workflowId: string) => {
-    if (selectedAutomationItem === workflowId && rightDrawerOpen) {
-      setRightDrawerOpen(false)
-      setSelectedAutomationItem(null)
-    } else {
-      setSelectedAutomationItem(workflowId)
-      setSelectedInboxItem(null)
-      setSelectedSettingsCategory(null)
-      setSelectedMemoryCategory(null)
-      setSelectedCustomerId(null)
-      setSelectedGrowthItemId(null)
-      setSelectedDocumentId(null)
-      setShowInboxOverview(false)
-      setShowGrowthOverview(false)
-      setShowDocumentsOverview(false)
-      handleOpenDetails()
-    }
   }
 
   const handleCustomerClick = (customerId: string) => {
@@ -437,7 +527,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     }
   }
 
-  const showLeft = leftDrawerOpen && !showNotifications // Keine Sidebar wenn Benachrichtigungen im Vollbild
+  const showLeft = leftDrawerOpen // Sidebar kann auch bei Notifications geöffnet sein
   const showRight =
     rightDrawerOpen &&
     (showNotifications ||
@@ -454,7 +544,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       showDocumentsOverview)
 
   const chatStyle: CSSProperties =
-    showLeft && !showNotifications ? { marginLeft: LEFT_DRAWER_WIDTH } : { marginLeft: 0 }
+    showLeft ? { marginLeft: LEFT_DRAWER_WIDTH } : { marginLeft: 0 }
 
   const leftDrawerStyle: CSSProperties = {
     width: LEFT_DRAWER_WIDTH,
@@ -472,8 +562,45 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
   return (
     <div className="flex h-screen bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)]">
-      <aside className="ak-glass flex w-16 flex-col items-center gap-y-4 py-3 text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] border-r-0">
-        <nav className="mt-1 flex flex-1 flex-col items-center gap-y-4">
+      <aside className="ak-glass flex w-16 flex-col items-center py-3 text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] border-r-0">
+        {/* Notifications oben */}
+        <div className="mb-4">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => handleModuleClick('notifications')}
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                const x = ((e.clientX - rect.left) / rect.width) * 100
+                const y = ((e.clientY - rect.top) / rect.height) * 100
+                e.currentTarget.style.setProperty('--mouse-x', `${x}%`)
+                e.currentTarget.style.setProperty('--mouse-y', `${y}%`)
+              }}
+              onMouseEnter={() => setHoveredSidebarTooltip('notifications')}
+              onMouseLeave={() => setHoveredSidebarTooltip(null)}
+              className={clsx(
+                'ak-sidebar-button flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-[var(--ak-color-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ak-button-interactive',
+                showNotifications
+                  ? 'bg-[var(--ak-color-bg-selected)] text-[var(--ak-color-text-primary)] shadow-sm border-[var(--ak-color-border-subtle)]'
+                  : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
+              )}
+              aria-label="Benachrichtigungen"
+            >
+              <BellIcon className="h-5 w-5" aria-hidden="true" />
+            </button>
+            {hoveredSidebarTooltip === 'notifications' && (
+              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
+                Benachrichtigungen
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Abstand */}
+        <div className="flex-1" />
+
+        {/* Hauptmodule in der Mitte */}
+        <nav className="flex flex-col items-center gap-y-4">
           {MODULES.map((mod) => {
             const Icon = mod.icon
             const isActive =
@@ -516,7 +643,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
             )
           })}
         </nav>
-        <div className="mb-3 flex flex-col items-center gap-y-3">
+
+        {/* Abstand */}
+        <div className="flex-1" />
+
+        {/* Settings unten */}
+        <div className="mt-4">
           <div className="relative">
             <button
               type="button"
@@ -531,16 +663,14 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
               onMouseEnter={() => setHoveredSidebarTooltip('settings')}
               onMouseLeave={() => setHoveredSidebarTooltip(null)}
               className={clsx(
-                'ak-sidebar-button flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ak-button-interactive',
+                'ak-sidebar-button flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-[var(--ak-color-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ak-button-interactive',
                 activeModuleToken === 'settings' && leftDrawerOpen
-                  ? 'bg-[var(--ak-color-selected)] text-[var(--ak-color-text-primary)] shadow-sm border-[var(--ak-color-border-subtle)]'
-                  : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-hover)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
+                  ? 'bg-[var(--ak-color-bg-selected)] text-[var(--ak-color-text-primary)] shadow-sm border-[var(--ak-color-border-subtle)]'
+                  : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
               )}
               aria-label="Einstellungen"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--ak-color-selected)] ak-caption font-semibold text-[var(--ak-color-text-primary)] shadow-sm border border-[var(--ak-color-border-subtle)]">
-                {profileUser.initials ?? 'N'}
-              </span>
+              <Cog6ToothIcon className="h-5 w-5" aria-hidden="true" />
             </button>
             {hoveredSidebarTooltip === 'settings' && (
               <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
@@ -577,12 +707,14 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 <div className="flex-1 truncate text-lg font-semibold text-[var(--ak-color-text-primary)]">
                   {activeModuleToken === 'settings' && selectedSettingsCategory === 'memory_crm'
                     ? 'Speicher & CRM'
+                    : activeModuleToken === 'notifications'
+                    ? 'Benachrichtigungen'
                     : getModuleLabel(activeModuleToken)}
                 </div>
                 
                 <div className="flex items-center gap-2 pl-2">
                   {/* Info Button - Toggle logic */}
-                  {(activeModuleToken === 'inbox' || activeModuleToken === 'new1' || activeModuleToken === 'new2' || activeModuleToken === 'automation') && (
+                  {(activeModuleToken === 'inbox' || activeModuleToken === 'new1' || activeModuleToken === 'new2' || activeModuleToken === 'automation' || activeModuleToken === 'notifications') && (
                     <button
                       type="button"
                       onClick={() => {
@@ -650,6 +782,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                             setShowDocumentsOverview(false)
                             handleOpenDetails()
                           }
+                        } else if (activeModuleToken === 'notifications') {
+                          // Toggle Notifications Details (rechter Drawer)
+                          handleNotificationsInfoClick()
                         }
                       }}
                       className={clsx(
@@ -665,10 +800,10 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     </button>
                   )}
 
-                  {/* Collapse Button */}
+                  {/* Collapse Button - Toggle linke Sidebar */}
                   <button
                     type="button"
-                    onClick={() => setLeftDrawerOpen(false)}
+                    onClick={() => setLeftDrawerOpen((prev) => !prev)}
                     className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] shadow-sm hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
                   >
                     <span className="sr-only">Panel einklappen</span>
@@ -748,6 +883,10 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                       setShowDocumentsOverview(false)
                       handleOpenDetails()
                     }}
+                  />
+                ) : activeModuleToken === 'notifications' ? (
+                  <NotificationsSidebarWidget 
+                    onInfoClick={handleNotificationsInfoClick}
                   />
                 ) : (
                   <>
@@ -829,7 +968,14 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 style={{ scrollbarWidth: 'thin' }}
               >
                 {showNotifications ? (
-                  <NotificationsDetailPanel />
+                  <NotificationsSettingsDrawer
+                    onClose={handleCloseDetails}
+                    onSave={(settings) => {
+                      console.log('Save notification settings:', settings)
+                      // TODO: Save to backend
+                    }}
+                    onCancel={handleCloseDetails}
+                  />
                 ) : showInboxOverview ? (
                   <div className="space-y-2">
                     <h3 className="ak-heading text-base">Posteingang Übersicht</h3>

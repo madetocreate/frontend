@@ -118,7 +118,7 @@ export function ChatSidebarContent() {
     }
   };
 
-  const handleDeleteThread = (threadId: string) => {
+  const handleDeleteThread = useCallback((threadId: string) => {
     setThreads((prev) => {
       const next = prev.filter((t) => t.id !== threadId)
       saveThreads(next)
@@ -128,16 +128,16 @@ export function ChatSidebarContent() {
     if (activeThreadId === threadId) {
       handleNewChat()
     }
-  };
+  }, [activeThreadId, handleNewChat, saveThreads, threads]);
 
-  const handleRenameThread = (threadId: string) => {
+  const handleRenameThread = useCallback((threadId: string) => {
     const thread = threads.find((t) => t.id === threadId);
     if (thread) {
       setEditingThreadId(threadId);
       setEditingTitle(thread.title);
       setOpenKebabId(null);
     }
-  };
+  }, [threads]);
 
   const handleSaveRename = (threadId: string) => {
     const trimmedTitle = editingTitle.trim()
@@ -161,7 +161,7 @@ export function ChatSidebarContent() {
     setEditingTitle("");
   };
 
-  const handleArchiveThread = (threadId: string) => {
+  const handleArchiveThread = useCallback((threadId: string) => {
     setThreads((prev) => {
       const next = prev.map((t) =>
         t.id === threadId ? { ...t, archived: true } : t
@@ -173,7 +173,38 @@ export function ChatSidebarContent() {
     if (activeThreadId === threadId) {
       handleNewChat();
     }
-  };
+  }, [activeThreadId, handleNewChat, saveThreads]);
+
+  // Command Palette Event Handlers
+  useEffect(() => {
+    const handleArchiveThreadCommand = () => {
+      if (activeThreadId) {
+        handleArchiveThread(activeThreadId);
+      }
+    };
+
+    const handleDeleteThreadCommand = () => {
+      if (activeThreadId) {
+        handleDeleteThread(activeThreadId);
+      }
+    };
+
+    const handleRenameThreadCommand = () => {
+      if (activeThreadId) {
+        handleRenameThread(activeThreadId);
+      }
+    };
+
+    window.addEventListener('aklow-archive-thread-command', handleArchiveThreadCommand as EventListener);
+    window.addEventListener('aklow-delete-thread-command', handleDeleteThreadCommand as EventListener);
+    window.addEventListener('aklow-rename-thread-command', handleRenameThreadCommand as EventListener);
+
+    return () => {
+      window.removeEventListener('aklow-archive-thread-command', handleArchiveThreadCommand as EventListener);
+      window.removeEventListener('aklow-delete-thread-command', handleDeleteThreadCommand as EventListener);
+      window.removeEventListener('aklow-rename-thread-command', handleRenameThreadCommand as EventListener);
+    };
+  }, [activeThreadId, handleDeleteThread, handleRenameThread, handleArchiveThread]);
 
   const handleRenameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, threadId: string) => {
     if (e.key === 'Enter') {

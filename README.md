@@ -1,6 +1,6 @@
 # Frontend - AKLOW Chat Interface
 
-Modern Next.js-based chat interface with real-time streaming, voice support, and comprehensive workspace management.
+Modern Next.js-based chat interface with real-time streaming, OpenAI Realtime Voice, and a "Quiet Power" design system.
 
 ## 🚀 Quick Start
 
@@ -25,6 +25,7 @@ ORCHESTRATOR_TENANT_ID=demo
 AGENT_BACKEND_URL=http://127.0.0.1:8000
 MEMORY_API_SECRET=your-secret-key
 NEXT_PUBLIC_BACKEND_URL=http://localhost:4000
+OPENAI_API_KEY=sk-... (optional, handled by backend proxy)
 ```
 
 ### Development
@@ -41,75 +42,61 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 frontend/
 ├── src/
 │   ├── app/              # Next.js App Router
-│   │   ├── api/         # API Routes (proxy to backend)
-│   │   ├── chat/        # Chat page
-│   │   └── memory/      # Memory page
-│   ├── components/      # React components
-│   │   ├── chat/        # Chat-related components
-│   │   ├── calendar/    # Calendar widgets
-│   │   └── ui/          # UI primitives
-│   ├── hooks/           # Custom React hooks
-│   └── lib/             # Utilities and clients
-├── app/                  # Legacy App Router (migration in progress)
-└── public/              # Static assets
+│   │   ├── api/          # API Routes (TTS proxy, Realtime session)
+│   │   ├── ak-tokens.css # Design Tokens ("Quiet Power")
+│   │   └── globals.css   # Global styles & Tailwind
+│   ├── components/       # React components
+│   │   ├── chat/         # Chat-related components (Composer, Shell)
+│   │   │   ├── markdown/ # Markdown rendering with custom badges
+│   │   ├── CustomersSidebarWidget.tsx # Customer module
+│   │   ├── DocumentsSidebarWidget.tsx # Documents module
+│   │   ├── GrowthSidebarWidget.tsx    # Growth module
+│   │   ├── InboxDrawerWidget.tsx      # Inbox module
+│   │   ├── *DetailsDrawer.tsx         # Right-side detail drawers
+│   │   └── ui/           # UI primitives
+│   ├── hooks/            # Custom React hooks
+│   │   ├── useRealtimeVoice.ts  # OpenAI Realtime integration
+│   │   ├── useSpeechSynthesis.ts # TTS streaming
+│   │   └── useKeyboardShortcuts.ts # Global shortcuts
+│   └── lib/              # Utilities and clients
+│       └── realtimeVoiceClient.ts # WebSocket client for OpenAI Realtime
 ```
 
-## 🎨 Features
+## 🎨 Features & Design
 
-### Core Features
-- ✅ Real-time chat streaming
-- ✅ Voice input (dictation & real-time)
-- ✅ Text-to-speech (TTS)
-- ✅ Memory management
-- ✅ Inbox integration
-- ✅ Calendar integration
-- ✅ News feed
-- ✅ Multi-module workspace
+### "Quiet Power" Design System
+AKLOW follows an Apple-inspired "Quiet Power" design philosophy:
+- **Tokens**: Centralized in `ak-tokens.css` (Surfaces, Spacing, Typography).
+- **Layout**: Fixed 320px left drawer, pixel-perfect alignment.
+- **Glassmorphism**: Used sparingly for transient UI (drawers, headers).
+- **Typography**: Clean, hierarchical fonts with `ak-caption`, `ak-body`, `ak-heading` classes.
 
-### UI Components
-- **ChatWorkspaceShell**: Main workspace layout with sidebar
-- **ChatShell**: Chat interface with message handling
-- **ChatSidebarContent**: Chat thread management
-- **MemorySidebarWidget**: Memory category browser
-- **InboxDrawerWidget**: Inbox item list
-- **CalendarSidebarWidget**: Calendar event browser
+### Core Modules (Sidebar)
+1. **Chat**: Main interface with streaming responses and rich markdown.
+2. **Posteingang (Inbox)**: Unified inbox for Email, Messenger, Support.
+3. **Dokumente (Documents)**: Document management with preview and categorization.
+4. **Kunden (Customers)**: CRM view with segments (Leads, Active, VIP).
+5. **Wachstum (Growth)**: Marketing & Campaign management.
 
-### Design System
-- Apple-style design tokens
-- Dark/Light mode support (via CSS variables)
-- Micro-interactions on buttons
-- Responsive layout
-- Glassmorphism effects
+### Voice & Audio
+- **Real-time Voice**: Direct integration with OpenAI Realtime API (WebSockets).
+- **Visualizations**: Dynamic audio waves in composer (real microphone data + fallback animation).
+- **TTS**: High-quality streaming text-to-speech (OpenAI `nova` voice).
+- **Dictation**: Integrated Whisper-based dictation.
+
+### UX Enhancements
+- **Right Drawer System**: Detail views slide in from the right, toggled via info buttons.
+- **Keyboard Shortcuts**: Global shortcuts for navigation and actions (`Cmd+K`, `Cmd+Enter`, etc.).
+- **Smart Actions**: Context-aware tooltips and quick actions (Copy, Edit, Save, Update).
 
 ## 🔧 API Integration
-
-See [API_INTEGRATION_SUMMARY.md](./API_INTEGRATION_SUMMARY.md) for detailed API documentation.
 
 ### Key Endpoints
 - `/api/memory/*` - Memory operations (save, search, archive, delete)
 - `/api/inbox` - Inbox items
-- `/api/audio/transcribe` - Audio transcription
-- `/api/realtime/*` - Real-time analysis and research
-
-## 🎯 Recent Updates
-
-### Design System
-- Apple-style design tokens implemented
-- Green accent colors for buttons and counters
-- Blue accent for "AI Modernisierung" button
-- Two-tone green logo
-- Micro-interactions on all interactive elements
-
-### Hero Section
-- Removed avatars/logos
-- Removed decorative lines
-- Increased spacing
-- Title split into two lines: "Den Kopf frei." / "Der Rest in AKLOW."
-
-### Audio Transcription
-- Automatic format detection (webm, mp4, wav)
-- Improved error handling
-- Minimum file size validation
+- `/api/audio/transcribe` - Audio transcription (Whisper-1)
+- `/api/audio/tts` - Text-to-Speech streaming
+- `/api/realtime/session` - Ephemeral session generation for OpenAI Realtime
 
 ## 📚 Documentation
 
@@ -137,16 +124,6 @@ npm test
 npm run lint
 ```
 
-## 🐛 Troubleshooting
-
-See [GETTING_STARTED.md](./GETTING_STARTED.md#troubleshooting) for common issues.
-
-Common issues:
-- Environment variables not loading → Restart Next.js dev server
-- Memory API 401/403 → Check `MEMORY_API_SECRET` matches backend
-- Audio transcription fails → Check audio format support
-
 ## 📝 License
 
 See LICENSE file for details.
-

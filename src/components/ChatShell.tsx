@@ -2,7 +2,7 @@
 
 import { useState, FormEvent, useRef, useEffect, useCallback } from "react";
 import clsx from "clsx";
-import { BellIcon, RectangleStackIcon, ClipboardDocumentIcon, BookmarkIcon, ArrowPathIcon, SpeakerWaveIcon, PencilSquareIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { RectangleStackIcon, ClipboardDocumentIcon, BookmarkIcon, ArrowPathIcon, SpeakerWaveIcon, PencilSquareIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { WidgetRenderer } from "./chat/WidgetRenderer";
 import { sendChatMessageStream, ChatResponse } from "../lib/chatClient";
 import { filterDuplicateTextUiMessages } from "../lib/uiMessageText";
@@ -43,8 +43,6 @@ export function ChatShell() {
   const hoverMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hoveredUserMessageId, setHoveredUserMessageId] = useState<string | null>(null);
   const hoverUserMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [hoveredBell, setHoveredBell] = useState(false);
-  const bellTooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
   const [savedMessageId, setSavedMessageId] = useState<string | null>(null);
@@ -66,12 +64,13 @@ export function ChatShell() {
 
   const [realtimeTextBuffer, setRealtimeTextBuffer] = useState("");
   const [audioLevel, setAudioLevel] = useState(0);
+  const [audioBands, setAudioBands] = useState<number[]>(Array(20).fill(0));
   const audioLevelIntervalRef = useRef<number | null>(null);
   const audioAnalyserRef = useRef<AnalyserNode | null>(null);
   const audioDataArrayRef = useRef<Uint8Array | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const [fakeWaveLevels, setFakeWaveLevels] = useState<number[]>([0.2, 0.3, 0.4, 0.3, 0.2]);
+  const [fakeWaveLevels, setFakeWaveLevels] = useState<number[]>(Array(20).fill(0.3));
   const fakeWaveIntervalRef = useRef<number | null>(null);
 
   const { status: realtimeStatus, toggle: toggleRealtime } = useRealtimeVoice({
@@ -117,7 +116,7 @@ export function ChatShell() {
       
       const measureAudio = () => {
         if (audioAnalyserRef.current && audioDataArrayRef.current) {
-          // @ts-ignore - TypeScript strict mode issue with Web Audio API types
+          // @ts-expect-error - TypeScript strict mode issue with Web Audio API types
           audioAnalyserRef.current.getByteFrequencyData(audioDataArrayRef.current);
           
           // Berechne durchschnittliche Amplitude
@@ -129,6 +128,14 @@ export function ChatShell() {
           const normalizedLevel = average / 255; // Normalisiere auf 0-1
           
           setAudioLevel(normalizedLevel);
+
+          // Berechne 20 Bänder für die Visualisierung und speichere sie im State
+          const bands: number[] = [];
+          for (let i = 0; i < 20; i++) {
+            const idx = Math.floor((i / 20) * audioDataArrayRef.current.length);
+            bands.push(audioDataArrayRef.current[idx] / 255);
+          }
+          setAudioBands(bands);
           
           // Prüfe ob Mikrofon noch aktiv ist
           const stillActive = dictationStatus === "recording" || 
@@ -178,6 +185,7 @@ export function ChatShell() {
     realtimeStatus === "connecting";
   
   const isRealtimeActive = realtimeStatus === "live" || realtimeStatus === "connecting";
+  const shouldHideInput = isMicrophoneActive || isRealtimeActive;
   
   // Audio-Level für Diktat-Mode
   useEffect(() => {
@@ -196,18 +204,12 @@ export function ChatShell() {
   useEffect(() => {
     if (isMicrophoneActive) {
       const updateFakeWaves = () => {
-        // Zufällig entscheiden, ob die Wellen sich bewegen sollen (70% Chance)
-        if (Math.random() > 0.3) {
-          setFakeWaveLevels((prev) => {
-            return prev.map(() => {
-              // Zufällige Höhe zwischen 0.2 und 0.8
-              return 0.2 + Math.random() * 0.6;
-            });
-          });
-        }
-        
-        // Nächste Aktualisierung in zufälliger Zeit (200ms - 800ms)
-        const nextDelay = 200 + Math.random() * 600;
+        // Immer bewegen, keine Aussetzer
+        setFakeWaveLevels(() =>
+          Array.from({ length: 20 }, () => 0.2 + Math.random() * 0.6)
+        );
+        // Konstante, schnelle Aktualisierung für flüssige Bewegung
+        const nextDelay = 160 + Math.random() * 90; // 160–250ms
         fakeWaveIntervalRef.current = window.setTimeout(updateFakeWaves, nextDelay);
       };
       
@@ -215,7 +217,7 @@ export function ChatShell() {
       fakeWaveIntervalRef.current = window.setTimeout(updateFakeWaves, 300);
     } else {
       // Setze Wellen auf niedrige Werte, wenn nicht aktiv
-      setFakeWaveLevels([0.2, 0.2, 0.2, 0.2, 0.2]);
+      setFakeWaveLevels(Array(20).fill(0.2));
       if (fakeWaveIntervalRef.current !== null) {
         clearTimeout(fakeWaveIntervalRef.current);
         fakeWaveIntervalRef.current = null;
@@ -300,11 +302,135 @@ export function ChatShell() {
 
     window.addEventListener("aklow-select-thread", handleSelect as EventListener);
     window.addEventListener("aklow-new-chat", handleNew as EventListener);
+
+    // Command Palette Event Handlers
+    const handleToggleDictation = () => {
+      if (dictationStatus === "recording") {
+        stopRecording();
+      } else if (dictationStatus === "idle" || dictationStatus === "error") {
+        startRecording();
+      }
+    };
+
+    const handleToggleRealtime = () => {
+      toggleRealtime();
+    };
+
+    const handleStopTts = () => {
+      stopTts();
+    };
+
+    const handleCopyMessage = () => {
+      const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
+      if (lastAssistantMessage?.text) {
+        navigator.clipboard.writeText(lastAssistantMessage.text);
+      }
+    };
+
+    const handleEditMessage = () => {
+      const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+      if (lastUserMessage) {
+        setEditingMessageId(lastUserMessage.id);
+        setEditingText(lastUserMessage.text);
+      }
+    };
+
+    const handleSaveMessage = async () => {
+      const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
+      if (lastAssistantMessage?.text) {
+        try {
+          const response = await fetch("/api/memory/save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tenantId,
+              content: lastAssistantMessage.text,
+              type: "custom",
+            }),
+          });
+          if (response.ok) {
+            setSavedMessageId(lastAssistantMessage.id);
+            setTimeout(() => setSavedMessageId(null), 2000);
+          }
+        } catch (error) {
+          console.error("Failed to save message:", error);
+        }
+      }
+    };
+
+    const handleUpdateMessage = () => {
+      const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+      if (lastUserMessage?.text) {
+        setInput(lastUserMessage.text);
+        inputRef.current?.focus();
+      }
+    };
+
+    const handleReadMessage = () => {
+      const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
+      if (lastAssistantMessage?.text) {
+        toggleTts({ id: lastAssistantMessage.id, text: lastAssistantMessage.text, lang: "de-DE" });
+      }
+    };
+
+    const handleOpenQuickActions = () => {
+      // Trigger quick actions menu - find last assistant message and trigger quick actions
+      const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
+      if (lastAssistantMessage) {
+        // Simulate click on quick actions button for last message
+        const quickActionsButton = document.querySelector(`[data-message-id="${lastAssistantMessage.id}"] [aria-label="Schnellaktionen"]`) as HTMLButtonElement;
+        if (quickActionsButton) {
+          quickActionsButton.click();
+        }
+      }
+    };
+
+    const handleQuickAction = (e: CustomEvent<{ actionId: string }>) => {
+      // Send quick action message to chat
+      const actionId = e.detail?.actionId;
+      if (actionId) {
+        const actionMessages: Record<string, string> = {
+          inbox_summary: "Fasse meinen Posteingang zusammen",
+          reply_suggestion: "Schlage mir eine Antwort auf die letzte Kundenfrage vor",
+          deep_research: "Starte eine Deep Research zu folgendem Thema:",
+          document_analysis: "Analysiere das folgende Dokument:",
+          call_summary: "Fasse das folgende Gespräch zusammen:",
+          crm_preparation: "Bereite einen CRM-Eintrag aus diesem Chat vor",
+          task_extraction: "Extrahiere To-dos aus diesem Text:",
+          automation_suggestion: "Schlage mir Automatisierungen basierend auf meinen Workflows vor",
+        };
+        const message = actionMessages[actionId] || `Führe die Aktion "${actionId}" aus`;
+        setInput(message);
+        inputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("aklow-toggle-dictation", handleToggleDictation as EventListener);
+    window.addEventListener("aklow-toggle-realtime", handleToggleRealtime as EventListener);
+    window.addEventListener("aklow-stop-tts", handleStopTts as EventListener);
+    window.addEventListener("aklow-copy-message", handleCopyMessage as EventListener);
+    window.addEventListener("aklow-edit-message", handleEditMessage as EventListener);
+    window.addEventListener("aklow-save-message", handleSaveMessage as EventListener);
+    window.addEventListener("aklow-update-message", handleUpdateMessage as EventListener);
+    window.addEventListener("aklow-read-message", handleReadMessage as EventListener);
+    window.addEventListener("aklow-open-quick-actions", handleOpenQuickActions as EventListener);
+    window.addEventListener("aklow-send-quick-action", handleQuickAction as EventListener);
+
     return () => {
       window.removeEventListener("aklow-select-thread", handleSelect as EventListener);
       window.removeEventListener("aklow-new-chat", handleNew as EventListener);
+      window.removeEventListener("aklow-toggle-dictation", handleToggleDictation as EventListener);
+      window.removeEventListener("aklow-toggle-realtime", handleToggleRealtime as EventListener);
+      window.removeEventListener("aklow-stop-tts", handleStopTts as EventListener);
+      window.removeEventListener("aklow-copy-message", handleCopyMessage as EventListener);
+      window.removeEventListener("aklow-edit-message", handleEditMessage as EventListener);
+      window.removeEventListener("aklow-save-message", handleSaveMessage as EventListener);
+      window.removeEventListener("aklow-update-message", handleUpdateMessage as EventListener);
+      window.removeEventListener("aklow-read-message", handleReadMessage as EventListener);
+      window.removeEventListener("aklow-open-quick-actions", handleOpenQuickActions as EventListener);
+      window.removeEventListener("aklow-send-quick-action", handleQuickAction as EventListener);
     };
-  }, [loadMessages, stopTts]);
+  }, [loadMessages, stopTts, dictationStatus, startRecording, stopRecording, toggleRealtime, toggleTts, messages, setInput, tenantId]);
 
   // Initial load messages on mount if thread is already selected
   useEffect(() => {
@@ -322,11 +448,9 @@ export function ChatShell() {
         }
         return index === firstIndex;
       });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       setMessages(uniqueMessages);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     return () => {
@@ -336,6 +460,8 @@ export function ChatShell() {
       stopTts();
     };
   }, [stopTts]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const lastAssistantMessage = messages.filter((m) => m.role === "assistant").slice(-1)[0];
   const isLastAssistantMessage = (msg: ChatMessage) => msg.id === lastAssistantMessage?.id;
@@ -1083,10 +1209,6 @@ export function ChatShell() {
     await sendMessage(text);
   }
 
-  const handleBellClick = () => {
-    window.dispatchEvent(new CustomEvent("aklow-open-module", { detail: { module: "inbox" } }));
-  };
-
   // Keyboard Shortcuts für Chat
   useKeyboardShortcuts({
     shortcuts: [
@@ -1122,37 +1244,6 @@ export function ChatShell() {
         boxShadow: "var(--ak-shadow-glass)",
       }}
     >
-      <div className="absolute top-3 right-3 z-10">
-        <button
-          type="button"
-          onClick={handleBellClick}
-          onMouseEnter={() => {
-            if (bellTooltipTimeoutRef.current) {
-              clearTimeout(bellTooltipTimeoutRef.current);
-            }
-            bellTooltipTimeoutRef.current = setTimeout(() => {
-              setHoveredBell(true);
-            }, 500);
-          }}
-          onMouseLeave={() => {
-            if (bellTooltipTimeoutRef.current) {
-              clearTimeout(bellTooltipTimeoutRef.current);
-              bellTooltipTimeoutRef.current = null;
-            }
-            setHoveredBell(false);
-          }}
-          className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition-all duration-200 hover:bg-white/30 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25 focus-visible:ring-offset-2"
-          aria-label="Benachrichtigungen"
-        >
-          <BellIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1} />
-          {hoveredBell && (
-            <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
-              Benachrichtigungen
-            </span>
-          )}
-        </button>
-      </div>
-
       <style jsx>{`
         @keyframes thinking-dot-blink {
           0%, 100% {
@@ -1191,7 +1282,7 @@ export function ChatShell() {
         note={thinkingNote}
       />
 
-      <div className="flex-1 overflow-y-auto space-y-6 px-[5%] py-2 pb-28 mx-auto max-w-3xl">
+      <div className="flex-1 overflow-y-auto space-y-6 px-[5%] py-2 pb-20 mx-auto max-w-3xl">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
             <div className="ak-heading font-medium text-[var(--ak-color-text-primary)]" style={{ fontSize: "2rem" }}>
@@ -1249,29 +1340,35 @@ export function ChatShell() {
         )}>
           {/* Audio-Wellen-Visualisierung - zentriert, schwarz, doppelt so breit, mit echten Audio-Daten oder zufälliger Animation */}
           {isMicrophoneActive && (
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 h-4">
-              {[0, 1, 2, 3, 4].map((i) => {
-                // Verwende echte Audio-Daten, wenn verfügbar, sonst zufällige Animation
+            <div
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-10 w-[32%] min-w-[180px] max-w-[360px] items-end justify-center gap-[2px]"
+            >
+              {/* Punkte links */}
+              <div className="flex flex-col justify-between h-6 mr-1 opacity-60">
+                <div className="h-[3px] w-[3px] rounded-full bg-black" />
+                <div className="h-[3px] w-[3px] rounded-full bg-black" />
+              </div>
+
+              {/* Balken */}
+              {Array.from({ length: 20 }).map((_, i) => {
                 let waveHeight: number;
                 let opacity: number;
                 
-                if (audioLevel > 0 && audioDataArrayRef.current) {
-                  // Echte Audio-Daten für verschiedene Frequenzbänder
-                  const frequencyBand = (audioDataArrayRef.current[Math.floor((i / 5) * audioDataArrayRef.current.length)] || 0) / 255;
-                  const combinedLevel = (audioLevel * 0.7 + frequencyBand * 0.3);
-                  waveHeight = Math.max(4, combinedLevel * 20); // Mindesthöhe 4px, max 20px
+                if (audioLevel > 0 && audioBands.length >= 20) {
+                  const frequencyBand = audioBands[i] || 0;
+                  const combinedLevel = (audioLevel * 0.55 + frequencyBand * 0.45);
+                  waveHeight = Math.max(3, combinedLevel * 22);
                   opacity = 0.5 + combinedLevel * 0.5;
                 } else {
-                  // Zufällige Animation (fake waves)
                   const fakeLevel = fakeWaveLevels[i] || 0.2;
-                  waveHeight = Math.max(4, fakeLevel * 16); // Mindesthöhe 4px, max ~13px
+                  waveHeight = Math.max(3, fakeLevel * 16);
                   opacity = 0.4 + fakeLevel * 0.4;
                 }
                 
                 return (
                   <div
                     key={i}
-                    className="w-1 bg-black rounded-full transition-all duration-300"
+                    className="w-[2px] bg-black rounded-full transition-all duration-140 ease-linear"
                     style={{
                       height: `${waveHeight}px`,
                       opacity: opacity,
@@ -1279,6 +1376,12 @@ export function ChatShell() {
                   />
                 );
               })}
+
+              {/* Punkte rechts */}
+              <div className="flex flex-col justify-between h-6 ml-1 opacity-60">
+                <div className="h-[3px] w-[3px] rounded-full bg-black" />
+                <div className="h-[3px] w-[3px] rounded-full bg-black" />
+              </div>
             </div>
           )}
           {quickHint ? (
@@ -1333,24 +1436,6 @@ export function ChatShell() {
                     >
                       Intensive Internetsuche
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsPlusMenuOpen(false);
-                      }}
-                      className="ak-body w-full px-4 py-3 text-left text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-hover)] transition-colors"
-                    >
-                      Bild generieren
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsPlusMenuOpen(false);
-                      }}
-                      className="ak-body w-full px-4 py-3 text-left text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-hover)] transition-colors"
-                    >
-                      Lernmodus
-                    </button>
                   </div>
                 </div>
               </>
@@ -1359,18 +1444,18 @@ export function ChatShell() {
 
           <input
             type="text"
-            value={isRealtimeActive ? realtimeTextBuffer : input}
+            value={shouldHideInput ? "" : input}
             onChange={(e) => {
-              if (!isRealtimeActive) {
-                setInput(e.target.value);
-              }
+              if (shouldHideInput) return;
+              setInput(e.target.value);
             }}
-            placeholder={isRealtimeActive ? "Real-Time Mode aktiv..." : "Schreibe mit Aklow"}
+            placeholder={shouldHideInput ? "" : "Schreibe mit Aklow"}
             ref={inputRef}
-            readOnly={isRealtimeActive}
+            readOnly={shouldHideInput}
+            aria-disabled={shouldHideInput}
             className={clsx(
               "ak-body flex-1 border-none bg-transparent text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-secondary)] focus-visible:outline-none outline-none ring-0",
-              isRealtimeActive && "text-red-600"
+              shouldHideInput && "text-transparent placeholder-transparent caret-transparent cursor-not-allowed select-none opacity-80"
             )}
           />
 
@@ -1404,7 +1489,7 @@ export function ChatShell() {
               }
               isLongPressRef.current = false;
             }}
-            onMouseLeave={(e) => {
+            onMouseLeave={() => {
               if (longPressTimerRef.current) {
                 clearTimeout(longPressTimerRef.current);
                 longPressTimerRef.current = null;

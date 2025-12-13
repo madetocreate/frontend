@@ -204,7 +204,7 @@ export function CustomersSidebarWidget({
         {filteredCustomers.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] p-8 text-center">
             <p className="ak-body text-sm text-[var(--ak-color-text-secondary)]">
-              Noch keine Kundendatei. Starte mit 'Kundendatei aufbauen'.
+              Noch keine Kundendatei. Starte mit &apos;Kundendatei aufbauen&apos;.
             </p>
             <button
               type="button"
