@@ -2,27 +2,35 @@
 
 import type { UIContext, UIMessage } from "../../lib/chatClient";
 import { WidgetCard } from "../ui/WidgetCard";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { ChatMarkdown } from "./markdown/ChatMarkdown";
 
 type WidgetRendererProps = {
   message: UIMessage;
 };
 
-export function WidgetRenderer({ message }: WidgetRendererProps) {
-  const typedMessage = message as UIMessage & { uiContext?: UIContext };
-  const uiContext = typedMessage.uiContext;
+type MaybePayload = {
+  markdown?: unknown;
+  content?: unknown;
+  text?: unknown;
+  uiContext?: unknown;
+};
 
-  if (
-    typedMessage.type === "text" &&
-    typeof (typedMessage as { markdown?: string }).markdown === "string"
-  ) {
-    const markdown = (typedMessage as { markdown: string }).markdown;
+function pickMarkdown(message: UIMessage): string | null {
+  const m = message as unknown as MaybePayload;
+  if (typeof m.markdown === "string" && m.markdown.trim().length > 0) return m.markdown;
+  if (typeof m.content === "string" && m.content.trim().length > 0) return m.content;
+  if (typeof m.text === "string" && m.text.trim().length > 0) return m.text;
+  return null;
+}
+
+export function WidgetRenderer({ message }: WidgetRendererProps) {
+  const uiContext = (message as unknown as { uiContext?: UIContext }).uiContext;
+  const markdown = pickMarkdown(message);
+
+  if (!uiContext && markdown) {
     return (
-      <div className="widget widget-text prose prose-slate max-w-none">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-          {markdown}
-        </ReactMarkdown>
+      <div className="widget widget-text max-w-none">
+        <ChatMarkdown content={markdown} />
       </div>
     );
   }
@@ -41,9 +49,10 @@ export function WidgetRenderer({ message }: WidgetRendererProps) {
           shadow
         >
           <div className="space-y-2 text-sm">
-            {typeof typedMessage.content === "string" &&
-            typedMessage.content.trim().length > 0 ? (
-              <p className="whitespace-pre-wrap">{typedMessage.content}</p>
+            {markdown ? (
+              <div className="max-w-none">
+                <ChatMarkdown content={markdown} />
+              </div>
             ) : null}
 
             {Array.isArray(uiContext.fields) && uiContext.fields.length > 0 ? (
@@ -63,7 +72,7 @@ export function WidgetRenderer({ message }: WidgetRendererProps) {
                   <button
                     key={action.id}
                     type="button"
-                    className="rounded-md border px-3 py-1 text-xs"
+                    className="rounded-md border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-1 text-xs text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-hover)]"
                   >
                     {action.label}
                   </button>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 
-export type SettingsCategory = 'general' | 'memory_crm' | 'notifications' | 'personalization' | 'apps_connectors' | 'schedules' | 'data_controls' | 'security' | 'parental' | 'account'
+export type SettingsCategory = 'general' | 'memory_crm' | 'notifications' | 'personalization' | 'apps_connectors' | 'schedules' | 'data_controls' | 'security' | 'parental' | 'account' | 'shop'
 
 type GeneralSettings = {
   appearance: {
@@ -105,6 +105,7 @@ export function SettingsDetailPanel({ category }: SettingsDetailPanelProps) {
       security: 'Sicherheit',
       parental: 'Kindersicherung',
       account: 'Konto',
+      shop: 'Shop',
     }
 
     return (

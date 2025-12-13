@@ -251,12 +251,14 @@ function handleTextResponse(textDelta: string): void {
 }
 
 // Setze Funktionen auf window für useRealtimeVoice Hook
-interface WindowWithRealtimeVoice {
-  startRealtimeVoiceSession?: typeof startRealtimeVoiceSession
-  stopRealtimeVoiceSession?: typeof stopRealtimeVoiceSession
+declare global {
+  interface Window {
+    startRealtimeVoiceSession?: () => Promise<void>
+    stopRealtimeVoiceSession?: () => Promise<void>
+  }
 }
 
 if (typeof window !== 'undefined') {
-  (window as WindowWithRealtimeVoice).startRealtimeVoiceSession = startRealtimeVoiceSession
-  (window as WindowWithRealtimeVoice).stopRealtimeVoiceSession = stopRealtimeVoiceSession
+  window.startRealtimeVoiceSession = startRealtimeVoiceSession
+  window.stopRealtimeVoiceSession = stopRealtimeVoiceSession
 }
