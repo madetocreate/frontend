@@ -12,7 +12,7 @@ type ChatMarkdownProps = {
 
 export function ChatMarkdown({ content }: ChatMarkdownProps) {
   return (
-    <div className="prose prose-slate max-w-none leading-relaxed text-left" style={{ fontSize: '19px' }}>
+    <div className="w-full max-w-none text-left leading-relaxed text-[var(--ak-color-text-primary)]">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

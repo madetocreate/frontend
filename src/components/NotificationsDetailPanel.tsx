@@ -169,37 +169,6 @@ export function NotificationsDetailPanel() {
   return (
     <WidgetCard padding="sm">
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h2 className="ak-heading">Benachrichtigungen</h2>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                const evt = new CustomEvent('aklow-open-module', { detail: { module: 'inbox' } })
-                window.dispatchEvent(evt)
-              }}
-              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors duration-150"
-              aria-label="Benachrichtigungen schließen"
-            >
-              <BellIcon className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <span className="absolute right-1 top-1 inline-flex h-2.5 min-w-[10px] items-center justify-center rounded-full bg-red-500 text-[9px] font-semibold text-white px-0.5">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={handleMarkAllRead}
-              className="inline-flex items-center justify-center rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-xs font-medium text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
-            >
-              Alle als gelesen markieren
-            </button>
-          </div>
-        </div>
-
-        <div className="h-px bg-[var(--ak-color-border-subtle)]" />
-
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -262,14 +231,39 @@ export function NotificationsDetailPanel() {
             Sales & Marketing
           </button>
           <div className="flex-1" />
-          <button
-            type="button"
-            onClick={handleOpenSettings}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-transparent text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
-            aria-label="Einstellungen"
-          >
-            <AdjustmentsHorizontalIcon className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                const evt = new CustomEvent('aklow-open-module', { detail: { module: 'inbox' } })
+                window.dispatchEvent(evt)
+              }}
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors duration-150"
+              aria-label="Benachrichtigungen schließen"
+            >
+              <BellIcon className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute right-1 top-1 inline-flex h-2.5 min-w-[10px] items-center justify-center rounded-full bg-red-500 text-[9px] font-semibold text-white px-0.5">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={handleMarkAllRead}
+              className="inline-flex items-center justify-center rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-xs font-medium text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
+            >
+              Alle als gelesen markieren
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenSettings}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-transparent text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
+              aria-label="Einstellungen"
+            >
+              <AdjustmentsHorizontalIcon className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         <div className="h-px bg-[var(--ak-color-border-subtle)]" />

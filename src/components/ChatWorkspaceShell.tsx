@@ -245,11 +245,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
   return (
     <div className="flex h-screen bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)]">
-      <aside className="ak-glass flex w-16 flex-col items-center gap-y-3 py-4 text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--ak-color-bg-surface)] ak-caption font-semibold text-[var(--ak-color-text-secondary)] shadow-sm">
-          <span className="text-xs">AK</span>
-        </div>
-        <nav className="mt-4 flex flex-1 flex-col items-center gap-y-3">
+      <aside className="ak-glass flex w-16 flex-col items-center gap-y-4 py-3 text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]">
+        <nav className="mt-1 flex flex-1 flex-col items-center gap-y-4">
           {MODULES.map((mod) => {
             const Icon = mod.icon
             const isActive =
@@ -272,23 +269,20 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     e.currentTarget.style.setProperty('--mouse-y', `${y}%`)
                   }}
                   className={clsx(
-                    'ak-sidebar-button flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
+                    'ak-sidebar-button flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
                     isActive
                       ? 'bg-[var(--ak-color-bg-selected)] text-[var(--ak-color-text-primary)] shadow-sm border-[var(--ak-color-border-subtle)]'
                       : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
                   )}
                 >
                   <span className="sr-only">{mod.label}</span>
-                  <Icon className="h-5 w-5" aria-hidden="true" />
+                  <Icon className="h-6 w-6" aria-hidden="true" />
                 </button>
-                <div className="pointer-events-none absolute left-14 top-1/2 z-50 -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-full bg-[var(--ak-color-selected)] px-3 py-1 ak-caption font-medium text-[var(--ak-color-text-primary)] opacity-0 shadow-sm transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100">
-                  {mod.label}
-                </div>
               </div>
             )
           })}
         </nav>
-        <div className="mb-4 flex flex-col items-center gap-y-3">
+        <div className="mb-3 flex flex-col items-center gap-y-3">
           <div className="relative">
             <button
               type="button"
@@ -301,14 +295,14 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 e.currentTarget.style.setProperty('--mouse-y', `${y}%`)
               }}
               className={clsx(
-                'ak-sidebar-button flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-slate-500 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
+                'ak-sidebar-button flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
                 activeModuleToken === 'settings' && leftDrawerOpen
                   ? 'bg-[var(--ak-color-selected)] text-[var(--ak-color-text-primary)] shadow-sm border-[var(--ak-color-border-subtle)]'
                   : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-hover)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
               )}
               aria-label="Einstellungen"
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--ak-color-selected)] ak-caption font-semibold text-[var(--ak-color-text-primary)] shadow-sm border border-[var(--ak-color-border-subtle)]">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--ak-color-selected)] ak-caption font-semibold text-[var(--ak-color-text-primary)] shadow-sm border border-[var(--ak-color-border-subtle)]">
                 {profileUser.initials ?? 'N'}
               </span>
             </button>
@@ -355,7 +349,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   </span>
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto ak-body text-[var(--ak-color-text-secondary)]">
+              <div className="flex-1 overflow-y-auto ak-scrollbar ak-body text-[var(--ak-color-text-secondary)]">
                 {activeModuleToken === 'chat' ? (
                   <ChatSidebarContent />
                 ) : activeModuleToken === 'inbox' ? (
@@ -427,7 +421,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 </div>
                 <div className="w-7" />
               </div>
-              <div className="flex-1 overflow-y-auto px-3 py-3 text-sm text-slate-600">
+              <div className="flex-1 overflow-y-auto ak-scrollbar px-3 py-3 text-sm text-[var(--ak-color-text-secondary)]">
                 {showNotifications ? (
                   <NotificationsDetailPanel />
                 ) : activeModuleToken === 'inbox' ? (

@@ -426,17 +426,17 @@ export function ChatShell() {
         background: "rgba(255, 255, 255, 0.3)",
         backdropFilter: "blur(20px) saturate(180%)",
         WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        border: "1px solid var(--ak-color-border-fine)",
+        border: "1px solid var(--ak-color-border-hairline)",
         boxShadow: "var(--ak-shadow-glass)",
       }}
     >
       <button
         type="button"
         onClick={handleBellClick}
-        className="absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-lg border border-transparent text-slate-500 transition-all duration-200 hover:bg-white/20 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25 focus-visible:ring-offset-2"
+        className="absolute top-3 right-3 z-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition-all duration-200 hover:bg-white/30 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25 focus-visible:ring-offset-2"
         aria-label="Benachrichtigungen"
       >
-        <BellIcon className="h-5 w-5" aria-hidden="true" />
+        <BellIcon className="h-6 w-6" aria-hidden="true" />
       </button>
 
       <ThinkingStepsDrawer
@@ -449,7 +449,7 @@ export function ChatShell() {
       <div className="flex-1 overflow-y-auto space-y-6 px-[5%] py-2 pb-28 mx-auto max-w-3xl">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
-            <div className="ak-heading font-bold text-[var(--ak-color-text-primary)]" style={{ fontSize: "2.5rem" }}>
+            <div className="ak-heading font-medium text-[var(--ak-color-text-primary)]" style={{ fontSize: "2rem" }}>
               Was kann ich für dich tun?
             </div>
           </div>
@@ -490,7 +490,7 @@ export function ChatShell() {
       </div>
 
       <form onSubmit={handleSend} className="px-[5%]">
-        <div className="ak-glass-panel relative flex items-center gap-2 rounded-full px-4 py-3 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-within:shadow-[var(--ak-ring-strong)] focus-within:scale-[1.01]">
+        <div className="ak-glass-panel relative flex items-center gap-2 rounded-full px-4 py-3 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-within:shadow-[var(--ak-shadow-glass)] focus-within:scale-[1.01] border border-[var(--ak-color-border-hairline)] bg-[var(--ak-color-bg-surface)]/70 backdrop-blur-xl">
           {quickHint ? (
             <div className="absolute left-2 -top-1 translate-y-[-70%] ak-caption font-semibold text-[var(--ak-color-success)] flex items-center gap-1">
               <span>{quickHint}</span>
@@ -571,9 +571,9 @@ export function ChatShell() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Stelle irgendeine Frage"
+            placeholder="Schreibe mit Aklow"
             ref={inputRef}
-            className="ak-body flex-1 border-none bg-transparent text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-muted)] focus-visible:outline-none"
+            className="ak-body flex-1 border-none bg-transparent text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-secondary)] focus-visible:outline-none"
           />
 
           <button
