@@ -35,7 +35,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         let errorDetail = "Transcription failed";
         try {
           const errorJson = await response.json();
-          errorDetail = errorJson.detail || errorJson.error || errorDetail;
+          // Bessere Extraktion der Fehlermeldung aus verschiedenen Formaten
+          if (errorJson.error) {
+            if (typeof errorJson.error === 'string') {
+              errorDetail = errorJson.error;
+            } else if (errorJson.error.message) {
+              errorDetail = errorJson.error.message;
+            } else if (errorJson.error.detail) {
+              errorDetail = errorJson.error.detail;
+            }
+          } else if (errorJson.detail) {
+            errorDetail = errorJson.detail;
+          } else if (errorJson.message) {
+            errorDetail = errorJson.message;
+          }
         } catch {
           const errorText = await response.text().catch(() => "");
           errorDetail = errorText || errorDetail;

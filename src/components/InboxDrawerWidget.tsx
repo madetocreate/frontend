@@ -211,12 +211,11 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
               type="button"
               onClick={() => setActiveChannel(tab.id)}
               className={clsx(
-                'inline-flex w-full items-center justify-center rounded-lg border px-1.5 py-0.5 font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+                'inline-flex w-full items-center justify-center rounded-lg border px-1.5 py-0.5 text-[9px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] ak-button-interactive',
                 isActive
                   ? 'border-[var(--ak-color-border-strong)] bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-primary)] shadow-[var(--ak-shadow-soft)]'
                   : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
               )}
-              style={{ fontSize: 'var(--ak-font-size-button-small)' }}
             >
               <span className="truncate">{tab.label}</span>
             </button>
@@ -247,7 +246,7 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
                     type="button"
                     onClick={() => handleItemClick(item)}
                     className={clsx(
-                      'group flex w-full items-stretch gap-3 rounded-[var(--ak-radius-card)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 px-3 py-2.5 text-left text-xs shadow-sm backdrop-blur-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+                      'group flex w-full items-stretch gap-3 rounded-[var(--ak-radius-card)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 px-3 py-2.5 text-left text-xs shadow-sm backdrop-blur-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] ak-button-interactive',
                       item.unread
                         ? 'bg-slate-50/90 hover:border-slate-300 hover:bg-slate-100/90 hover:shadow-[var(--ak-shadow-card)]'
                         : 'hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]/80 hover:shadow-[var(--ak-shadow-card)]',

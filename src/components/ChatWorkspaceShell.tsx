@@ -269,7 +269,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     e.currentTarget.style.setProperty('--mouse-y', `${y}%`)
                   }}
                   className={clsx(
-                    'ak-sidebar-button flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
+                    'ak-sidebar-button flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-[var(--ak-color-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ak-button-interactive',
                     isActive
                       ? 'bg-[var(--ak-color-bg-selected)] text-[var(--ak-color-text-primary)] shadow-sm border-[var(--ak-color-border-subtle)]'
                       : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'
@@ -295,7 +295,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 e.currentTarget.style.setProperty('--mouse-y', `${y}%`)
               }}
               className={clsx(
-                'ak-sidebar-button flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
+                'ak-sidebar-button flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ak-button-interactive',
                 activeModuleToken === 'settings' && leftDrawerOpen
                   ? 'bg-[var(--ak-color-selected)] text-[var(--ak-color-text-primary)] shadow-sm border-[var(--ak-color-border-subtle)]'
                   : 'bg-[var(--ak-color-bg-surface)]/70 hover:bg-[var(--ak-color-hover)] hover:text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-subtle)] hover:shadow-none'

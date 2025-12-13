@@ -54,7 +54,27 @@ export function useDictation(options: UseDictationOptions = {}) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
 
-      const recorder = new MediaRecorder(stream)
+      // Versuche ein unterstütztes Format zu verwenden
+      let mimeType = 'audio/webm'
+      const supportedTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/mpeg',
+        'audio/wav',
+      ]
+      
+      // Finde das erste unterstützte Format
+      for (const type of supportedTypes) {
+        if (MediaRecorder.isTypeSupported(type)) {
+          mimeType = type
+          break
+        }
+      }
+
+      const recorder = new MediaRecorder(stream, { mimeType })
+      // Speichere den MIME-Type für später
+      ;(recorder as any).__mimeType = mimeType
       mediaRecorderRef.current = recorder
       chunksRef.current = []
 
@@ -80,12 +100,40 @@ export function useDictation(options: UseDictationOptions = {}) {
           return
         }
 
-        const blob = new Blob(chunks, { type: 'audio/webm' })
+        // Bestimme den Dateinamen basierend auf dem MIME-Type
+        const mimeType = recorder.mimeType || (recorder as any).__mimeType || 'audio/webm'
+        let extension = 'webm'
+        let blobType = 'audio/webm'
+        
+        if (mimeType.includes('mp4') || mimeType.includes('m4a')) {
+          extension = 'm4a'
+          blobType = 'audio/mp4'
+        } else if (mimeType.includes('mpeg')) {
+          extension = 'mp3'
+          blobType = 'audio/mpeg'
+        } else if (mimeType.includes('wav')) {
+          extension = 'wav'
+          blobType = 'audio/wav'
+        } else {
+          extension = 'webm'
+          blobType = 'audio/webm'
+        }
+
+        const blob = new Blob(chunks, { type: blobType })
+        
+        // Validierung: Mindestgröße für Audio-Datei (z.B. 1KB)
+        if (blob.size < 1024) {
+          stopStream()
+          setError('Aufnahme zu kurz. Bitte sprechen Sie länger.')
+          setStatus('error')
+          return
+        }
+
         setStatus('transcribing')
 
         try {
           const formData = new FormData()
-          formData.append('file', blob, 'speech.webm')
+          formData.append('file', blob, `speech.${extension}`)
 
           const response = await fetch('/api/audio/transcribe', {
             method: 'POST',
@@ -96,9 +144,25 @@ export function useDictation(options: UseDictationOptions = {}) {
             let errorMessage = 'Transkription fehlgeschlagen'
             try {
               const errorJson = await response.json()
-              errorMessage = errorJson.error || errorJson.detail || errorMessage
+              // Bessere Extraktion der Fehlermeldung
+              if (errorJson.error) {
+                if (typeof errorJson.error === 'string') {
+                  errorMessage = errorJson.error
+                } else if (errorJson.error.message) {
+                  errorMessage = errorJson.error.message
+                } else if (errorJson.error.detail) {
+                  errorMessage = errorJson.error.detail
+                }
+              } else if (errorJson.detail) {
+                errorMessage = errorJson.detail
+              }
+              
+              // Spezifische Fehlermeldungen für bekannte Probleme
+              if (errorMessage.includes('corrupted') || errorMessage.includes('unsupported')) {
+                errorMessage = 'Audio-Format wird nicht unterstützt. Bitte versuchen Sie es erneut.'
+              }
             } catch {
-            const message = await response.text().catch(() => '')
+              const message = await response.text().catch(() => '')
               errorMessage = message || errorMessage
             }
             throw new Error(errorMessage)
@@ -114,7 +178,8 @@ export function useDictation(options: UseDictationOptions = {}) {
           setStatus('idle')
         } catch (err) {
           console.error('Transcription error', err)
-          setError('Transkription fehlgeschlagen.')
+          const errorMessage = err instanceof Error ? err.message : 'Transkription fehlgeschlagen.'
+          setError(errorMessage)
           setStatus('error')
         } finally {
           stopStream()

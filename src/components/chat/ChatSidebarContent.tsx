@@ -6,6 +6,7 @@ import {
   MagnifyingGlassIcon,
   EllipsisVerticalIcon,
   ChatBubbleLeftRightIcon,
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 
 type ChatThread = {
@@ -56,6 +57,7 @@ export function ChatSidebarContent() {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(DEFAULT_THREAD.id);
   const [editingThreadId, setEditingThreadId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState<string>("");
+  const [chatsExpanded, setChatsExpanded] = useState(true);
   const [, setHydrated] = useState(false); // Track hydration state (setter only, value not used)
 
   // Lade Threads nur auf dem Client nach Hydration
@@ -230,11 +232,11 @@ export function ChatSidebarContent() {
   return (
     <div className="flex h-full flex-col">
       {/* Header: New Chat + Search */}
-      <div className="flex flex-col gap-2 border-b border-[var(--ak-color-border-subtle)] p-3">
+      <div className="flex flex-col gap-2 p-3">
         <button
           type="button"
           onClick={handleNewChat}
-          className="flex w-full items-center gap-2 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-2 text-sm font-medium text-[var(--ak-color-text-primary)] transition-all duration-200 hover:bg-[var(--ak-color-bg-surface-muted)] hover:border-[var(--ak-color-border-strong)]"
+          className="flex w-full items-center gap-2 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-2 text-sm font-medium text-[var(--ak-color-text-primary)] transition-all duration-200 hover:bg-[var(--ak-color-bg-surface-muted)] hover:border-[var(--ak-color-border-strong)] ak-button-interactive"
         >
           <ChatBubbleLeftRightIcon className="h-4 w-4" />
           <span>Neuer Chat</span>
@@ -252,8 +254,28 @@ export function ChatSidebarContent() {
         </div>
       </div>
 
+      {/* Collapsible Chats Section */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setChatsExpanded((prev) => !prev)}
+          className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-[var(--ak-color-bg-surface-muted)] transition-colors ak-button-interactive"
+        >
+          <span className="text-sm font-medium text-[var(--ak-color-text-secondary)]">
+            Chats
+          </span>
+          <ChevronDownIcon
+            className={clsx(
+              "h-4 w-4 text-[var(--ak-color-text-muted)] transition-transform duration-200",
+              chatsExpanded ? "rotate-0" : "-rotate-90"
+            )}
+          />
+        </button>
+      </div>
+
       {/* Thread-Liste */}
-      <div className="flex-1 overflow-y-auto">
+      {chatsExpanded && (
+        <div className="flex-1 overflow-y-auto">
         {filteredThreads.length === 0 ? (
           <div className="flex h-full items-center justify-center p-4 text-center text-sm text-[var(--ak-color-text-muted)]">
             {searchQuery ? "Keine Chats gefunden" : "Noch keine Chats"}
@@ -290,7 +312,7 @@ export function ChatSidebarContent() {
                       type="button"
                       onClick={() => handleThreadSelect(thread.id)}
                       className={clsx(
-                        "flex w-full items-start gap-2 rounded-lg px-3 py-2.5 text-left transition-all duration-150",
+                        "flex w-full items-start gap-2 rounded-lg px-3 py-2.5 text-left transition-all duration-150 ak-button-interactive",
                         isActive
                           ? "bg-[var(--ak-color-accent-soft)] text-[var(--ak-color-text-primary)]"
                           : "text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-surface-muted)]"
@@ -362,7 +384,8 @@ export function ChatSidebarContent() {
             })}
           </div>
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
