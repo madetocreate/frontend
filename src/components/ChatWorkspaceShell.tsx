@@ -7,6 +7,8 @@ import {
   ChatBubbleLeftRightIcon,
   InboxIcon,
   Squares2X2Icon,
+  LightBulbIcon,
+  PresentationChartBarIcon,
 } from '@heroicons/react/24/outline'
 import { ChatSidebarContent } from '@/components/chat/ChatSidebarContent'
 import { InboxDrawerWidget } from '@/components/InboxDrawerWidget'
@@ -26,6 +28,8 @@ import { AutomationDetailPanel } from '@/components/AutomationDetailPanel'
 type WorkspaceModuleToken =
   | 'chat'
   | 'inbox'
+  | 'new1'
+  | 'new2'
   | 'automation'
   | 'settings'
 
@@ -39,6 +43,8 @@ type ModuleConfig = {
 const MODULES: ModuleConfig[] = [
   { id: 'chat', label: 'Chat', icon: ChatBubbleLeftRightIcon, href: '/' },
   { id: 'inbox', label: 'Posteingang', icon: InboxIcon },
+  { id: 'new1', label: 'Memory', icon: LightBulbIcon },
+  { id: 'new2', label: 'Analytics', icon: PresentationChartBarIcon },
   { id: 'automation', label: 'Modules', icon: Squares2X2Icon },
 ]
 
@@ -47,14 +53,14 @@ const MODULES: ModuleConfig[] = [
 const LEFT_RAIL_WIDTH = '64px'
 // Linkes Panel ~30% Breite (mit Grenzen)
 const LEFT_DRAWER_WIDTH = 'clamp(260px, 30vw, 400px)'
-// Rechtes Panel ~70% Breite (mit Grenzen)
-const RIGHT_DRAWER_WIDTH = 'clamp(360px, 70vw, 1100px)'
 
 function getModuleLabel(token: WorkspaceModuleToken): string {
   const match = MODULES.find((m) => m.id === token)
   if (match) return match.label
 
   if (token === 'settings') return 'Einstellungen'
+  if (token === 'new1') return 'Memory'
+  if (token === 'new2') return 'Analytics'
   return token
 }
 
@@ -74,6 +80,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const [selectedAutomationItem, setSelectedAutomationItem] = useState<string | null>(null)
   const [selectedMemoryCategory, setSelectedMemoryCategory] = useState<MemoryCategory | null>(null)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [hoveredSidebarTooltip, setHoveredSidebarTooltip] = useState<string | null>(null)
 
   const profileUser: ProfileUserState = {
     isAuthenticated: false,
@@ -243,11 +250,14 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     width: LEFT_DRAWER_WIDTH,
   }
 
-  // Rechtes Panel: nur Breite reservieren, wenn sichtbar; ausrichten relativ zum linken Panel
+  // Rechtes Panel: Positionierung abhängig vom Zustand
   const rightContainerStyle: CSSProperties = {
     right: 0,
-    left: showLeft && !showNotifications ? LEFT_DRAWER_WIDTH : 0,
-    width: showRight ? (showNotifications ? '100%' : RIGHT_DRAWER_WIDTH) : 0,
+    left: showNotifications 
+      ? 0 
+      : showLeft 
+        ? LEFT_DRAWER_WIDTH 
+        : LEFT_RAIL_WIDTH, // Bei geschlossener Sidebar: bei Logos (64px) starten
   }
 
   return (
@@ -264,7 +274,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 !rightDrawerOpen)
 
             return (
-              <div key={mod.id} className="relative group">
+              <div key={mod.id} className="relative">
                 <button
                   type="button"
                   onClick={() => handleModuleClick(mod.id)}
@@ -275,6 +285,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     e.currentTarget.style.setProperty('--mouse-x', `${x}%`)
                     e.currentTarget.style.setProperty('--mouse-y', `${y}%`)
                   }}
+                  onMouseEnter={() => setHoveredSidebarTooltip(mod.id)}
+                  onMouseLeave={() => setHoveredSidebarTooltip(null)}
                   className={clsx(
                     'ak-sidebar-button flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-[var(--ak-color-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ak-button-interactive',
                     isActive
@@ -285,6 +297,11 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   <span className="sr-only">{mod.label}</span>
                   <Icon className="h-6 w-6" aria-hidden="true" />
                 </button>
+                {hoveredSidebarTooltip === mod.id && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
+                    {mod.label}
+                  </span>
+                )}
               </div>
             )
           })}
@@ -301,6 +318,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 e.currentTarget.style.setProperty('--mouse-x', `${x}%`)
                 e.currentTarget.style.setProperty('--mouse-y', `${y}%`)
               }}
+              onMouseEnter={() => setHoveredSidebarTooltip('settings')}
+              onMouseLeave={() => setHoveredSidebarTooltip(null)}
               className={clsx(
                 'ak-sidebar-button flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ak-button-interactive',
                 activeModuleToken === 'settings' && leftDrawerOpen
@@ -313,6 +332,11 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 {profileUser.initials ?? 'N'}
               </span>
             </button>
+            {hoveredSidebarTooltip === 'settings' && (
+              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
+                Einstellungen
+              </span>
+            )}
           </div>
         </div>
       </aside>
@@ -334,7 +358,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
           >
             <div
               className={clsx(
-                'ak-glass pointer-events-auto flex h-full flex-col border-r transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+                'ak-glass pointer-events-auto flex h-full flex-col border-r-0 transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
                 showLeft ? 'translate-x-0' : '-translate-x-full'
               )}
               style={leftDrawerStyle}
@@ -397,10 +421,10 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
           >
             <div
             className={clsx(
-              'ak-glass pointer-events-auto flex h-full flex-col border-l transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+              'ak-glass pointer-events-auto flex h-full flex-col transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
               showRight ? 'translate-x-0' : 'translate-x-full'
             )}
-            style={{ width: showNotifications ? '100%' : RIGHT_DRAWER_WIDTH }}
+            style={{ width: '100%' }} // Füllt immer den gesamten Container
             >
               <div className="flex items-center justify-between px-3 py-2">
                 <button
@@ -428,7 +452,10 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 </div>
                 <div className="w-7" />
               </div>
-              <div className="flex-1 overflow-y-auto ak-scrollbar px-3 py-3 text-sm text-[var(--ak-color-text-secondary)]">
+              <div
+                className="flex-1 overflow-y-auto ak-scrollbar px-3 py-3 text-sm text-[var(--ak-color-text-secondary)]"
+                style={{ scrollbarWidth: 'thin' }}
+              >
                 {showNotifications ? (
                   <NotificationsDetailPanel />
                 ) : activeModuleToken === 'inbox' ? (

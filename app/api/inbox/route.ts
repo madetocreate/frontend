@@ -41,6 +41,7 @@ type InboxApiResponse = {
 }
 
 const ORCHESTRATOR_URL = process.env.ORCHESTRATOR_API_URL
+const FASTAPI_URL = process.env.NEXT_PUBLIC_CHAT_API_URL ?? process.env.NEXT_PUBLIC_AGENT_BACKEND_URL ?? 'http://127.0.0.1:8000'
 const ORCHESTRATOR_TENANT_ID = process.env.ORCHESTRATOR_TENANT_ID
 const ORCHESTRATOR_API_TOKEN = process.env.ORCHESTRATOR_API_TOKEN
 
@@ -164,7 +165,7 @@ export async function GET() {
 
   try {
     const response = await fetch(
-      `${normalizeBaseUrl(ORCHESTRATOR_URL)}/operator/inbox`,
+      `${normalizeBaseUrl(FASTAPI_URL)}/operator/inbox`,
       {
         method: 'POST',
         headers: {

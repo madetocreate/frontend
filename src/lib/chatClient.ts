@@ -2,7 +2,7 @@
 // Priority: NEXT_PUBLIC_CHAT_API_URL > NEXT_PUBLIC_AGENT_BACKEND_URL > NEXT_PUBLIC_BACKEND_URL (if port 8000) > default
 // Note: AGENT_BACKEND_URL is server-side only, so we need NEXT_PUBLIC_ version for client-side
 const CHAT_API_BASE_URL =
-  process.env.NEXT_PUBLIC_CHAT_API_URL ?? 
+  process.env.NEXT_PUBLIC_CHAT_API_URL ??
   process.env.NEXT_PUBLIC_AGENT_BACKEND_URL ??
   (process.env.NEXT_PUBLIC_BACKEND_URL?.includes("8000") ? process.env.NEXT_PUBLIC_BACKEND_URL : "http://127.0.0.1:8000");
 const CHAT_STREAM_URL =
@@ -117,136 +117,172 @@ export type ChatStreamCallbacks = {
   onError?: (error: { message: string }) => void;
 };
 
+type SSEPayload = Record<string, unknown>;
+
+function _str(v: unknown): string {
+  return typeof v === "string" ? v : "";
+}
+
+function _arr<T>(v: unknown): T[] | undefined {
+  return Array.isArray(v) ? (v as T[]) : undefined;
+}
+
 export async function sendChatMessageStream(
-  params: {
-    tenantId: string;
-    sessionId: string;
-    channel?: string;
-    message: string;
-    metadata?: Record<string, unknown>;
+  message: string,
+  callbacks: ChatStreamCallbacks,
+  options?: {
+    tenantId?: string
+    sessionId?: string
+    channel?: string
   },
-  callbacks: ChatStreamCallbacks
 ): Promise<void> {
-  const body: ChatRequestBody = {
-    tenantId: params.tenantId,
-    sessionId: params.sessionId,
-    channel: params.channel ?? "web_chat",
-    message: params.message,
-    metadata: params.metadata
-  };
+  const tenantId = options?.tenantId ?? 'demo'
+  const sessionId = options?.sessionId ?? 'default'
+  const channel = options?.channel ?? 'default'
+
+  const response = await fetch(CHAT_STREAM_URL, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({
+      tenantId,
+      sessionId,
+      channel,
+      message,
+    }),
+  })
+
+  if (!response.ok) {
+    let details = ''
+    try {
+      details = await response.text()
+    } catch {
+      details = ''
+    }
+    throw new Error(`Chat stream request failed (${response.status}): ${details}`)
+  }
+
+  if (!response.body) {
+    throw new Error('No response body for chat stream')
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+
+  let buffer = ''
+  let currentEvent = ''
+  let currentData = ''
+
+  const dispatch = (eventName: string, dataText: string) => {
+    if (!dataText) return
+
+    let data: Record<string, unknown> | string = dataText
+    try {
+      const parsed = JSON.parse(dataText)
+      if (parsed && typeof parsed === 'object') {
+        data = parsed as Record<string, unknown>
+      } else {
+        data = { content: dataText }
+      }
+    } catch {
+      data = { content: dataText }
+    }
+
+    const effectiveEvent =
+      (eventName && eventName !== 'message')
+        ? eventName
+        : (typeof data === 'object' && data !== null && typeof (data as Record<string, unknown>).event === 'string'
+            ? (data as Record<string, unknown>).event as string
+            : '')
+
+    if (!effectiveEvent) return
+
+    switch (effectiveEvent) {
+      case 'start':
+        callbacks.onStart?.(data)
+        return
+      case 'step_update':
+        callbacks.onStepUpdate?.(data)
+        return
+      case 'chunk':
+        callbacks.onChunk?.(data)
+        return
+      case 'end':
+        callbacks.onEnd?.(data)
+        return
+      case 'error':
+        callbacks.onError?.(data)
+        return
+      default:
+        return
+    }
+  }
 
   try {
-    const response = await fetch(CHAT_STREAM_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      credentials: "include",
-      body: JSON.stringify(body)
-    });
-
-    if (!response.ok) {
-      const text = await response.text().catch(() => "");
-      throw new Error(
-        `Chat stream request failed: ${response.status} ${response.statusText} ${text}`
-      );
-    }
-
-    if (!response.body) {
-      throw new Error("Response body is null");
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-
     while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+      const { value, done } = await reader.read()
+      if (done) break
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
+      buffer += decoder.decode(value, { stream: true })
 
-      let currentEvent = "";
-      let currentData = "";
+      const lines = buffer.split(/\r?\n/)
+      buffer = lines.pop() ?? ''
 
       for (const line of lines) {
-        if (line.startsWith("event:")) {
-          currentEvent = line.slice(6).trim();
-        } else if (line.startsWith("data:")) {
-          currentData = line.slice(5).trim();
-        } else if (line === "" && currentEvent && currentData) {
-          try {
-            const data = JSON.parse(currentData);
-            switch (currentEvent) {
-              case "start":
-                callbacks.onStart?.(data);
-                break;
-              case "chunk":
-                callbacks.onChunk?.(data);
-                break;
-              case "step_update":
-                callbacks.onStepUpdate?.(data);
-                break;
-              case "end":
-                callbacks.onEnd?.(data);
-                break;
-              case "error":
-                callbacks.onError?.(data);
-                break;
-            }
-          } catch (e) {
-            console.error("Failed to parse SSE data:", e, currentData);
-          }
-          currentEvent = "";
-          currentData = "";
+        if (line.startsWith('event:')) {
+          currentEvent = line.slice(6).trim()
+          continue
+        }
+
+        if (line.startsWith('data:')) {
+          const raw = line.slice(5)
+          const payload = raw.startsWith(' ') ? raw.slice(1) : raw
+          currentData = currentData ? `${currentData}\n${payload}` : payload
+          continue
+        }
+
+        if (line.trim() === '' && currentData) {
+          dispatch(currentEvent, currentData)
+          currentEvent = ''
+          currentData = ''
         }
       }
     }
 
-    // Process remaining buffer
     if (buffer) {
-      const lines = buffer.split("\n");
-      let currentEvent = "";
-      let currentData = "";
+      const tailLines = buffer.split(/\r?\n/)
+      for (const line of tailLines) {
+        if (line.startsWith('event:')) {
+          currentEvent = line.slice(6).trim()
+          continue
+        }
 
-      for (const line of lines) {
-        if (line.startsWith("event:")) {
-          currentEvent = line.slice(6).trim();
-        } else if (line.startsWith("data:")) {
-          currentData = line.slice(5).trim();
-        } else if (line === "" && currentEvent && currentData) {
-          try {
-            const data = JSON.parse(currentData);
-            switch (currentEvent) {
-              case "start":
-                callbacks.onStart?.(data);
-                break;
-              case "chunk":
-                callbacks.onChunk?.(data);
-                break;
-              case "step_update":
-                callbacks.onStepUpdate?.(data);
-                break;
-              case "end":
-                callbacks.onEnd?.(data);
-                break;
-              case "error":
-                callbacks.onError?.(data);
-                break;
-            }
-          } catch (e) {
-            console.error("Failed to parse SSE data:", e, currentData);
-          }
+        if (line.startsWith('data:')) {
+          const raw = line.slice(5)
+          const payload = raw.startsWith(' ') ? raw.slice(1) : raw
+          currentData = currentData ? `${currentData}\n${payload}` : payload
+          continue
+        }
+
+        if (line.trim() === '' && currentData) {
+          dispatch(currentEvent, currentData)
+          currentEvent = ''
+          currentData = ''
         }
       }
     }
-  } catch (error) {
-    callbacks.onError?.({
-      message: error instanceof Error ? error.message : "Unknown error"
-    });
-    throw error;
+
+    if (currentData) {
+      dispatch(currentEvent, currentData)
+    }
+  } finally {
+    try {
+      reader.releaseLock()
+    } catch {
+      // Ignore errors when releasing lock
+    }
   }
 }
 
@@ -280,14 +316,7 @@ export async function sendChatMessage(params: {
       text = await response.text();
     } catch {
     }
-    throw new Error(
-      "Chat request failed: " +
-        response.status +
-        " " +
-        response.statusText +
-        " " +
-        text
-    );
+    throw new Error("Chat request failed: " + response.status + " " + response.statusText + " " + text);
   }
 
   const data = (await response.json()) as ChatResponse;

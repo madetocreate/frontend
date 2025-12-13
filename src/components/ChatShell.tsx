@@ -2,14 +2,12 @@
 
 import { useState, FormEvent, useRef, useEffect, useCallback } from "react";
 import clsx from "clsx";
-import { BellIcon, RectangleStackIcon } from "@heroicons/react/24/outline";
+import { BellIcon, RectangleStackIcon, ClipboardDocumentIcon, BookmarkIcon, ArrowPathIcon, SpeakerWaveIcon } from "@heroicons/react/24/outline";
 import { WidgetRenderer } from "./chat/WidgetRenderer";
 import { sendChatMessageStream, ChatResponse } from "../lib/chatClient";
 import { useDictation } from "../hooks/useDictation";
 import { useRealtimeVoice } from "../hooks/useRealtimeVoice";
 import { useSpeechSynthesis } from "../hooks/useSpeechSynthesis";
-import { TtsToggleButton } from "./chat/TtsToggleButton";
-import { ChatMessageAvatar } from "./chat/ChatMessageAvatar";
 import { ThinkingStepsDrawer } from "./chat/ThinkingStepsDrawer";
 import { ChatMarkdown } from "./chat/markdown/ChatMarkdown";
 
@@ -37,6 +35,10 @@ export function ChatShell() {
   const [thinkingNote, setThinkingNote] = useState<string | null>(null);
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
   const [isStepsOpen, setIsStepsOpen] = useState(false);
+  const [hoveredTooltip, setHoveredTooltip] = useState<{ messageId: string; icon: string } | null>(null);
+  const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const hoverMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressRef = useRef(false);
@@ -143,6 +145,16 @@ export function ChatShell() {
     };
   }, [loadMessages, stopTts]);
 
+  // Initial load messages on mount if thread is already selected
+  useEffect(() => {
+    if (!currentThreadRef.current) {
+      const defaultThreadId = "thread-default";
+      currentThreadRef.current = defaultThreadId;
+      const loaded = loadMessages(defaultThreadId);
+      setMessages(loaded);
+    }
+  }, [loadMessages]);
+
   useEffect(() => {
     return () => {
       if (longPressTimerRef.current) {
@@ -181,25 +193,59 @@ export function ChatShell() {
 
     const ttsActive = speakingId === message.id;
 
+    const handleCopy = () => {
+      navigator.clipboard.writeText(message.text);
+    };
+
+    const handleSave = () => {
+      // TODO: Implement save message functionality
+      console.log("Save message:", message.id);
+    };
+
+    const handleUpdate = () => {
+      // TODO: Implement update/regenerate functionality
+      console.log("Update message:", message.id);
+    };
+
+    const handleReadAloud = () => {
+      if (ttsActive) {
+        stopTts();
+      } else {
+        toggleTts({ id: message.id, text: message.text, lang: "de-DE" });
+      }
+    };
+
     return (
       <div
         key={message.id}
-        className="flex justify-start animate-[fadeInUp_0.3s_var(--ak-motion-ease)]"
+        className="group flex justify-start"
+        onMouseEnter={() => {
+          if (hoverMenuTimeoutRef.current) {
+            clearTimeout(hoverMenuTimeoutRef.current);
+          }
+          hoverMenuTimeoutRef.current = setTimeout(() => {
+            setHoveredMessageId(message.id);
+          }, 500);
+        }}
+        onMouseLeave={() => {
+          if (hoverMenuTimeoutRef.current) {
+            clearTimeout(hoverMenuTimeoutRef.current);
+            hoverMenuTimeoutRef.current = null;
+          }
+          setHoveredMessageId(null);
+        }}
         style={{
           marginLeft: "3%",
           maxWidth: "85%",
-          opacity: 0,
-          animation: "fadeInUp 0.3s var(--ak-motion-ease) forwards",
+          opacity: 1,
         }}
       >
-        <div className="flex w-full items-start gap-3">
-          <ChatMessageAvatar role="assistant" />
+        <div className="flex w-full items-start">
           <div className="flex w-full flex-col gap-3" style={{ alignItems: "flex-start" }}>
             <div className="flex w-full items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <ChatMarkdown content={message.text} />
               </div>
-              <div className="flex items-center gap-1">
                 {thinkingSteps.length > 0 && isLastAssistantMessage(message) ? (
                   <button
                     type="button"
@@ -210,11 +256,142 @@ export function ChatShell() {
                     <RectangleStackIcon className="h-5 w-5" aria-hidden="true" />
                   </button>
                 ) : null}
-                <TtsToggleButton
-                  active={ttsActive}
+            </div>
+
+            {/* Hover Menu - nur bei Hover sichtbar */}
+            <div 
+              className={`${hoveredMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-1.5 -mt-2`}
+              onMouseLeave={() => {
+                if (tooltipTimeoutRef.current) {
+                  clearTimeout(tooltipTimeoutRef.current);
+                  tooltipTimeoutRef.current = null;
+                }
+                setHoveredTooltip(null);
+              }}
+            >
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  onMouseEnter={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                    }
+                    tooltipTimeoutRef.current = setTimeout(() => {
+                      setHoveredTooltip({ messageId: message.id, icon: 'copy' });
+                    }, 500);
+                  }}
+                  onMouseLeave={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                      tooltipTimeoutRef.current = null;
+                    }
+                    setHoveredTooltip(null);
+                  }}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  aria-label="Nachricht kopieren"
+                >
+                  <ClipboardDocumentIcon className="h-5 w-5" aria-hidden="true" />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'copy' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
+                    Kopieren
+                  </span>
+                )}
+              </div>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  onMouseEnter={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                    }
+                    tooltipTimeoutRef.current = setTimeout(() => {
+                      setHoveredTooltip({ messageId: message.id, icon: 'save' });
+                    }, 500);
+                  }}
+                  onMouseLeave={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                      tooltipTimeoutRef.current = null;
+                    }
+                    setHoveredTooltip(null);
+                  }}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  aria-label="Nachricht speichern"
+                >
+                  <BookmarkIcon className="h-5 w-5" aria-hidden="true" />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'save' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
+                    Speichern
+                  </span>
+                )}
+              </div>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleUpdate}
+                  onMouseEnter={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                    }
+                    tooltipTimeoutRef.current = setTimeout(() => {
+                      setHoveredTooltip({ messageId: message.id, icon: 'update' });
+                    }, 500);
+                  }}
+                  onMouseLeave={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                      tooltipTimeoutRef.current = null;
+                    }
+                    setHoveredTooltip(null);
+                  }}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  aria-label="Nachricht aktualisieren"
+                >
+                  <ArrowPathIcon className="h-5 w-5" aria-hidden="true" />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'update' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
+                    Aktualisieren
+                  </span>
+                )}
+              </div>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleReadAloud}
                   disabled={!ttsSupported || !message.text || message.text.trim().length === 0}
-                  onClick={() => toggleTts({ id: message.id, text: message.text, lang: "de-DE" })}
-                />
+                  onMouseEnter={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                    }
+                    tooltipTimeoutRef.current = setTimeout(() => {
+                      setHoveredTooltip({ messageId: message.id, icon: 'read' });
+                    }, 500);
+                  }}
+                  onMouseLeave={() => {
+                    if (tooltipTimeoutRef.current) {
+                      clearTimeout(tooltipTimeoutRef.current);
+                      tooltipTimeoutRef.current = null;
+                    }
+                    setHoveredTooltip(null);
+                  }}
+                  className={clsx(
+                    "inline-flex h-7 w-7 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] disabled:opacity-50",
+                    ttsActive && "text-[var(--ak-color-accent)]"
+                  )}
+                  aria-label={ttsActive ? "Vorlesen stoppen" : "Vorlesen"}
+                >
+                  <SpeakerWaveIcon className="h-5 w-5" aria-hidden="true" />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'read' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
+                    {ttsActive ? "Stoppen" : "Vorlesen"}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -426,7 +603,6 @@ export function ChatShell() {
         background: "rgba(255, 255, 255, 0.3)",
         backdropFilter: "blur(20px) saturate(180%)",
         WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        border: "1px solid var(--ak-color-border-hairline)",
         boxShadow: "var(--ak-shadow-glass)",
       }}
     >
@@ -490,7 +666,7 @@ export function ChatShell() {
       </div>
 
       <form onSubmit={handleSend} className="px-[5%]">
-        <div className="ak-glass-panel relative flex items-center gap-2 rounded-full px-4 py-3 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-within:shadow-[var(--ak-shadow-glass)] focus-within:scale-[1.01] border border-[var(--ak-color-border-hairline)] bg-[var(--ak-color-bg-surface)]/70 backdrop-blur-xl">
+        <div className="relative flex items-center gap-2 rounded-xl px-4 py-3 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] shadow-[var(--ak-shadow-glass)] focus-within:scale-[1.01] border border-gray-300 bg-gradient-to-b from-gray-100/80 via-gray-100/70 to-gray-100/60 backdrop-blur-2xl outline-none ring-0 focus-within:outline-none focus-within:ring-0 focus-within:border-gray-300">
           {quickHint ? (
             <div className="absolute left-2 -top-1 translate-y-[-70%] ak-caption font-semibold text-[var(--ak-color-success)] flex items-center gap-1">
               <span>{quickHint}</span>
@@ -573,7 +749,7 @@ export function ChatShell() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Schreibe mit Aklow"
             ref={inputRef}
-            className="ak-body flex-1 border-none bg-transparent text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-secondary)] focus-visible:outline-none"
+            className="ak-body flex-1 border-none bg-transparent text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-secondary)] focus-visible:outline-none outline-none ring-0"
           />
 
           <button
@@ -658,10 +834,10 @@ export function ChatShell() {
             type="submit"
             disabled={isSending || !input.trim()}
             className={clsx(
-              "inline-flex h-8 w-8 items-center justify-center rounded-full shadow-[var(--ak-shadow-soft)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px] active:scale-95",
+              "inline-flex h-8 w-8 items-center justify-center rounded-full shadow-[var(--ak-shadow-soft)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px] active:scale-95 border",
               input.trim()
-                ? "bg-[var(--ak-color-accent)] text-white hover:opacity-90"
-                : "bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-muted)] border border-[var(--ak-color-border-subtle)]",
+                ? "bg-green-500 text-white hover:opacity-90 border-gray-300/40"
+                : "bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-muted)] border-gray-300/40",
               "disabled:opacity-60"
             )}
             aria-label="Senden"

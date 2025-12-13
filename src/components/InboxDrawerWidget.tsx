@@ -200,7 +200,7 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
   }
 
   return (
-    <div className="flex h-full flex-col gap-3 rounded-xl border border-slate-200 bg-[var(--ak-color-bg-surface)]/95 p-3 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl">
+    <div className="flex h-full flex-col gap-1.5 rounded-xl border border-slate-200 bg-[var(--ak-color-bg-surface)]/95 p-1.5 pt-2 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl">
       <div className="grid grid-cols-4 gap-1">
         {FILTER_TABS.map((tab) => {
           const isActive = activeChannel === tab.id
@@ -235,7 +235,7 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
             Keine Einträge für diesen Filter.
           </div>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col items-center gap-1 mt-0.5">
             {filteredItems.map((item) => {
               const Icon = channelIcon(item.channel)
               const meta = CHANNEL_META[item.channel]
@@ -246,48 +246,37 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
                     type="button"
                     onClick={() => handleItemClick(item)}
                     className={clsx(
-                      'group flex w-full items-stretch gap-3 rounded-[var(--ak-radius-card)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 px-3 py-2.5 text-left text-xs shadow-sm backdrop-blur-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] ak-button-interactive',
+                      'group mx-auto flex w-full max-w-[270px] items-start gap-2 rounded-[var(--ak-radius-card)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 px-2 py-3 text-left text-[11px] shadow-sm backdrop-blur-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] ak-button-interactive min-h-[100px]',
                       item.unread
                         ? 'bg-slate-50/90 hover:border-slate-300 hover:bg-slate-100/90 hover:shadow-[var(--ak-shadow-card)]'
                         : 'hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]/80 hover:shadow-[var(--ak-shadow-card)]',
                     )}
                   >
-                    <div className="flex items-center">
+                    <div className="flex w-14 flex-col items-start justify-between gap-1 py-0.5">
+                      <span className="text-[10px] text-slate-400">{item.time}</span>
                       <div
                         className={clsx(
-                          'flex h-9 w-9 items-center justify-center rounded-full',
+                          'flex h-8 w-8 items-center justify-center rounded-full',
                           meta.bubbleBg,
                         )}
                       >
-                        <Icon className={clsx('h-4 w-4', meta.iconColor)} />
+                        <Icon className={clsx('h-3.5 w-3.5', meta.iconColor)} />
                       </div>
                     </div>
 
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <p className="truncate text-[11px] font-semibold text-slate-900">
+                      <p className="line-clamp-2 text-[11px] font-semibold leading-snug text-slate-900">
                         {item.title}
                       </p>
-                      <p className="truncate text-[11px] text-slate-600">
-                        {item.contactName}
-                        {item.source ? (
-                          <span className="text-slate-400">
-                            {' '}
-                            · {item.source}
-                          </span>
-                        ) : null}
-                      </p>
-                      <p className="truncate text-[10px] text-slate-500">
-                        {item.preview}
+                      <p className="line-clamp-2 text-[10px] text-slate-600">
+                        {item.preview || item.contactName || ''}
                       </p>
                     </div>
 
-                    <div className="flex w-16 flex-col items-end justify-between py-0.5">
-                      <span className="text-[10px] text-slate-400">
-                        {item.time}
-                      </span>
+                    <div className="flex w-7 flex-col items-end justify-end pb-1">
                       <span
                         className={clsx(
-                          'mt-2 h-2 w-2 rounded-full',
+                          'mt-0.5 h-1.5 w-1.5 rounded-full',
                           item.unread ? meta.dotColor : 'bg-slate-200',
                         )}
                       />
