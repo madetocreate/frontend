@@ -241,9 +241,10 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     width: LEFT_DRAWER_WIDTH,
   }
 
-  // Rechtes Panel soll immer rechts anliegen, unabhängig vom linken Panel
+  // Rechtes Panel: nur Breite reservieren, wenn sichtbar
   const rightContainerStyle: CSSProperties = {
-    left: 0,
+    right: 0,
+    width: showRight ? (showNotifications ? '100%' : RIGHT_DRAWER_WIDTH) : 0,
   }
 
   return (
