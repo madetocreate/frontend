@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { RealtimeVoiceClientScript } from "../components/RealtimeVoiceClientScript";
+import { KeyboardShortcutsProvider } from "../components/KeyboardShortcutsProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,7 +25,9 @@ export default function RootLayout({
     <html lang="de" className={inter.variable}>
       <body className="bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)] antialiased font-sans">
         <RealtimeVoiceClientScript />
-        {children}
+        <KeyboardShortcutsProvider>
+          {children}
+        </KeyboardShortcutsProvider>
       </body>
     </html>
   );

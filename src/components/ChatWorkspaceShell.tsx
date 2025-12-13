@@ -22,6 +22,12 @@ import { MemorySidebarWidget, type MemoryCategory } from '@/components/MemorySid
 import { MemoryDetailPanel } from '@/components/MemoryDetailPanel'
 import { AutomationQuickActionsWidget } from '@/components/AutomationQuickActionsWidget'
 import { AutomationDetailPanel } from '@/components/AutomationDetailPanel'
+import { GrowthSidebarWidget } from '@/components/GrowthSidebarWidget'
+import { DocumentsSidebarWidget } from '@/components/DocumentsSidebarWidget'
+import { CustomersSidebarWidget } from '@/components/CustomersSidebarWidget'
+import { CustomerDetailsDrawer } from '@/components/CustomerDetailsDrawer'
+import { GrowthDetailsDrawer } from '@/components/GrowthDetailsDrawer'
+import { DocumentDetailsDrawer } from '@/components/DocumentDetailsDrawer'
 
 
 
@@ -43,9 +49,9 @@ type ModuleConfig = {
 const MODULES: ModuleConfig[] = [
   { id: 'chat', label: 'Chat', icon: ChatBubbleLeftRightIcon, href: '/' },
   { id: 'inbox', label: 'Posteingang', icon: PaperAirplaneIcon },
-  { id: 'new1', label: 'Wachstum', icon: MegaphoneIcon },
   { id: 'new2', label: 'Dokumente', icon: DocumentIcon },
   { id: 'automation', label: 'Kunden', icon: UserGroupIcon },
+  { id: 'new1', label: 'Wachstum', icon: MegaphoneIcon },
 ]
 
 // Layout-Konstanten
@@ -79,6 +85,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const [selectedSettingsCategory, setSelectedSettingsCategory] = useState<SettingsCategory | null>(null)
   const [selectedAutomationItem, setSelectedAutomationItem] = useState<string | null>(null)
   const [selectedMemoryCategory, setSelectedMemoryCategory] = useState<MemoryCategory | null>(null)
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
+  const [selectedGrowthItemId, setSelectedGrowthItemId] = useState<string | null>(null)
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null)
+  const [showInboxOverview, setShowInboxOverview] = useState(false)
+  const [showGrowthOverview, setShowGrowthOverview] = useState(false)
+  const [showDocumentsOverview, setShowDocumentsOverview] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [hoveredSidebarTooltip, setHoveredSidebarTooltip] = useState<string | null>(null)
 
@@ -109,6 +121,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setSelectedSettingsCategory(null)
     setSelectedAutomationItem(null)
     setSelectedMemoryCategory(null)
+    setSelectedCustomerId(null)
+    setSelectedGrowthItemId(null)
+    setSelectedDocumentId(null)
+    setShowInboxOverview(false)
+    setShowGrowthOverview(false)
+    setShowDocumentsOverview(false)
   }
 
 
@@ -161,6 +179,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setSelectedSettingsCategory(null)
     setSelectedAutomationItem(null)
     setSelectedMemoryCategory(null)
+    setSelectedCustomerId(null)
+    setSelectedGrowthItemId(null)
+    setSelectedDocumentId(null)
+    setShowInboxOverview(false)
+    setShowGrowthOverview(false)
+    setShowDocumentsOverview(false)
     handleOpenDetails()
   }
 
@@ -173,6 +197,69 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       setSelectedInboxItem(null)
       setSelectedSettingsCategory(null)
       setSelectedMemoryCategory(null)
+      setSelectedCustomerId(null)
+      setSelectedGrowthItemId(null)
+      setSelectedDocumentId(null)
+      setShowInboxOverview(false)
+      setShowGrowthOverview(false)
+      setShowDocumentsOverview(false)
+      handleOpenDetails()
+    }
+  }
+
+  const handleCustomerClick = (customerId: string) => {
+    if (selectedCustomerId === customerId && rightDrawerOpen) {
+      setRightDrawerOpen(false)
+      setSelectedCustomerId(null)
+    } else {
+      setSelectedCustomerId(customerId)
+      setSelectedInboxItem(null)
+      setSelectedSettingsCategory(null)
+      setSelectedAutomationItem(null)
+      setSelectedMemoryCategory(null)
+      setSelectedGrowthItemId(null)
+      setSelectedDocumentId(null)
+      setShowInboxOverview(false)
+      setShowGrowthOverview(false)
+      setShowDocumentsOverview(false)
+      handleOpenDetails()
+    }
+  }
+
+  const handleGrowthItemClick = (itemId: string) => {
+    if (selectedGrowthItemId === itemId && rightDrawerOpen) {
+      setRightDrawerOpen(false)
+      setSelectedGrowthItemId(null)
+    } else {
+      setSelectedGrowthItemId(itemId)
+      setSelectedInboxItem(null)
+      setSelectedSettingsCategory(null)
+      setSelectedAutomationItem(null)
+      setSelectedMemoryCategory(null)
+      setSelectedCustomerId(null)
+      setSelectedDocumentId(null)
+      setShowInboxOverview(false)
+      setShowGrowthOverview(false)
+      setShowDocumentsOverview(false)
+      handleOpenDetails()
+    }
+  }
+
+  const handleDocumentClick = (documentId: string) => {
+    if (selectedDocumentId === documentId && rightDrawerOpen) {
+      setRightDrawerOpen(false)
+      setSelectedDocumentId(null)
+    } else {
+      setSelectedDocumentId(documentId)
+      setSelectedInboxItem(null)
+      setSelectedSettingsCategory(null)
+      setSelectedAutomationItem(null)
+      setSelectedMemoryCategory(null)
+      setSelectedCustomerId(null)
+      setSelectedGrowthItemId(null)
+      setShowInboxOverview(false)
+      setShowGrowthOverview(false)
+      setShowDocumentsOverview(false)
       handleOpenDetails()
     }
   }
@@ -185,6 +272,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       setSelectedMemoryCategory(category)
       setSelectedInboxItem(null)
       setSelectedAutomationItem(null)
+      setSelectedCustomerId(null)
+      setSelectedGrowthItemId(null)
+      setSelectedDocumentId(null)
+      setShowInboxOverview(false)
+      setShowGrowthOverview(false)
+      setShowDocumentsOverview(false)
       // Wenn wir in Settings sind und memory_crm ausgewählt ist, behalten wir das bei
       if (activeModuleToken === 'settings' && selectedSettingsCategory === 'memory_crm') {
         // Settings-Kategorie bleibt memory_crm
@@ -207,6 +300,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       setSelectedSettingsCategory(category)
       setSelectedInboxItem(null)
       setSelectedAutomationItem(null)
+      setSelectedCustomerId(null)
+      setSelectedGrowthItemId(null)
+      setSelectedDocumentId(null)
+      setShowInboxOverview(false)
+      setShowGrowthOverview(false)
+      setShowDocumentsOverview(false)
       // Wenn memory_crm ausgewählt wird, Memory-Category zurücksetzen
       if (category !== 'memory_crm') {
         setSelectedMemoryCategory(null)
@@ -232,6 +331,69 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setSelectedSettingsCategory(null)
     setSelectedAutomationItem(null)
     setSelectedMemoryCategory(null)
+    setSelectedCustomerId(null)
+    setSelectedGrowthItemId(null)
+    setSelectedDocumentId(null)
+    setShowInboxOverview(false)
+    setShowGrowthOverview(false)
+    setShowDocumentsOverview(false)
+  }
+
+  const handleInboxOverviewToggle = () => {
+    if (showInboxOverview && rightDrawerOpen) {
+      setRightDrawerOpen(false)
+      setShowInboxOverview(false)
+    } else {
+      setShowInboxOverview(true)
+      setSelectedInboxItem(null)
+      setSelectedSettingsCategory(null)
+      setSelectedAutomationItem(null)
+      setSelectedMemoryCategory(null)
+      setSelectedCustomerId(null)
+      setSelectedGrowthItemId(null)
+      setSelectedDocumentId(null)
+      setShowGrowthOverview(false)
+      setShowDocumentsOverview(false)
+      handleOpenDetails()
+    }
+  }
+
+  const handleGrowthOverviewToggle = () => {
+    if (showGrowthOverview && rightDrawerOpen) {
+      setRightDrawerOpen(false)
+      setShowGrowthOverview(false)
+    } else {
+      setShowGrowthOverview(true)
+      setSelectedInboxItem(null)
+      setSelectedSettingsCategory(null)
+      setSelectedAutomationItem(null)
+      setSelectedMemoryCategory(null)
+      setSelectedCustomerId(null)
+      setSelectedGrowthItemId(null)
+      setSelectedDocumentId(null)
+      setShowInboxOverview(false)
+      setShowDocumentsOverview(false)
+      handleOpenDetails()
+    }
+  }
+
+  const handleDocumentsOverviewToggle = () => {
+    if (showDocumentsOverview && rightDrawerOpen) {
+      setRightDrawerOpen(false)
+      setShowDocumentsOverview(false)
+    } else {
+      setShowDocumentsOverview(true)
+      setSelectedInboxItem(null)
+      setSelectedSettingsCategory(null)
+      setSelectedAutomationItem(null)
+      setSelectedMemoryCategory(null)
+      setSelectedCustomerId(null)
+      setSelectedGrowthItemId(null)
+      setSelectedDocumentId(null)
+      setShowInboxOverview(false)
+      setShowGrowthOverview(false)
+      handleOpenDetails()
+    }
   }
 
   const showLeft = leftDrawerOpen && !showNotifications // Keine Sidebar wenn Benachrichtigungen im Vollbild
@@ -241,7 +403,13 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       selectedInboxItem !== null ||
       selectedSettingsCategory !== null ||
       selectedAutomationItem !== null ||
-      selectedMemoryCategory !== null)
+      selectedMemoryCategory !== null ||
+      selectedCustomerId !== null ||
+      selectedGrowthItemId !== null ||
+      selectedDocumentId !== null ||
+      showInboxOverview ||
+      showGrowthOverview ||
+      showDocumentsOverview)
 
   const chatStyle: CSSProperties =
     showLeft && !showNotifications ? { marginLeft: LEFT_DRAWER_WIDTH } : { marginLeft: 0 }
@@ -386,13 +554,17 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 ) : activeModuleToken === 'inbox' ? (
                   <InboxDrawerWidget onItemClick={handleInboxItemClick} />
                 ) : activeModuleToken === 'automation' ? (
-                  <AutomationQuickActionsWidget onSelectAction={handleAutomationItemClick} />
+                  <CustomersSidebarWidget />
                 ) : activeModuleToken === 'settings' ? (
                   selectedSettingsCategory === 'memory_crm' ? (
                     <MemorySidebarWidget onCategoryClick={handleMemoryCategoryClick} />
                   ) : (
                     <SettingsSidebarWidget onCategorySelect={handleSettingsCategorySelect} />
                   )
+                ) : activeModuleToken === 'new1' ? (
+                  <GrowthSidebarWidget onItemClick={handleGrowthItemClick} />
+                ) : activeModuleToken === 'new2' ? (
+                  <DocumentsSidebarWidget onDocumentClick={handleDocumentClick} onOverviewClick={handleDocumentsOverviewToggle} />
                 ) : (
                   <>
                     <p className="ak-body text-[var(--ak-color-text-muted)]">
@@ -440,14 +612,30 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 <div className="truncate ak-caption font-medium text-[var(--ak-color-text-primary)]">
                   {showNotifications
                     ? 'Benachrichtigungen'
-                    : activeModuleToken === 'inbox'
-                      ? selectedInboxItem?.title ?? 'Details'
-                      : activeModuleToken === 'settings'
+                    : showInboxOverview
+                      ? 'Posteingang Übersicht'
+                      : showGrowthOverview
+                        ? 'Wachstum Übersicht'
+                        : showDocumentsOverview
+                          ? 'Dokumente Übersicht'
+                          : activeModuleToken === 'inbox'
+                            ? selectedInboxItem?.title ?? 'Details'
+                            : activeModuleToken === 'settings'
                         ? selectedSettingsCategory === 'memory_crm'
                           ? selectedMemoryCategory?.title ?? 'Speicher & CRM'
                           : (selectedSettingsCategory ? 'Allgemein' : 'Einstellungen')
                         : activeModuleToken === 'automation'
-                              ? 'Modules'
+                          ? selectedCustomerId
+                            ? 'Kundendetails'
+                            : 'Kunden'
+                          : activeModuleToken === 'new1'
+                            ? selectedGrowthItemId
+                              ? 'Wachstum Details'
+                              : 'Wachstum'
+                            : activeModuleToken === 'new2'
+                              ? selectedDocumentId
+                                ? 'Dokument Details'
+                                : 'Dokumente'
                               : getModuleLabel(activeModuleToken)}
                 </div>
                 <div className="w-7" />
@@ -458,8 +646,29 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
               >
                 {showNotifications ? (
                   <NotificationsDetailPanel />
+                ) : showInboxOverview ? (
+                  <div className="space-y-2">
+                    <h3 className="ak-heading text-base">Posteingang Übersicht</h3>
+                    <p className="ak-body text-sm text-[var(--ak-color-text-secondary)]">
+                      Hier erscheint die Übersicht des Posteingangs.
+                    </p>
+                  </div>
                 ) : activeModuleToken === 'inbox' ? (
                   <InboxDetailPanel item={selectedInboxItem} />
+                ) : showGrowthOverview ? (
+                  <div className="space-y-2">
+                    <h3 className="ak-heading text-base">Wachstum Übersicht</h3>
+                    <p className="ak-body text-sm text-[var(--ak-color-text-secondary)]">
+                      Hier erscheint die Übersicht des Wachstums.
+                    </p>
+                  </div>
+                ) : showDocumentsOverview ? (
+                  <div className="space-y-2">
+                    <h3 className="ak-heading text-base">Dokumente Übersicht</h3>
+                    <p className="ak-body text-sm text-[var(--ak-color-text-secondary)]">
+                      Hier erscheint die Übersicht der Dokumente.
+                    </p>
+                  </div>
                 ) : activeModuleToken === 'settings' ? (
                   selectedSettingsCategory === 'memory_crm' ? (
                     <MemoryDetailPanel category={selectedMemoryCategory} />
@@ -467,7 +676,49 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     <SettingsDetailPanel category={selectedSettingsCategory} />
                   )
                 ) : activeModuleToken === 'automation' ? (
-                  <AutomationDetailPanel workflowId={selectedAutomationItem} />
+                  selectedCustomerId ? (
+                    <CustomerDetailsDrawer
+                      customerId={selectedCustomerId}
+                      onClose={() => {
+                        setSelectedCustomerId(null)
+                        setRightDrawerOpen(false)
+                      }}
+                    />
+                  ) : (
+                    <AutomationDetailPanel workflowId={selectedAutomationItem} />
+                  )
+                ) : activeModuleToken === 'new1' ? (
+                  selectedGrowthItemId ? (
+                    <GrowthDetailsDrawer
+                      growthItemId={selectedGrowthItemId}
+                      onClose={() => {
+                        setSelectedGrowthItemId(null)
+                        setRightDrawerOpen(false)
+                      }}
+                    />
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="ak-body text-[var(--ak-color-text-muted)]">
+                        Wähle ein Wachstum-Item aus, um Details zu sehen.
+                      </p>
+                    </div>
+                  )
+                ) : activeModuleToken === 'new2' ? (
+                  selectedDocumentId ? (
+                    <DocumentDetailsDrawer
+                      documentId={selectedDocumentId}
+                      onClose={() => {
+                        setSelectedDocumentId(null)
+                        setRightDrawerOpen(false)
+                      }}
+                    />
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="ak-body text-[var(--ak-color-text-muted)]">
+                        Wähle ein Dokument aus, um Details zu sehen.
+                      </p>
+                    </div>
+                  )
                 ) : (
                   <div className="space-y-2">
                     <p className="ak-body text-[var(--ak-color-text-muted)]">

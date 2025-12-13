@@ -13,115 +13,231 @@ type SpeakParams = {
   volume?: number
 }
 
-function canUseSpeechSynthesis(): boolean {
-  if (typeof window === 'undefined') return false
-  return 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window
-}
-
-function normalizeLanguage(lang: string): string {
-  const clean = (lang || '').trim()
-  return clean.length > 0 ? clean : 'de-DE'
-}
-
-function guessVoice(voices: SpeechSynthesisVoice[], lang: string): SpeechSynthesisVoice | null {
-  if (!Array.isArray(voices) || voices.length === 0) return null
-  const normalized = lang.toLowerCase()
-  const exact = voices.find((voice) => (voice.lang || '').toLowerCase() === normalized)
-  if (exact) return exact
-  const prefix = normalized.split('-')[0]
-  const partial = voices.find((voice) => (voice.lang || '').toLowerCase().startsWith(prefix))
-  return partial ?? voices[0] ?? null
+// OpenAI TTS Voices: alloy, echo, fable, onyx, nova, shimmer
+// nova und shimmer sind die neuesten, hochwertigen Stimmen
+function getVoiceForLanguage(lang: string): string {
+  const normalized = (lang || '').toLowerCase()
+  // Für Deutsch verwenden wir 'nova' (eine der besten Stimmen)
+  if (normalized.startsWith('de')) {
+    return 'nova'
+  }
+  // Standard: nova (hochwertige, natürliche Stimme)
+  return 'nova'
 }
 
 export function useSpeechSynthesis(defaultLang: string = 'de-DE') {
-  const [supported, setSupported] = useState(false)
+  const [supported, setSupported] = useState(true) // OpenAI TTS ist immer unterstützt
   const [speakingId, setSpeakingId] = useState<string | null>(null)
   const [status, setStatus] = useState<SpeechStatus>('idle')
 
-  const voicesRef = useRef<SpeechSynthesisVoice[]>([])
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const currentIdRef = useRef<string | null>(null)
 
   useEffect(() => {
-    const ok = canUseSpeechSynthesis()
-    setSupported(ok)
-    if (!ok) return
-
-    const loadVoices = () => {
-      try {
-        voicesRef.current = window.speechSynthesis.getVoices()
-      } catch {
-        voicesRef.current = []
-      }
-    }
-
-    loadVoices()
-    window.speechSynthesis.addEventListener('voiceschanged', loadVoices)
-
     return () => {
-      window.speechSynthesis.removeEventListener('voiceschanged', loadVoices)
-      try {
-        window.speechSynthesis.cancel()
-      } catch {
-        return
+      // Cleanup: Stoppe Audio wenn Komponente unmountet
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
       }
-    }
-  }, [])
-
-  const stop = useCallback(() => {
-    if (!canUseSpeechSynthesis()) return
-    try {
-      window.speechSynthesis.cancel()
-    } catch {
-      return
-    } finally {
-      utteranceRef.current = null
+      currentIdRef.current = null
       setSpeakingId(null)
       setStatus('idle')
     }
   }, [])
 
+  const stop = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+      audioRef.current = null
+    }
+    currentIdRef.current = null
+    setSpeakingId(null)
+    setStatus('idle')
+  }, [])
+
   const speak = useCallback(
-    (params: SpeakParams) => {
+    async (params: SpeakParams) => {
       if (!supported) return
-      if (!canUseSpeechSynthesis()) return
 
       const text = (params.text || '').trim()
       if (!text) return
 
-      const lang = normalizeLanguage(params.lang ?? defaultLang)
+      const lang = params.lang ?? defaultLang
       stop()
 
-      const utterance = new window.SpeechSynthesisUtterance(text)
-      utterance.lang = lang
-      if (typeof params.rate === 'number') utterance.rate = params.rate
-      if (typeof params.pitch === 'number') utterance.pitch = params.pitch
-      if (typeof params.volume === 'number') utterance.volume = params.volume
-
-      const voice = guessVoice(voicesRef.current, lang)
-      if (voice) utterance.voice = voice
-
-      utterance.onstart = () => {
-        setSpeakingId(params.id)
-        setStatus('speaking')
-      }
-      utterance.onend = () => {
-        setSpeakingId(null)
-        setStatus('ended')
-      }
-      utterance.onerror = () => {
-        setSpeakingId(null)
-        setStatus('error')
-      }
-
-      utteranceRef.current = utterance
+      currentIdRef.current = params.id
+      setStatus('speaking')
+      setSpeakingId(params.id)
 
       try {
-        window.speechSynthesis.speak(utterance)
-        setSpeakingId(params.id)
-        setStatus('speaking')
-      } catch {
+        // Rufe OpenAI TTS API auf mit Streaming
+        const voice = getVoiceForLanguage(lang)
+        const response = await fetch('/api/audio/tts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text,
+            voice,
+            model: 'tts-1-hd', // Höchste Qualität
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('TTS request failed')
+        }
+
+        // Für Streaming: Lese Stream in Chunks und starte Wiedergabe sobald genug Daten da sind
+        const reader = response.body?.getReader()
+        if (!reader) {
+          throw new Error('No response body')
+        }
+
+        const chunks: Uint8Array[] = []
+        let totalLength = 0
+        let audioStarted = false
+
+        // Lese Stream in Chunks
+        const readStream = async () => {
+          try {
+            while (true) {
+              const { done, value } = await reader.read()
+              if (done) {
+                // Wenn Audio noch nicht gestartet wurde, starte es jetzt mit allen Daten
+                if (!audioStarted && chunks.length > 0) {
+                  const finalBlob = new Blob(chunks, { type: 'audio/mpeg' })
+                  const audioUrl = URL.createObjectURL(finalBlob)
+                  
+                  const audio = new Audio(audioUrl)
+                  audioRef.current = audio
+
+                  if (typeof params.volume === 'number') {
+                    audio.volume = Math.max(0, Math.min(1, params.volume))
+                  } else {
+                    audio.volume = 1.0
+                  }
+
+                  if (typeof params.rate === 'number') {
+                    audio.playbackRate = Math.max(0.5, Math.min(2, params.rate))
+                  }
+
+                  audio.onended = () => {
+                    URL.revokeObjectURL(audioUrl)
+                    if (currentIdRef.current === params.id) {
+                      setSpeakingId(null)
+                      setStatus('ended')
+                      currentIdRef.current = null
+                    }
+                    audioRef.current = null
+                  }
+
+                  audio.onerror = () => {
+                    URL.revokeObjectURL(audioUrl)
+                    if (currentIdRef.current === params.id) {
+                      setSpeakingId(null)
+                      setStatus('error')
+                      currentIdRef.current = null
+                    }
+                    audioRef.current = null
+                  }
+
+                  audio.onplay = () => {
+                    if (currentIdRef.current === params.id) {
+                      setSpeakingId(params.id)
+                      setStatus('speaking')
+                    }
+                  }
+
+                  await audio.play()
+                  audioStarted = true
+                }
+                break
+              }
+              
+              chunks.push(value)
+              totalLength += value.length
+
+              // Starte Wiedergabe sobald genug Daten vorhanden sind (64KB für schnellen Start)
+              if (!audioStarted && totalLength >= 65536) {
+                // Erstelle Blob aus bisherigen Chunks
+                const partialBlob = new Blob(chunks, { type: 'audio/mpeg' })
+                const audioUrl = URL.createObjectURL(partialBlob)
+                
+                const audio = new Audio(audioUrl)
+                audioRef.current = audio
+
+                // Volume-Einstellung
+                if (typeof params.volume === 'number') {
+                  audio.volume = Math.max(0, Math.min(1, params.volume))
+                } else {
+                  audio.volume = 1.0
+                }
+
+                if (typeof params.rate === 'number') {
+                  audio.playbackRate = Math.max(0.5, Math.min(2, params.rate))
+                }
+
+                audio.onended = () => {
+                  URL.revokeObjectURL(audioUrl)
+                  if (currentIdRef.current === params.id) {
+                    setSpeakingId(null)
+                    setStatus('ended')
+                    currentIdRef.current = null
+                  }
+                  audioRef.current = null
+                }
+
+                audio.onerror = () => {
+                  URL.revokeObjectURL(audioUrl)
+                  if (currentIdRef.current === params.id) {
+                    setSpeakingId(null)
+                    setStatus('error')
+                    currentIdRef.current = null
+                  }
+                  audioRef.current = null
+                }
+
+                audio.onplay = () => {
+                  if (currentIdRef.current === params.id) {
+                    setSpeakingId(params.id)
+                    setStatus('speaking')
+                  }
+                }
+
+                // Starte Wiedergabe sobald genug Daten geladen sind
+                audio.oncanplay = () => {
+                  if (currentIdRef.current === params.id && audio.paused) {
+                    audio.play().catch(console.error)
+                  }
+                }
+
+                // Versuche sofort abzuspielen
+                audio.play().catch(() => {
+                  // Wird automatisch abgespielt wenn genug Daten da sind
+                })
+
+                audioStarted = true
+
+                // Lese weiter im Hintergrund (für vollständige Datei, falls nötig)
+                // Das Audio-Element wird automatisch weiter streamen
+              }
+            }
+          } catch (error) {
+            console.error('Stream reading error:', error)
+            throw error
+          }
+        }
+
+        readStream()
+      } catch (error) {
+        console.error('TTS error:', error)
         setSpeakingId(null)
         setStatus('error')
+        currentIdRef.current = null
+        audioRef.current = null
       }
     },
     [defaultLang, stop, supported]

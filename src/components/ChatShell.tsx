@@ -5,11 +5,13 @@ import clsx from "clsx";
 import { BellIcon, RectangleStackIcon, ClipboardDocumentIcon, BookmarkIcon, ArrowPathIcon, SpeakerWaveIcon, PencilSquareIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { WidgetRenderer } from "./chat/WidgetRenderer";
 import { sendChatMessageStream, ChatResponse } from "../lib/chatClient";
+import { filterDuplicateTextUiMessages } from "../lib/uiMessageText";
 import { useDictation } from "../hooks/useDictation";
 import { useRealtimeVoice } from "../hooks/useRealtimeVoice";
 import { useSpeechSynthesis } from "../hooks/useSpeechSynthesis";
 import { ThinkingStepsDrawer } from "./chat/ThinkingStepsDrawer";
 import { ChatMarkdown } from "./chat/markdown/ChatMarkdown";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 
 type ChatMessage = {
   id: string;
@@ -43,6 +45,9 @@ export function ChatShell() {
   const hoverUserMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hoveredBell, setHoveredBell] = useState(false);
   const bellTooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
+  const [savedMessageId, setSavedMessageId] = useState<string | null>(null);
 
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressRef = useRef(false);
@@ -59,19 +64,171 @@ export function ChatShell() {
     },
   });
 
+  const [realtimeTextBuffer, setRealtimeTextBuffer] = useState("");
+  const [audioLevel, setAudioLevel] = useState(0);
+  const audioLevelIntervalRef = useRef<number | null>(null);
+  const audioAnalyserRef = useRef<AnalyserNode | null>(null);
+  const audioDataArrayRef = useRef<Uint8Array | null>(null);
+  const audioStreamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const [fakeWaveLevels, setFakeWaveLevels] = useState<number[]>([0.2, 0.3, 0.4, 0.3, 0.2]);
+  const fakeWaveIntervalRef = useRef<number | null>(null);
+
   const { status: realtimeStatus, toggle: toggleRealtime } = useRealtimeVoice({
     onStart: () => {
       console.log("Real-time Audio gestartet");
+      setRealtimeTextBuffer("");
+      // Starte echte Audio-Level-Messung
+      startAudioLevelMeasurement();
     },
     onStop: () => {
       console.log("Real-time Audio gestoppt");
+      stopAudioLevelMeasurement();
+      setAudioLevel(0);
+      setRealtimeTextBuffer("");
+    },
+    onTextDelta: (text: string) => {
+      setRealtimeTextBuffer((prev) => prev + text);
     },
   });
+
+  // Funktion zum Starten der Audio-Level-Messung
+  const startAudioLevelMeasurement = useCallback(async () => {
+    try {
+      // Verwende bereits vorhandenen Stream, falls verfügbar
+      let stream = audioStreamRef.current;
+      if (!stream) {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioStreamRef.current = stream;
+      }
+      
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.8;
+      
+      source.connect(analyser);
+      audioAnalyserRef.current = analyser;
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(new ArrayBuffer(bufferLength));
+      audioDataArrayRef.current = dataArray;
+      
+      const measureAudio = () => {
+        if (audioAnalyserRef.current && audioDataArrayRef.current) {
+          // @ts-ignore - TypeScript strict mode issue with Web Audio API types
+          audioAnalyserRef.current.getByteFrequencyData(audioDataArrayRef.current);
+          
+          // Berechne durchschnittliche Amplitude
+          let sum = 0;
+          for (let i = 0; i < audioDataArrayRef.current.length; i++) {
+            sum += audioDataArrayRef.current[i];
+          }
+          const average = sum / audioDataArrayRef.current.length;
+          const normalizedLevel = average / 255; // Normalisiere auf 0-1
+          
+          setAudioLevel(normalizedLevel);
+          
+          // Prüfe ob Mikrofon noch aktiv ist
+          const stillActive = dictationStatus === "recording" || 
+                              dictationStatus === "transcribing" || 
+                              realtimeStatus === "live" || 
+                              realtimeStatus === "connecting";
+          
+          if (stillActive) {
+            audioLevelIntervalRef.current = requestAnimationFrame(measureAudio);
+          }
+        }
+      };
+      
+      measureAudio();
+    } catch (error) {
+      console.error("Fehler beim Starten der Audio-Level-Messung:", error);
+    }
+  }, [dictationStatus, realtimeStatus]);
+
+  // Funktion zum Stoppen der Audio-Level-Messung
+  const stopAudioLevelMeasurement = useCallback(() => {
+    if (audioLevelIntervalRef.current !== null) {
+      cancelAnimationFrame(audioLevelIntervalRef.current);
+      audioLevelIntervalRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(console.error);
+      audioContextRef.current = null;
+    }
+    audioAnalyserRef.current = null;
+    audioDataArrayRef.current = null;
+    // Stoppe Stream nur wenn nicht mehr benötigt
+    const stillActive = dictationStatus === "recording" || 
+                        dictationStatus === "transcribing" || 
+                        realtimeStatus === "live" || 
+                        realtimeStatus === "connecting";
+    if (audioStreamRef.current && !stillActive) {
+      audioStreamRef.current.getTracks().forEach(track => track.stop());
+      audioStreamRef.current = null;
+    }
+  }, [dictationStatus, realtimeStatus]);
 
   const isMicrophoneActive =
     dictationStatus === "recording" ||
     dictationStatus === "transcribing" ||
-    realtimeStatus === "live";
+    realtimeStatus === "live" ||
+    realtimeStatus === "connecting";
+  
+  const isRealtimeActive = realtimeStatus === "live" || realtimeStatus === "connecting";
+  
+  // Audio-Level für Diktat-Mode
+  useEffect(() => {
+    if (dictationStatus === "recording" && !isRealtimeActive) {
+      startAudioLevelMeasurement();
+    } else if (dictationStatus !== "recording" && !isRealtimeActive) {
+      stopAudioLevelMeasurement();
+      setAudioLevel(0);
+    }
+    return () => {
+      stopAudioLevelMeasurement();
+    };
+  }, [dictationStatus, isRealtimeActive, startAudioLevelMeasurement, stopAudioLevelMeasurement]);
+
+  // Zufällige Wellen-Animation für visuelles Feedback
+  useEffect(() => {
+    if (isMicrophoneActive) {
+      const updateFakeWaves = () => {
+        // Zufällig entscheiden, ob die Wellen sich bewegen sollen (70% Chance)
+        if (Math.random() > 0.3) {
+          setFakeWaveLevels((prev) => {
+            return prev.map(() => {
+              // Zufällige Höhe zwischen 0.2 und 0.8
+              return 0.2 + Math.random() * 0.6;
+            });
+          });
+        }
+        
+        // Nächste Aktualisierung in zufälliger Zeit (200ms - 800ms)
+        const nextDelay = 200 + Math.random() * 600;
+        fakeWaveIntervalRef.current = window.setTimeout(updateFakeWaves, nextDelay);
+      };
+      
+      // Starte die Animation nach einer kurzen Verzögerung
+      fakeWaveIntervalRef.current = window.setTimeout(updateFakeWaves, 300);
+    } else {
+      // Setze Wellen auf niedrige Werte, wenn nicht aktiv
+      setFakeWaveLevels([0.2, 0.2, 0.2, 0.2, 0.2]);
+      if (fakeWaveIntervalRef.current !== null) {
+        clearTimeout(fakeWaveIntervalRef.current);
+        fakeWaveIntervalRef.current = null;
+      }
+    }
+    
+    return () => {
+      if (fakeWaveIntervalRef.current !== null) {
+        clearTimeout(fakeWaveIntervalRef.current);
+        fakeWaveIntervalRef.current = null;
+      }
+    };
+  }, [isMicrophoneActive]);
 
   const threadStorageKey = (threadId: string) => `aklow_thread_${threadId}`;
 
@@ -155,10 +312,16 @@ export function ChatShell() {
       const defaultThreadId = "thread-default";
       currentThreadRef.current = defaultThreadId;
       const loaded = loadMessages(defaultThreadId);
-      // Remove duplicates based on message id
-      const uniqueMessages = loaded.filter((msg, index, self) => 
-        index === self.findIndex((m) => m.id === msg.id)
-      );
+      // Remove duplicates based on message id and role
+      const uniqueMessages = loaded.filter((msg, index, self) => {
+        const firstIndex = self.findIndex((m) => m.id === msg.id);
+        // Also check for duplicate assistant messages with same text
+        if (msg.role === "assistant" && index !== firstIndex) {
+          const sameText = self[firstIndex]?.text === msg.text;
+          return !sameText;
+        }
+        return index === firstIndex;
+      });
       // eslint-disable-next-line react-hooks/exhaustive-deps
       setMessages(uniqueMessages);
     }
@@ -183,13 +346,41 @@ export function ChatShell() {
     const isUser = message.role === "user";
 
     if (isUser) {
-      const handleUserCopy = () => {
-        navigator.clipboard.writeText(message.text);
+      const handleUserCopy = async () => {
+        try {
+          await navigator.clipboard.writeText(message.text);
+        } catch (err) {
+          console.error("Failed to copy text:", err);
+        }
       };
 
       const handleUserEdit = () => {
-        // TODO: Implement edit functionality
-        console.log("Edit message:", message.id);
+        setEditingMessageId(message.id);
+        setEditingText(message.text);
+      };
+
+      const handleEditSave = () => {
+        if (!editingText.trim()) return;
+        
+        const threadId = currentThreadRef.current || "thread-default";
+        setMessages((prev) => {
+          const updated = prev.map((msg) =>
+            msg.id === message.id ? { ...msg, text: editingText.trim() } : msg
+          );
+          saveMessages(threadId, updated);
+          return updated;
+        });
+        
+        setEditingMessageId(null);
+        setEditingText("");
+        
+        // Send edited message to bot
+        sendMessage(editingText.trim());
+      };
+
+      const handleEditCancel = () => {
+        setEditingMessageId(null);
+        setEditingText("");
       };
 
       return (
@@ -219,16 +410,52 @@ export function ChatShell() {
           style={{ marginLeft: "auto", maxWidth: "60%", marginRight: "3%" }}
         >
           <div className="flex flex-col gap-2" style={{ alignItems: "flex-end", width: "100%" }}>
-            <div
-              className="ak-body whitespace-pre-wrap leading-relaxed rounded-xl px-2.5 py-1.5 shadow-sm text-right bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)]"
-              style={{ color: "var(--ak-color-text-primary)", fontSize: "16px" }}
-            >
-              {message.text}
-            </div>
+            {editingMessageId === message.id ? (
+              <div className="flex flex-col gap-2 w-full">
+                <textarea
+                  value={editingText}
+                  onChange={(e) => setEditingText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleEditSave();
+                    } else if (e.key === "Escape") {
+                      handleEditCancel();
+                    }
+                  }}
+                  className="ak-body whitespace-pre-wrap leading-relaxed rounded-xl px-2.5 py-1.5 shadow-sm text-right bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ color: "var(--ak-color-text-primary)", fontSize: "16px", minHeight: "60px" }}
+                  autoFocus
+                />
+                <div className="flex gap-2 justify-end">
+                  <button
+                    type="button"
+                    onClick={handleEditCancel}
+                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                  >
+                    Abbrechen
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleEditSave}
+                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Senden
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                className="ak-body whitespace-pre-wrap leading-relaxed rounded-xl px-2.5 py-1.5 shadow-sm text-right bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)]"
+                style={{ color: "var(--ak-color-text-primary)", fontSize: "16px" }}
+              >
+                {message.text}
+              </div>
+            )}
             
             {/* Hover Menu für Benutzernachrichten */}
             <div 
-              className={`${hoveredUserMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-1 -mt-1`}
+              className={`${hoveredUserMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-1 -mt-3`}
             >
               <div className="relative">
                 <button
@@ -249,10 +476,10 @@ export function ChatShell() {
                     }
                     setHoveredTooltip(null);
                   }}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
                   aria-label="Nachricht bearbeiten"
                 >
-                  <PencilSquareIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+                  <PencilSquareIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'edit' && (
                   <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
@@ -279,10 +506,10 @@ export function ChatShell() {
                     }
                     setHoveredTooltip(null);
                   }}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
                   aria-label="Nachricht kopieren"
                 >
-                  <ClipboardDocumentIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+                  <ClipboardDocumentIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'copy' && (
                   <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
@@ -298,18 +525,72 @@ export function ChatShell() {
 
     const ttsActive = speakingId === message.id;
 
-    const handleCopy = () => {
-      navigator.clipboard.writeText(message.text);
+    const handleCopy = async () => {
+      try {
+        await navigator.clipboard.writeText(message.text);
+      } catch (err) {
+        console.error("Failed to copy text:", err);
+      }
     };
 
-    const handleSave = () => {
-      // TODO: Implement save message functionality
-      console.log("Save message:", message.id);
+    const handleSave = async () => {
+      try {
+        const threadId = currentThreadRef.current || "thread-default";
+        const timestamp = new Date().toISOString();
+        
+        const response = await fetch("/api/memory/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            threadId,
+            role: "assistant",
+            content: message.text,
+            timestamp,
+            tenantId,
+          }),
+        });
+
+        if (response.ok) {
+          setSavedMessageId(message.id);
+          setTimeout(() => {
+            setSavedMessageId(null);
+          }, 2000);
+        } else {
+          console.error("Failed to save message:", await response.text());
+        }
+      } catch (err) {
+        console.error("Error saving message:", err);
+      }
     };
 
-    const handleUpdate = () => {
-      // TODO: Implement update/regenerate functionality
-      console.log("Update message:", message.id);
+    const handleUpdate = async () => {
+      // Find the user message that came before this assistant message
+      const messageIndex = messages.findIndex((m) => m.id === message.id);
+      if (messageIndex === -1) return;
+      
+      // Find the last user message before this assistant message
+      let lastUserMessage: ChatMessage | null = null;
+      for (let i = messageIndex - 1; i >= 0; i--) {
+        if (messages[i].role === "user") {
+          lastUserMessage = messages[i];
+          break;
+        }
+      }
+      
+      if (!lastUserMessage) return;
+      
+      // Remove this assistant message and regenerate
+      const threadId = currentThreadRef.current || "thread-default";
+      setMessages((prev) => {
+        const updated = prev.filter((m) => m.id !== message.id);
+        saveMessages(threadId, updated);
+        return updated;
+      });
+      
+      // Regenerate the response
+      await sendMessage(lastUserMessage.text);
     };
 
     const handleReadAloud = () => {
@@ -368,9 +649,33 @@ export function ChatShell() {
                 ) : null}
             </div>
 
+            {/* Audio Player für Vorlesen-Modus */}
+            {ttsActive && (
+              <div className="mt-2 mb-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 flex items-center gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-1 h-4 bg-blue-500 rounded" style={{ animation: "audio-wave 0.6s ease-in-out infinite", animationDelay: "0ms" }} />
+                      <div className="w-1 h-4 bg-blue-500 rounded" style={{ animation: "audio-wave 0.6s ease-in-out infinite", animationDelay: "0.15s" }} />
+                      <div className="w-1 h-4 bg-blue-500 rounded" style={{ animation: "audio-wave 0.6s ease-in-out infinite", animationDelay: "0.3s" }} />
+                    </div>
+                    <span className="text-xs text-gray-600 ml-2">Wird vorgelesen...</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleReadAloud}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                  aria-label="Vorlesen stoppen"
+                >
+                  <SpeakerWaveIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
+                </button>
+              </div>
+            )}
+
             {/* Hover Menu - nur bei Hover sichtbar */}
             <div 
-              className={`${hoveredMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-1 -mt-3`}
+              className={`${hoveredMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-1 -mt-0.5`}
               onMouseLeave={() => {
                 if (tooltipTimeoutRef.current) {
                   clearTimeout(tooltipTimeoutRef.current);
@@ -398,10 +703,10 @@ export function ChatShell() {
                     }
                     setHoveredTooltip(null);
                   }}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
                   aria-label="Nachricht kopieren"
                 >
-                  <ClipboardDocumentIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+                  <ClipboardDocumentIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'copy' && (
                   <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
@@ -428,16 +733,20 @@ export function ChatShell() {
                     }
                     setHoveredTooltip(null);
                   }}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
                   aria-label="Nachricht speichern"
                 >
-                  <BookmarkIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+                  <BookmarkIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
                 </button>
-                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'save' && (
+                {savedMessageId === message.id ? (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-green-600 bg-transparent whitespace-nowrap pointer-events-none z-50">
+                    Gespeichert
+                  </span>
+                ) : hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'save' ? (
                   <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
                     Speichern
                   </span>
-                )}
+                ) : null}
               </div>
               <div className="relative">
                 <button
@@ -458,10 +767,10 @@ export function ChatShell() {
                     }
                     setHoveredTooltip(null);
                   }}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
                   aria-label="Nachricht aktualisieren"
                 >
-                  <ArrowPathIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+                  <ArrowPathIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'update' && (
                   <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
@@ -490,12 +799,12 @@ export function ChatShell() {
                     setHoveredTooltip(null);
                   }}
                   className={clsx(
-                    "inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] disabled:opacity-50",
+                    "inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] disabled:opacity-50",
                     ttsActive && "text-[var(--ak-color-accent)]"
                   )}
                   aria-label={ttsActive ? "Vorlesen stoppen" : "Vorlesen"}
                 >
-                  <SpeakerWaveIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+                  <SpeakerWaveIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'read' && (
                   <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
@@ -522,10 +831,10 @@ export function ChatShell() {
                     }
                     setHoveredTooltip(null);
                   }}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
                   aria-label="Schnellaktionen"
                 >
-                  <SparklesIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1.5} />
+                  <SparklesIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'quick-actions' && (
                   <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
@@ -639,7 +948,14 @@ export function ChatShell() {
             );
           },
           onChunk: (data) => {
-            fullContent += data.content || "";
+            const chunk = data.content || "";
+            if (chunk) {
+              if (chunk.startsWith(fullContent)) {
+                fullContent = chunk;
+              } else if (!fullContent.endsWith(chunk)) {
+                fullContent += chunk;
+              }
+            }
             setThinkingNote("Antwort wird erstellt …");
 
             setMessages((prev) => {
@@ -654,18 +970,42 @@ export function ChatShell() {
             // Use fullContent if it exists (from chunks), otherwise use data.content
             // This prevents duplication if data.content contains the full message
             const finalContent = fullContent || data.content || "";
+            const cleanedUiMessages = filterDuplicateTextUiMessages(data.uiMessages, finalContent);
             setMessages((prev) => {
-              // Remove any duplicate assistant messages with the same ID first
-              const withoutDuplicates = prev.filter((msg, index, self) => 
-                msg.id !== assistantMessageId || index === self.findIndex(m => m.id === assistantMessageId)
-              );
+              // Remove any duplicate assistant messages - keep only the one with matching ID
+              const withoutDuplicates = prev.filter((msg) => {
+                // Keep all user messages
+                if (msg.role === "user") return true;
+                // For assistant messages, only keep if it's our target message or if it's different
+                if (msg.role === "assistant") {
+                  // Keep our target message
+                  if (msg.id === assistantMessageId) return true;
+                  // Remove any other assistant messages that are empty or duplicates
+                  if (!msg.text || msg.text.trim() === "") return false;
+                  // Keep other assistant messages that have content
+                  return true;
+                }
+                return true;
+              });
+              
+              // Update the target message
               const updated = withoutDuplicates.map((msg) =>
                 msg.id === assistantMessageId
-                  ? { ...msg, text: finalContent, uiMessages: data.uiMessages }
+                  ? { ...msg, text: finalContent, uiMessages: cleanedUiMessages }
                   : msg
               );
-              saveMessages(threadId, updated);
-              return updated;
+              
+              // Final check: remove any duplicate assistant messages with same text
+              const finalMessages = updated.filter((msg, index, self) => {
+                if (msg.role === "assistant" && msg.text) {
+                  const firstIndex = self.findIndex(m => m.role === "assistant" && m.text === msg.text);
+                  return index === firstIndex || index === self.findIndex(m => m.id === assistantMessageId);
+                }
+                return true;
+              });
+              
+              saveMessages(threadId, finalMessages);
+              return finalMessages;
             });
 
             interface ResponseData {
@@ -747,6 +1087,31 @@ export function ChatShell() {
     window.dispatchEvent(new CustomEvent("aklow-open-module", { detail: { module: "inbox" } }));
   };
 
+  // Keyboard Shortcuts für Chat
+  useKeyboardShortcuts({
+    shortcuts: [
+      {
+        key: 'Escape',
+        description: 'Schließe offene Menüs',
+        action: () => {
+          // Schließe Plus-Menü
+          if (isPlusMenuOpen) {
+            setIsPlusMenuOpen(false);
+          }
+          // Schließe Edit-Modus
+          if (editingMessageId) {
+            setEditingMessageId(null);
+            setEditingText("");
+          }
+          // Stoppe TTS
+          stopTts();
+        },
+        enabled: true,
+      },
+    ],
+    enabled: true,
+  });
+
   return (
     <div
       className="flex h-full flex-col gap-4 rounded-2xl px-4 pt-4 pb-2 relative"
@@ -779,7 +1144,7 @@ export function ChatShell() {
           className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition-all duration-200 hover:bg-white/30 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/25 focus-visible:ring-offset-2"
           aria-label="Benachrichtigungen"
         >
-          <BellIcon className="h-6 w-6" aria-hidden="true" />
+          <BellIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1} />
           {hoveredBell && (
             <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
               Benachrichtigungen
@@ -787,6 +1152,37 @@ export function ChatShell() {
           )}
         </button>
       </div>
+
+      <style jsx>{`
+        @keyframes thinking-dot-blink {
+          0%, 100% {
+            opacity: 0.3;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.2);
+          }
+        }
+        @keyframes flicker {
+          0%, 100% {
+            opacity: 0.5;
+          }
+          50% {
+            opacity: 0.8;
+          }
+        }
+        @keyframes audio-wave {
+          0%, 100% {
+            height: 0.5rem;
+            opacity: 0.5;
+          }
+          50% {
+            height: 1.5rem;
+            opacity: 1;
+          }
+        }
+      `}</style>
 
       <ThinkingStepsDrawer
         open={isStepsOpen}
@@ -806,31 +1202,37 @@ export function ChatShell() {
           <>
             {messages.map(renderMessage)}
             {showThinking && (
-              <div className="flex justify-start">
-                <div className="flex items-center gap-1 px-[5%]">
+              <div className="flex justify-start relative px-[5%]">
+                <div className="flex items-center gap-1 relative">
                   <span
-                    className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 opacity-60"
-                    style={{ animation: "thinking-dot 1.4s ease-in-out infinite", animationDelay: "0ms" }}
+                    className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400"
+                    style={{ 
+                      animation: "thinking-dot-blink 1.2s ease-in-out infinite", 
+                      animationDelay: "0ms"
+                    }}
                   />
                   <span
-                    className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 opacity-60"
-                    style={{ animation: "thinking-dot 1.4s ease-in-out infinite", animationDelay: "200ms" }}
+                    className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400"
+                    style={{ 
+                      animation: "thinking-dot-blink 1.2s ease-in-out infinite", 
+                      animationDelay: "400ms"
+                    }}
                   />
                   <span
-                    className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 opacity-60"
-                    style={{ animation: "thinking-dot 1.4s ease-in-out infinite", animationDelay: "400ms" }}
+                    className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400"
+                    style={{ 
+                      animation: "thinking-dot-blink 1.2s ease-in-out infinite", 
+                      animationDelay: "800ms"
+                    }}
                   />
-                  {(thinkingSteps.length > 0 || thinkingNote) && (
-                    <button
-                      type="button"
-                      onClick={() => setIsStepsOpen(true)}
-                      className="ml-2 inline-flex items-center gap-1 rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/70 px-2.5 py-1 text-[11px] font-medium text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
-                      aria-label="Orchestrator anzeigen"
-                    >
-                      <RectangleStackIcon className="h-4 w-4" aria-hidden="true" />
-                      Orchestrator
-                    </button>
-                  )}
+                  <span 
+                    className="ml-3 text-gray-400 text-sm font-light"
+                    style={{ 
+                      animation: "flicker 2s ease-in-out infinite"
+                    }}
+                  >
+                    Denke nach...
+                  </span>
                 </div>
               </div>
             )}
@@ -839,7 +1241,46 @@ export function ChatShell() {
       </div>
 
       <form onSubmit={handleSend} className="px-[5%]">
-        <div className="relative flex items-center gap-2 rounded-xl px-4 py-3 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] shadow-[var(--ak-shadow-glass)] focus-within:scale-[1.01] border border-gray-300 bg-gradient-to-b from-gray-100/80 via-gray-100/70 to-gray-100/60 backdrop-blur-2xl outline-none ring-0 focus-within:outline-none focus-within:ring-0 focus-within:border-gray-300">
+        <div className={clsx(
+          "relative flex items-center gap-2 rounded-xl px-4 py-3 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] shadow-[var(--ak-shadow-glass)] focus-within:scale-[1.01] border backdrop-blur-2xl outline-none ring-0 focus-within:outline-none focus-within:ring-0",
+          isRealtimeActive 
+            ? "bg-red-500/20 border-red-400/50 focus-within:border-red-400/70" 
+            : "border-gray-300 bg-gradient-to-b from-gray-100/80 via-gray-100/70 to-gray-100/60 focus-within:border-gray-300"
+        )}>
+          {/* Audio-Wellen-Visualisierung - zentriert, schwarz, doppelt so breit, mit echten Audio-Daten oder zufälliger Animation */}
+          {isMicrophoneActive && (
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 h-4">
+              {[0, 1, 2, 3, 4].map((i) => {
+                // Verwende echte Audio-Daten, wenn verfügbar, sonst zufällige Animation
+                let waveHeight: number;
+                let opacity: number;
+                
+                if (audioLevel > 0 && audioDataArrayRef.current) {
+                  // Echte Audio-Daten für verschiedene Frequenzbänder
+                  const frequencyBand = (audioDataArrayRef.current[Math.floor((i / 5) * audioDataArrayRef.current.length)] || 0) / 255;
+                  const combinedLevel = (audioLevel * 0.7 + frequencyBand * 0.3);
+                  waveHeight = Math.max(4, combinedLevel * 20); // Mindesthöhe 4px, max 20px
+                  opacity = 0.5 + combinedLevel * 0.5;
+                } else {
+                  // Zufällige Animation (fake waves)
+                  const fakeLevel = fakeWaveLevels[i] || 0.2;
+                  waveHeight = Math.max(4, fakeLevel * 16); // Mindesthöhe 4px, max ~13px
+                  opacity = 0.4 + fakeLevel * 0.4;
+                }
+                
+                return (
+                  <div
+                    key={i}
+                    className="w-1 bg-black rounded-full transition-all duration-300"
+                    style={{
+                      height: `${waveHeight}px`,
+                      opacity: opacity,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
           {quickHint ? (
             <div className="absolute left-2 -top-1 translate-y-[-70%] ak-caption font-semibold text-[var(--ak-color-success)] flex items-center gap-1">
               <span>{quickHint}</span>
@@ -918,11 +1359,19 @@ export function ChatShell() {
 
           <input
             type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Schreibe mit Aklow"
+            value={isRealtimeActive ? realtimeTextBuffer : input}
+            onChange={(e) => {
+              if (!isRealtimeActive) {
+                setInput(e.target.value);
+              }
+            }}
+            placeholder={isRealtimeActive ? "Real-Time Mode aktiv..." : "Schreibe mit Aklow"}
             ref={inputRef}
-            className="ak-body flex-1 border-none bg-transparent text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-secondary)] focus-visible:outline-none outline-none ring-0"
+            readOnly={isRealtimeActive}
+            className={clsx(
+              "ak-body flex-1 border-none bg-transparent text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-secondary)] focus-visible:outline-none outline-none ring-0",
+              isRealtimeActive && "text-red-600"
+            )}
           />
 
           <button
@@ -955,11 +1404,16 @@ export function ChatShell() {
               }
               isLongPressRef.current = false;
             }}
-            onMouseLeave={() => {
+            onMouseLeave={(e) => {
               if (longPressTimerRef.current) {
                 clearTimeout(longPressTimerRef.current);
                 longPressTimerRef.current = null;
               }
+              if (tooltipTimeoutRef.current) {
+                clearTimeout(tooltipTimeoutRef.current);
+                tooltipTimeoutRef.current = null;
+              }
+              setHoveredTooltip(null);
             }}
             onTouchStart={(e) => {
               e.preventDefault();
@@ -990,17 +1444,33 @@ export function ChatShell() {
               isLongPressRef.current = false;
             }}
             className={clsx(
-              "inline-flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px]",
-              isMicrophoneActive && "ring-2 ring-[var(--ak-color-bg-danger-soft)] ring-offset-2"
+              "relative inline-flex h-7 w-7 items-center justify-center rounded-full bg-transparent text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px]",
+              isMicrophoneActive && "ring-2 ring-[var(--ak-color-bg-danger-soft)] ring-offset-2",
+              isRealtimeActive && "bg-red-500/20 text-red-600"
             )}
             aria-label="Mikrofon"
+            onMouseEnter={() => {
+              if (isRealtimeActive) {
+                if (tooltipTimeoutRef.current) {
+                  clearTimeout(tooltipTimeoutRef.current);
+                }
+                tooltipTimeoutRef.current = setTimeout(() => {
+                  setHoveredTooltip({ messageId: "realtime-tooltip", icon: "realtime" });
+                }, 500);
+              }
+            }}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
               <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
               <line x1="12" y1="19" x2="12" y2="23" />
               <line x1="8" y1="23" x2="16" y2="23" />
             </svg>
+            {hoveredTooltip?.messageId === "realtime-tooltip" && hoveredTooltip?.icon === "realtime" && (
+              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
+                Real time on
+              </span>
+            )}
           </button>
 
           <button

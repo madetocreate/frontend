@@ -1,0 +1,17 @@
+@layer components {
+  .ak-heading {
+    @apply text-lg font-semibold tracking-tight;
+  }
+
+  .ak-subheading {
+    @apply text-base font-semibold tracking-tight;
+  }
+
+  .ak-body {
+    @apply text-base leading-relaxed;
+  }
+
+  .ak-caption {
+    @apply text-xs leading-relaxed;
+  }
+}

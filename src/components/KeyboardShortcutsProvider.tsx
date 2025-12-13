@@ -1,0 +1,210 @@
+'use client'
+
+import { ReactNode, useCallback, useState } from 'react'
+import { useKeyboardShortcuts, KeyboardShortcut, formatShortcut } from '../hooks/useKeyboardShortcuts'
+import { XMarkIcon, CommandLineIcon } from '@heroicons/react/24/outline'
+
+type KeyboardShortcutsProviderProps = {
+  children: ReactNode
+}
+
+// Globale Shortcuts Definition
+const GLOBAL_SHORTCUTS: Omit<KeyboardShortcut, 'action'>[] = [
+  {
+    key: 'k',
+    ctrlOrCmd: true,
+    description: 'Command Palette öffnen',
+  },
+  {
+    key: 'n',
+    ctrlOrCmd: true,
+    description: 'Neue Nachricht',
+  },
+  {
+    key: 's',
+    ctrlOrCmd: true,
+    description: 'Speichern',
+  },
+  {
+    key: '/',
+    description: 'Fokus auf Suche',
+  },
+  {
+    key: 'Escape',
+    description: 'Schließen / Abbrechen',
+  },
+  {
+    key: 'ArrowUp',
+    description: 'Vorherige Nachricht',
+  },
+  {
+    key: 'ArrowDown',
+    description: 'Nächste Nachricht',
+  },
+]
+
+export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProviderProps) {
+  const [showShortcuts, setShowShortcuts] = useState(false)
+
+  const handleCommandPalette = useCallback(() => {
+    // TODO: Command Palette öffnen
+    console.log('Command Palette öffnen')
+  }, [])
+
+  const handleNewMessage = useCallback(() => {
+    // Fokus auf Input-Feld setzen
+    const input = document.querySelector('input[type="text"], textarea') as HTMLInputElement | HTMLTextAreaElement
+    if (input) {
+      input.focus()
+    }
+  }, [])
+
+  const handleSave = useCallback(() => {
+    // TODO: Speichern-Funktion
+    console.log('Speichern')
+  }, [])
+
+  const handleFocusSearch = useCallback(() => {
+    const searchInput = document.querySelector('input[placeholder*="Suchen"], input[placeholder*="suchen"]') as HTMLInputElement
+    if (searchInput) {
+      searchInput.focus()
+    }
+  }, [])
+
+  const handleEscape = useCallback(() => {
+    // Schließe offene Modals/Menüs
+    const event = new CustomEvent('ak-escape-pressed')
+    window.dispatchEvent(event)
+    // Schließe auch die Shortcuts-Modal, falls offen
+    setShowShortcuts(false)
+  }, [])
+
+  const handleShowShortcuts = useCallback(() => {
+    setShowShortcuts((prev) => !prev)
+  }, [])
+
+  useKeyboardShortcuts({
+    shortcuts: [
+      {
+        key: 'k',
+        ctrlOrCmd: true,
+        description: 'Command Palette öffnen',
+        action: handleCommandPalette,
+      },
+      {
+        key: 'n',
+        ctrlOrCmd: true,
+        description: 'Neue Nachricht',
+        action: handleNewMessage,
+      },
+      {
+        key: 's',
+        ctrlOrCmd: true,
+        description: 'Speichern',
+        action: handleSave,
+      },
+      {
+        key: '/',
+        description: 'Fokus auf Suche',
+        action: handleFocusSearch,
+      },
+      {
+        key: 'Escape',
+        description: 'Schließen / Abbrechen',
+        action: handleEscape,
+      },
+      {
+        key: '?',
+        ctrlOrCmd: true,
+        description: 'Shortcuts anzeigen',
+        action: handleShowShortcuts,
+      },
+    ],
+  })
+
+  return (
+    <>
+      {children}
+      {showShortcuts && (
+        <KeyboardShortcutsModal onClose={() => setShowShortcuts(false)} />
+      )}
+    </>
+  )
+}
+
+type KeyboardShortcutsModalProps = {
+  onClose: () => void
+}
+
+function KeyboardShortcutsModal({ onClose }: KeyboardShortcutsModalProps) {
+  const shortcuts = GLOBAL_SHORTCUTS
+
+  useKeyboardShortcuts({
+    shortcuts: [
+      {
+        key: 'Escape',
+        action: onClose,
+      },
+      {
+        key: '?',
+        ctrlOrCmd: true,
+        action: onClose,
+      },
+    ],
+  })
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-2xl rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[var(--ak-color-border-subtle)] px-6 py-4">
+          <div className="flex items-center gap-3">
+            <CommandLineIcon className="h-5 w-5 text-[var(--ak-color-text-primary)]" />
+            <h2 className="ak-heading text-lg">Tastenkombinationen</h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-8 w-8 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-colors hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]"
+            aria-label="Schließen"
+          >
+            <XMarkIcon className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="max-h-[60vh] overflow-y-auto px-6 py-4">
+          <div className="space-y-4">
+            {shortcuts.map((shortcut, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between border-b border-[var(--ak-color-border-subtle)] pb-3 last:border-0"
+              >
+                <span className="ak-body text-sm text-[var(--ak-color-text-primary)]">
+                  {shortcut.description}
+                </span>
+                <kbd className="inline-flex items-center gap-1 rounded border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] px-2.5 py-1 text-xs font-mono text-[var(--ak-color-text-primary)]">
+                  {formatShortcut(shortcut)}
+                </kbd>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-[var(--ak-color-border-subtle)] px-6 py-3">
+          <p className="ak-caption text-center text-[var(--ak-color-text-secondary)]">
+            Drücke <kbd className="rounded border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] px-1.5 py-0.5 text-[10px] font-mono">{formatShortcut({ key: '?', ctrlOrCmd: true })}</kbd> oder <kbd className="rounded border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] px-1.5 py-0.5 text-[10px] font-mono">Esc</kbd> zum Schließen
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+

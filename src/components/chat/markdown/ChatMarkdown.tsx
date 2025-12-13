@@ -12,30 +12,30 @@ type ChatMarkdownProps = {
 
 export function ChatMarkdown({ content }: ChatMarkdownProps) {
   return (
-    <div className="w-full max-w-none text-left leading-relaxed" style={{ color: '#000000' }}>
+    <div className="w-full max-w-none text-left leading-relaxed text-[var(--ak-color-text-primary)]">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
-            <h1 className="ak-heading mb-2 mt-0" style={{ color: '#000000' }}>{children}</h1>
+            <h1 className="ak-heading mb-2 mt-0 text-2xl font-semibold tracking-tight">{children}</h1>
           ),
           h2: ({ children }) => (
-            <h2 className="ak-subheading mb-2 mt-3" style={{ color: '#000000' }}>{children}</h2>
+            <h2 className="ak-heading mb-2 mt-4 text-xl font-semibold tracking-tight">{children}</h2>
           ),
           h3: ({ children }) => (
-            <h3 className="ak-subheading mb-2 mt-3" style={{ color: '#000000' }}>{children}</h3>
+            <h3 className="ak-subheading mb-2 mt-4 text-lg font-semibold tracking-tight">{children}</h3>
           ),
           p: ({ children }) => (
-            <p className="ak-body mb-3 mt-0" style={{ color: '#000000' }}>{children}</p>
+            <p className="ak-body mb-3 mt-0 whitespace-pre-wrap">{children}</p>
           ),
           ul: ({ children }) => (
-            <ul className="ak-body mb-3 mt-0 pl-6" style={{ color: '#000000' }}>{children}</ul>
+            <ul className="ak-body mb-3 mt-0 pl-6 list-disc list-outside">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="ak-body mb-3 mt-0 pl-6" style={{ color: '#000000' }}>{children}</ol>
+            <ol className="ak-body mb-3 mt-0 pl-6 list-decimal list-outside">{children}</ol>
           ),
           li: ({ children }) => (
-            <li className="ak-body mb-1" style={{ color: '#000000' }}>{children}</li>
+            <li className="ak-body mb-1">{children}</li>
           ),
           table: ({ children }) => (
             <div style={{ overflowX: 'auto', marginBottom: '1rem', marginTop: '0.5rem' }}>
@@ -65,12 +65,12 @@ export function ChatMarkdown({ content }: ChatMarkdownProps) {
             </tr>
           ),
           th: ({ children }) => (
-            <th className="ak-body p-3 text-left font-semibold" style={{ color: '#000000' }}>
+            <th className="ak-body p-3 text-left font-semibold">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="ak-body p-3" style={{ color: '#000000' }}>
+            <td className="ak-body p-3 align-top">
               {children}
             </td>
           ),
@@ -79,7 +79,7 @@ export function ChatMarkdown({ content }: ChatMarkdownProps) {
             return isInline ? (
               <InlineCode>{children}</InlineCode>
             ) : (
-              <code className={clsx(className, "ak-body")}>
+              <code className={clsx(className, "font-mono text-sm")}>
                 {children}
               </code>
             )
@@ -88,32 +88,20 @@ export function ChatMarkdown({ content }: ChatMarkdownProps) {
             <CodeBlock>{children}</CodeBlock>
           ),
           blockquote: ({ children }) => (
-            <blockquote style={{ 
-              borderLeft: '4px solid var(--ak-color-accent)',
-              paddingLeft: '1rem',
-              marginLeft: '0',
-              marginBottom: '0.75rem',
-              fontStyle: 'italic',
-              color: '#000000',
-            }}>
+            <blockquote className="my-3 border-l-4 border-[var(--ak-color-accent)] pl-4 text-[var(--ak-color-text-secondary)]">
               {children}
             </blockquote>
           ),
           strong: ({ children }) => (
-            <strong style={{ fontWeight: 'bold', color: '#000000' }}>
-              {children}
-            </strong>
+            <strong className="font-semibold">{children}</strong>
           ),
           em: ({ children }) => (
-            <em style={{ fontStyle: 'italic', color: '#000000' }}>
-              {children}
-            </em>
+            <em className="italic">{children}</em>
           ),
           a: ({ children, href }) => (
             <a 
               href={href}
-              className="hover:underline"
-              style={{ color: '#000000' }}
+              className="text-[var(--ak-color-accent)] hover:underline"
               target="_blank"
               rel="noopener noreferrer"
             >

@@ -40,6 +40,53 @@ export const QuickActionsWidget: FC<QuickActionsWidgetProps> = ({
   const gridClass =
     columns === 1 ? 'grid grid-cols-1' : 'grid grid-cols-2'
 
+  // For automation/customers module, use the same style as inbox
+  const isAutomation = source === 'automation'
+  
+  if (isAutomation) {
+    return (
+      <div className="flex h-full flex-col gap-1.5 bg-white p-1.5 pt-2">
+        <div className="flex-1 overflow-y-auto rounded-xl">
+          <ul className="flex flex-col items-center gap-1 mt-0.5">
+            {actions.map((action) => (
+              <li key={action.id}>
+                <button
+                  type="button"
+                  onClick={() => handleClick(action.id)}
+                  className={clsx(
+                    'group mx-auto flex w-full max-w-[220px] flex-col gap-2.5 rounded-xl border border-white/20 bg-white/60 backdrop-blur-md px-3 py-2.5 text-left shadow-lg transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] ak-button-interactive relative',
+                    'hover:bg-white/75 hover:shadow-xl',
+                  )}
+                >
+                  <div className="flex items-start gap-2.5">
+                    {action.icon ? (
+                      <div className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center text-[var(--ak-color-text-primary)]">
+                        {action.icon}
+                      </div>
+                    ) : null}
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      {action.category && (
+                        <span className="ak-caption mb-1 text-[var(--ak-color-text-muted)]">
+                          {action.category}
+                        </span>
+                      )}
+                      <span className="ak-body truncate font-semibold text-slate-900">
+                        {action.title}
+                      </span>
+                      <span className="ak-caption mt-1 line-clamp-2 text-slate-600">
+                        {action.description}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <WidgetCard title={title} subtitle={subtitle} padding="sm" shadow={false}>
       <div className={clsx('flex-1 gap-2 overflow-y-auto', gridClass)}>

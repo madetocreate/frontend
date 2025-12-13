@@ -7,6 +7,7 @@ export type RealtimeVoiceStatus = 'idle' | 'connecting' | 'live' | 'error'
 type UseRealtimeVoiceOptions = {
   onStart?: () => void
   onStop?: () => void
+  onTextDelta?: (text: string) => void
 }
 
 export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}) {
@@ -23,7 +24,11 @@ export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}) {
     }
 
     const anyWindow = window as unknown as {
-      startRealtimeVoiceSession?: () => Promise<void> | void
+      startRealtimeVoiceSession?: (callbacks?: {
+        onTextDelta?: (text: string) => void
+        onAudioDelta?: (audio: string) => void
+        onResponseDone?: () => void
+      }) => Promise<void> | void
       stopRealtimeVoiceSession?: () => Promise<void> | void
     }
 
@@ -33,7 +38,9 @@ export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}) {
         setStatus('connecting')
 
         if (anyWindow.startRealtimeVoiceSession) {
-          await anyWindow.startRealtimeVoiceSession()
+          await anyWindow.startRealtimeVoiceSession({
+            onTextDelta: options.onTextDelta,
+          })
         }
 
         setStatus('live')
