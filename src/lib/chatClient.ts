@@ -1,9 +1,14 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+// Chat API should point to the FastAPI backend (port 8000), not the Orchestrator (port 4000)
+// Priority: NEXT_PUBLIC_CHAT_API_URL > NEXT_PUBLIC_AGENT_BACKEND_URL > NEXT_PUBLIC_BACKEND_URL (if port 8000) > default
+// Note: AGENT_BACKEND_URL is server-side only, so we need NEXT_PUBLIC_ version for client-side
+const CHAT_API_BASE_URL =
+  process.env.NEXT_PUBLIC_CHAT_API_URL ?? 
+  process.env.NEXT_PUBLIC_AGENT_BACKEND_URL ??
+  (process.env.NEXT_PUBLIC_BACKEND_URL?.includes("8000") ? process.env.NEXT_PUBLIC_BACKEND_URL : "http://127.0.0.1:8000");
 const CHAT_STREAM_URL =
-  process.env.NEXT_PUBLIC_CHAT_STREAM_URL ?? `${API_BASE_URL}/chat/stream`;
+  process.env.NEXT_PUBLIC_CHAT_STREAM_URL ?? `${CHAT_API_BASE_URL}/chat/stream`;
 const CHAT_HTTP_URL =
-  process.env.NEXT_PUBLIC_CHAT_HTTP_URL ?? `${API_BASE_URL}/chat`;
+  process.env.NEXT_PUBLIC_CHAT_HTTP_URL ?? `${CHAT_API_BASE_URL}/chat`;
 
 export type ChatRequestBody = {
   tenantId: string;

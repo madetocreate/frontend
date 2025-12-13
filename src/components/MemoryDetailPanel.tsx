@@ -181,8 +181,9 @@ export function MemoryDetailPanel({ category }: MemoryDetailPanelProps) {
         setItems(convertedItems)
 
         if (convertedItems.length > 0) {
-          const keepId = selected?.id && convertedItems.some((i) => i.id === selected.id) ? selected.id : convertedItems[0].id
-          if (!selected || selected.id !== keepId) {
+          const selectedId = selected?.id
+          const keepId = selectedId && convertedItems.some((i) => i.id === selectedId) ? selectedId : convertedItems[0].id
+          if (!selectedId || selectedId !== keepId) {
             await loadItemDetail(keepId)
           }
         } else {
@@ -199,6 +200,7 @@ export function MemoryDetailPanel({ category }: MemoryDetailPanelProps) {
     }
 
     loadItems()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, typeChips, statusChips, scopeChips, debouncedQuery, sortValue])
 
   const loadItemDetail = async (itemId: string) => {

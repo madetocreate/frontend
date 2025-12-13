@@ -74,7 +74,7 @@ export function useDictation(options: UseDictationOptions = {}) {
 
       const recorder = new MediaRecorder(stream, { mimeType })
       // Speichere den MIME-Type für später
-      ;(recorder as any).__mimeType = mimeType
+      ;(recorder as MediaRecorder & { __mimeType?: string }).__mimeType = mimeType
       mediaRecorderRef.current = recorder
       chunksRef.current = []
 
@@ -101,7 +101,7 @@ export function useDictation(options: UseDictationOptions = {}) {
         }
 
         // Bestimme den Dateinamen basierend auf dem MIME-Type
-        const mimeType = recorder.mimeType || (recorder as any).__mimeType || 'audio/webm'
+        const mimeType = recorder.mimeType || (recorder as MediaRecorder & { __mimeType?: string }).__mimeType || 'audio/webm'
         let extension = 'webm'
         let blobType = 'audio/webm'
         
