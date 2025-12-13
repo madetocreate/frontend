@@ -59,8 +59,8 @@ const MODULES: ModuleConfig[] = [
 // Layout-Konstanten
 // Linker Rail (Icons): 64px (Tailwind w-16)
 const LEFT_RAIL_WIDTH = '64px'
-// Linkes Panel ~30% Breite (mit Grenzen)
-const LEFT_DRAWER_WIDTH = 'clamp(260px, 30vw, 400px)'
+// Linkes Panel Breite (Pixelgenau für Apple-Style Präzision)
+const LEFT_DRAWER_WIDTH = '320px'
 
 function getModuleLabel(token: WorkspaceModuleToken): string {
   const match = MODULES.find((m) => m.id === token)
@@ -573,84 +573,110 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
               )}
               style={leftDrawerStyle}
             >
-              <div className="flex items-center justify-between px-3 py-2">
-                <div className="truncate text-lg font-semibold text-[var(--ak-color-text-primary)]">
+              <div className="flex h-[52px] items-center justify-between px-3">
+                <div className="flex-1 truncate text-lg font-semibold text-[var(--ak-color-text-primary)]">
                   {activeModuleToken === 'settings' && selectedSettingsCategory === 'memory_crm'
                     ? 'Speicher & CRM'
                     : getModuleLabel(activeModuleToken)}
                 </div>
                 
-                <div className="flex-1 flex justify-center">
-                  {/* Info Button - öffnet rechten Drawer mit Details */}
+                <div className="flex items-center gap-2 pl-2">
+                  {/* Info Button - Toggle logic */}
                   {(activeModuleToken === 'inbox' || activeModuleToken === 'new1' || activeModuleToken === 'new2' || activeModuleToken === 'automation') && (
                     <button
                       type="button"
                       onClick={() => {
                         if (activeModuleToken === 'inbox') {
-                          handleInboxInfoClick()
+                          // Toggle Inbox Overview oder Details
+                          if (rightDrawerOpen && (showInboxOverview || selectedInboxThreadId)) {
+                             handleCloseDetails()
+                          } else {
+                             handleInboxInfoClick()
+                          }
                         } else if (activeModuleToken === 'new1') {
-                          // Öffne GrowthDetailsDrawer
-                          setSelectedGrowthItemId('gi_2025_001')
-                          setSelectedInboxItem(null)
-                          setSelectedInboxThreadId(null)
-                          setSelectedSettingsCategory(null)
-                          setSelectedAutomationItem(null)
-                          setSelectedMemoryCategory(null)
-                          setSelectedCustomerId(null)
-                          setSelectedDocumentId(null)
-                          setShowInboxOverview(false)
-                          setShowGrowthOverview(false)
-                          setShowDocumentsOverview(false)
-                          handleOpenDetails()
+                          // Toggle Growth Details
+                          if (rightDrawerOpen && (showGrowthOverview || selectedGrowthItemId === 'gi_2025_001')) {
+                            handleCloseDetails()
+                          } else {
+                            // Öffne GrowthDetailsDrawer
+                            setSelectedGrowthItemId('gi_2025_001')
+                            setSelectedInboxItem(null)
+                            setSelectedInboxThreadId(null)
+                            setSelectedSettingsCategory(null)
+                            setSelectedAutomationItem(null)
+                            setSelectedMemoryCategory(null)
+                            setSelectedCustomerId(null)
+                            setSelectedDocumentId(null)
+                            setShowInboxOverview(false)
+                            setShowGrowthOverview(false)
+                            setShowDocumentsOverview(false)
+                            handleOpenDetails()
+                          }
                         } else if (activeModuleToken === 'new2') {
-                          // Öffne DocumentDetailsDrawer
-                          setSelectedDocumentId('d_123')
-                          setSelectedInboxItem(null)
-                          setSelectedInboxThreadId(null)
-                          setSelectedSettingsCategory(null)
-                          setSelectedAutomationItem(null)
-                          setSelectedMemoryCategory(null)
-                          setSelectedCustomerId(null)
-                          setSelectedGrowthItemId(null)
-                          setShowInboxOverview(false)
-                          setShowGrowthOverview(false)
-                          setShowDocumentsOverview(false)
-                          handleOpenDetails()
+                          // Toggle Document Details
+                          if (rightDrawerOpen && (showDocumentsOverview || selectedDocumentId === 'd_123')) {
+                            handleCloseDetails()
+                          } else {
+                            // Öffne DocumentDetailsDrawer
+                            setSelectedDocumentId('d_123')
+                            setSelectedInboxItem(null)
+                            setSelectedInboxThreadId(null)
+                            setSelectedSettingsCategory(null)
+                            setSelectedAutomationItem(null)
+                            setSelectedMemoryCategory(null)
+                            setSelectedCustomerId(null)
+                            setSelectedGrowthItemId(null)
+                            setShowInboxOverview(false)
+                            setShowGrowthOverview(false)
+                            setShowDocumentsOverview(false)
+                            handleOpenDetails()
+                          }
                         } else if (activeModuleToken === 'automation') {
-                          // Öffne CustomerDetailsDrawer
-                          setSelectedCustomerId('c1')
-                          setSelectedInboxItem(null)
-                          setSelectedInboxThreadId(null)
-                          setSelectedSettingsCategory(null)
-                          setSelectedAutomationItem(null)
-                          setSelectedMemoryCategory(null)
-                          setSelectedGrowthItemId(null)
-                          setSelectedDocumentId(null)
-                          setShowInboxOverview(false)
-                          setShowGrowthOverview(false)
-                          setShowDocumentsOverview(false)
-                          handleOpenDetails()
+                          // Toggle Customer Details
+                          if (rightDrawerOpen && selectedCustomerId === 'c1') {
+                            handleCloseDetails()
+                          } else {
+                            // Öffne CustomerDetailsDrawer
+                            setSelectedCustomerId('c1')
+                            setSelectedInboxItem(null)
+                            setSelectedInboxThreadId(null)
+                            setSelectedSettingsCategory(null)
+                            setSelectedAutomationItem(null)
+                            setSelectedMemoryCategory(null)
+                            setSelectedGrowthItemId(null)
+                            setSelectedDocumentId(null)
+                            setShowInboxOverview(false)
+                            setShowGrowthOverview(false)
+                            setShowDocumentsOverview(false)
+                            handleOpenDetails()
+                          }
                         }
                       }}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[var(--ak-color-text-secondary)] transition-colors hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
-                      aria-label="Details öffnen"
+                      className={clsx(
+                        "inline-flex h-7 w-7 items-center justify-center rounded-full transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2",
+                        // Active state visualisieren wenn Drawer offen ist
+                        rightDrawerOpen 
+                          ? "bg-[var(--ak-surface-2-selected)] text-[var(--ak-color-text-primary)] border-[var(--ak-color-border-strong)]"
+                          : "text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]"
+                      )}
+                      aria-label="Details umschalten"
                     >
                       <InformationCircleIcon className="h-4 w-4" />
                     </button>
                   )}
-                </div>
 
-                {/* Collapse Button */}
-                <button
-                  type="button"
-                  onClick={() => setLeftDrawerOpen(false)}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] shadow-sm hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
-                >
-                  <span className="sr-only">Panel einklappen</span>
-                  <span aria-hidden="true" className="text-xs">
-                    ‹
-                  </span>
-                </button>
+                  {/* Collapse Button */}
+                  <button
+                    type="button"
+                    onClick={() => setLeftDrawerOpen(false)}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] shadow-sm hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
+                  >
+                    <span className="sr-only">Panel einklappen</span>
+                    <span aria-hidden="true" className="text-xs">
+                      ‹
+                    </span>
+                  </button>
+                </div>
               </div>
               <div className="flex-1 overflow-y-auto ak-scrollbar ak-body text-[var(--ak-color-text-secondary)]">
                 {activeModuleToken === 'chat' ? (
