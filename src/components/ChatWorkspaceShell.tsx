@@ -42,10 +42,12 @@ const MODULES: ModuleConfig[] = [
   { id: 'automation', label: 'Modules', icon: Squares2X2Icon },
 ]
 
-// Responsive Breiten:
-// Linkes Panel ca. 30% der Breite (mit sinnvollen Grenzen)
-// Rechtes Panel ca. 70% der Breite (mit sinnvollen Grenzen), außer bei Benachrichtigungen (Vollbreite)
+// Layout-Konstanten
+// Linker Rail (Icons): 64px (Tailwind w-16)
+const LEFT_RAIL_WIDTH = '64px'
+// Linkes Panel ~30% Breite (mit Grenzen)
 const LEFT_DRAWER_WIDTH = 'clamp(260px, 30vw, 400px)'
+// Rechtes Panel ~70% Breite (mit Grenzen)
 const RIGHT_DRAWER_WIDTH = 'clamp(360px, 70vw, 1100px)'
 
 function getModuleLabel(token: WorkspaceModuleToken): string {
@@ -241,9 +243,10 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     width: LEFT_DRAWER_WIDTH,
   }
 
-  // Rechtes Panel: nur Breite reservieren, wenn sichtbar
+  // Rechtes Panel: nur Breite reservieren, wenn sichtbar; ausrichten relativ zum linken Panel
   const rightContainerStyle: CSSProperties = {
     right: 0,
+    left: showLeft && !showNotifications ? LEFT_DRAWER_WIDTH : 0,
     width: showRight ? (showNotifications ? '100%' : RIGHT_DRAWER_WIDTH) : 0,
   }
 
