@@ -42,7 +42,11 @@ const MODULES: ModuleConfig[] = [
   { id: 'automation', label: 'Modules', icon: Squares2X2Icon },
 ]
 
-const LEFT_DRAWER_WIDTH = 336 // 20% kleiner als 420
+// Responsive Breiten:
+// Linkes Panel ca. 30% der Breite (mit sinnvollen Grenzen)
+// Rechtes Panel ca. 70% der Breite (mit sinnvollen Grenzen), außer bei Benachrichtigungen (Vollbreite)
+const LEFT_DRAWER_WIDTH = 'clamp(260px, 30vw, 400px)'
+const RIGHT_DRAWER_WIDTH = 'clamp(360px, 70vw, 1100px)'
 
 function getModuleLabel(token: WorkspaceModuleToken): string {
   const match = MODULES.find((m) => m.id === token)
@@ -230,16 +234,15 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       selectedAutomationItem !== null ||
       selectedMemoryCategory !== null)
 
-  const chatStyle: CSSProperties = showLeft && !showNotifications
-    ? { marginLeft: LEFT_DRAWER_WIDTH }
-    : { marginLeft: 0 }
+  const chatStyle: CSSProperties =
+    showLeft && !showNotifications ? { marginLeft: LEFT_DRAWER_WIDTH } : { marginLeft: 0 }
 
   const leftDrawerStyle: CSSProperties = {
     width: LEFT_DRAWER_WIDTH,
   }
 
   const rightContainerStyle: CSSProperties = {
-    left: showNotifications ? 0 : (showLeft ? LEFT_DRAWER_WIDTH : 0), // Vollbild links bei Benachrichtigungen
+    left: showNotifications ? 0 : showLeft ? LEFT_DRAWER_WIDTH : 0, // Vollbild links bei Benachrichtigungen
   }
 
   return (
@@ -388,11 +391,11 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
             style={rightContainerStyle}
           >
             <div
-              className={clsx(
-                'ak-glass pointer-events-auto flex h-full flex-col border-l transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
-                showRight ? 'translate-x-0' : 'translate-x-full',
-                showNotifications ? 'w-full' : 'w-full' // Vollbild bei Benachrichtigungen
-              )}
+            className={clsx(
+              'ak-glass pointer-events-auto flex h-full flex-col border-l transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+              showRight ? 'translate-x-0' : 'translate-x-full'
+            )}
+            style={{ width: showNotifications ? '100%' : RIGHT_DRAWER_WIDTH }}
             >
               <div className="flex items-center justify-between px-3 py-2">
                 <button
