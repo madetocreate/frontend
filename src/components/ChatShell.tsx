@@ -147,13 +147,19 @@ export function ChatShell() {
 
   // Initial load messages on mount if thread is already selected
   useEffect(() => {
-    if (!currentThreadRef.current) {
+    if (!currentThreadRef.current && messages.length === 0) {
       const defaultThreadId = "thread-default";
       currentThreadRef.current = defaultThreadId;
       const loaded = loadMessages(defaultThreadId);
-      setMessages(loaded);
+      // Remove duplicates based on message id
+      const uniqueMessages = loaded.filter((msg, index, self) => 
+        index === self.findIndex((m) => m.id === msg.id)
+      );
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      setMessages(uniqueMessages);
     }
-  }, [loadMessages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -470,6 +476,11 @@ export function ChatShell() {
     };
 
     setMessages((prev) => {
+      // Check if assistant message with this ID already exists to prevent duplicates
+      const exists = prev.some(msg => msg.id === assistantMessageId);
+      if (exists) {
+        return prev;
+      }
       const next = [...prev, assistantMessage];
       saveMessages(threadId, next);
       return next;
@@ -479,12 +490,7 @@ export function ChatShell() {
       let fullContent = "";
 
       await sendChatMessageStream(
-        {
-          tenantId,
-          sessionId: threadId,
-          channel: "web_chat",
-          message: trimmed,
-        },
+        trimmed,
         {
           onStart: (data) => {
             const steps = (data.steps ?? []) as ThinkingStep[];
@@ -511,9 +517,15 @@ export function ChatShell() {
             });
           },
           onEnd: (data) => {
-            const finalContent = data.content || fullContent;
+            // Use fullContent if it exists (from chunks), otherwise use data.content
+            // This prevents duplication if data.content contains the full message
+            const finalContent = fullContent || data.content || "";
             setMessages((prev) => {
-              const updated = prev.map((msg) =>
+              // Remove any duplicate assistant messages with the same ID first
+              const withoutDuplicates = prev.filter((msg, index, self) => 
+                msg.id !== assistantMessageId || index === self.findIndex(m => m.id === assistantMessageId)
+              );
+              const updated = withoutDuplicates.map((msg) =>
                 msg.id === assistantMessageId
                   ? { ...msg, text: finalContent, uiMessages: data.uiMessages }
                   : msg
@@ -565,6 +577,11 @@ export function ChatShell() {
             setThinkingNote("Fehler beim Streamen");
             setIsSending(false);
           },
+        },
+        {
+          tenantId,
+          sessionId: threadId,
+          channel: "web_chat",
         }
       );
     } catch (err) {

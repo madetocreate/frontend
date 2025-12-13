@@ -5,10 +5,10 @@ import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 import {
   ChatBubbleLeftRightIcon,
-  InboxIcon,
-  Squares2X2Icon,
-  LightBulbIcon,
-  PresentationChartBarIcon,
+  PaperAirplaneIcon,
+  MegaphoneIcon,
+  DocumentIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline'
 import { ChatSidebarContent } from '@/components/chat/ChatSidebarContent'
 import { InboxDrawerWidget } from '@/components/InboxDrawerWidget'
@@ -42,10 +42,10 @@ type ModuleConfig = {
 
 const MODULES: ModuleConfig[] = [
   { id: 'chat', label: 'Chat', icon: ChatBubbleLeftRightIcon, href: '/' },
-  { id: 'inbox', label: 'Posteingang', icon: InboxIcon },
-  { id: 'new1', label: 'Memory', icon: LightBulbIcon },
-  { id: 'new2', label: 'Analytics', icon: PresentationChartBarIcon },
-  { id: 'automation', label: 'Modules', icon: Squares2X2Icon },
+  { id: 'inbox', label: 'Posteingang', icon: PaperAirplaneIcon },
+  { id: 'new1', label: 'Wachstum', icon: MegaphoneIcon },
+  { id: 'new2', label: 'Dokumente', icon: DocumentIcon },
+  { id: 'automation', label: 'Kunden', icon: UserGroupIcon },
 ]
 
 // Layout-Konstanten
@@ -59,8 +59,8 @@ function getModuleLabel(token: WorkspaceModuleToken): string {
   if (match) return match.label
 
   if (token === 'settings') return 'Einstellungen'
-  if (token === 'new1') return 'Memory'
-  if (token === 'new2') return 'Analytics'
+  if (token === 'new1') return 'Wachstum'
+  if (token === 'new2') return 'Dokumente'
   return token
 }
 
@@ -262,7 +262,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
   return (
     <div className="flex h-screen bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)]">
-      <aside className="ak-glass flex w-16 flex-col items-center gap-y-4 py-3 text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]">
+      <aside className="ak-glass flex w-16 flex-col items-center gap-y-4 py-3 text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] border-r-0">
         <nav className="mt-1 flex flex-1 flex-col items-center gap-y-4">
           {MODULES.map((mod) => {
             const Icon = mod.icon
@@ -295,7 +295,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   )}
                 >
                   <span className="sr-only">{mod.label}</span>
-                  <Icon className="h-6 w-6" aria-hidden="true" />
+                  <Icon className="h-5 w-5" aria-hidden="true" />
                 </button>
                 {hoveredSidebarTooltip === mod.id && (
                   <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">

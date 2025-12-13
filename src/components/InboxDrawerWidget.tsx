@@ -200,7 +200,7 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
   }
 
   return (
-    <div className="flex h-full flex-col gap-1.5 rounded-xl border border-slate-200 bg-[var(--ak-color-bg-surface)]/95 p-1.5 pt-2 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl">
+    <div className="flex h-full flex-col gap-1.5 rounded-xl border border-slate-200 bg-transparent p-1.5 pt-2">
       <div className="grid grid-cols-4 gap-1">
         {FILTER_TABS.map((tab) => {
           const isActive = activeChannel === tab.id
@@ -246,7 +246,7 @@ export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
                     type="button"
                     onClick={() => handleItemClick(item)}
                     className={clsx(
-                      'group mx-auto flex w-full max-w-[270px] items-start gap-2 rounded-[var(--ak-radius-card)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 px-2 py-3 text-left text-[11px] shadow-sm backdrop-blur-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] ak-button-interactive min-h-[100px]',
+                      'group mx-auto flex w-full max-w-[220px] items-start gap-2 rounded-[var(--ak-radius-card)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 px-2 py-3 text-left text-[11px] shadow-sm backdrop-blur-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] ak-button-interactive min-h-[100px]',
                       item.unread
                         ? 'bg-slate-50/90 hover:border-slate-300 hover:bg-slate-100/90 hover:shadow-[var(--ak-shadow-card)]'
                         : 'hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]/80 hover:shadow-[var(--ak-shadow-card)]',
