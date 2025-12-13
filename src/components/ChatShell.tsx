@@ -62,7 +62,6 @@ export function ChatShell() {
     },
   });
 
-  const [realtimeTextBuffer, setRealtimeTextBuffer] = useState("");
   const [audioLevel, setAudioLevel] = useState(0);
   const [audioBands, setAudioBands] = useState<number[]>(Array(20).fill(0));
   const audioLevelIntervalRef = useRef<number | null>(null);
@@ -76,7 +75,6 @@ export function ChatShell() {
   const { status: realtimeStatus, toggle: toggleRealtime } = useRealtimeVoice({
     onStart: () => {
       console.log("Real-time Audio gestartet");
-      setRealtimeTextBuffer("");
       // Starte echte Audio-Level-Messung
       startAudioLevelMeasurement();
     },
@@ -84,10 +82,9 @@ export function ChatShell() {
       console.log("Real-time Audio gestoppt");
       stopAudioLevelMeasurement();
       setAudioLevel(0);
-      setRealtimeTextBuffer("");
     },
     onTextDelta: (text: string) => {
-      setRealtimeTextBuffer((prev) => prev + text);
+      console.log("Realtime delta:", text);
     },
   });
 
@@ -193,7 +190,7 @@ export function ChatShell() {
       startAudioLevelMeasurement();
     } else if (dictationStatus !== "recording" && !isRealtimeActive) {
       stopAudioLevelMeasurement();
-      setAudioLevel(0);
+      window.setTimeout(() => setAudioLevel(0), 0);
     }
     return () => {
       stopAudioLevelMeasurement();
@@ -217,7 +214,7 @@ export function ChatShell() {
       fakeWaveIntervalRef.current = window.setTimeout(updateFakeWaves, 300);
     } else {
       // Setze Wellen auf niedrige Werte, wenn nicht aktiv
-      setFakeWaveLevels(Array(20).fill(0.2));
+      window.setTimeout(() => setFakeWaveLevels(Array(20).fill(0.2)), 0);
       if (fakeWaveIntervalRef.current !== null) {
         clearTimeout(fakeWaveIntervalRef.current);
         fakeWaveIntervalRef.current = null;
@@ -448,6 +445,7 @@ export function ChatShell() {
         }
         return index === firstIndex;
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMessages(uniqueMessages);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -460,8 +458,6 @@ export function ChatShell() {
       stopTts();
     };
   }, [stopTts]);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const lastAssistantMessage = messages.filter((m) => m.role === "assistant").slice(-1)[0];
   const isLastAssistantMessage = (msg: ChatMessage) => msg.id === lastAssistantMessage?.id;

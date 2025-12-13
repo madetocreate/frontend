@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from 'react'
 import clsx from 'clsx'
+import { AkSearchField } from '@/components/ui/AkSearchField'
 import {
   ArrowPathIcon,
   FunnelIcon,
-  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline'
 
 type MemoryCategory =
@@ -212,14 +212,12 @@ export function MemoryOverviewWidget() {
 
       <div className="mt-3 px-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-xs text-slate-700 focus-within:ring-1 focus-within:ring-sky-500">
-            <MagnifyingGlassIcon className="h-3.5 w-3.5 text-slate-400" />
-            <input
-              type="search"
+          <div className="flex-1">
+            <AkSearchField
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(next) => setQuery(next)}
               placeholder="Memories durchsuchen..."
-              className="h-6 flex-1 bg-transparent text-xs text-slate-700 placeholder:text-slate-400 focus:outline-none"
+              size="sm"
             />
           </div>
           <button

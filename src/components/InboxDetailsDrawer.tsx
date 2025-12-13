@@ -7,7 +7,6 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   InformationCircleIcon,
-  ArrowTopRightOnSquareIcon,
 } from '@heroicons/react/24/outline'
 
 type InboxDetailsDrawerProps = {

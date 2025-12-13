@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import clsx from "clsx";
+import { AkSearchField } from "@/components/ui/AkSearchField";
 import {
-  MagnifyingGlassIcon,
   EllipsisVerticalIcon,
   ChatBubbleLeftRightIcon,
   ChevronDownIcon,
@@ -273,16 +273,11 @@ export function ChatSidebarContent() {
           <span>Neuer Chat</span>
         </button>
 
-        <div className="relative">
-          <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ak-color-text-muted)]" />
-          <input
-            type="text"
-            placeholder="Chats durchsuchen..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] px-8 py-1.5 text-sm text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-muted)] focus:border-[var(--ak-color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--ak-color-accent)]"
-          />
-        </div>
+        <AkSearchField
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Chats durchsuchen..."
+        />
       </div>
 
       {/* Collapsible Chats Section */}

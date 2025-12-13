@@ -1,0 +1,112 @@
+/*
+ * AKLOW UI Scaffold – Drawer/Header/Footer + Sidebar polish
+ *
+ * Ziel: Header/Footer aller Drawers über ein gemeinsames „Scaffold“ konsistent machen,
+ * plus saubere Hover/Auswahl-Effekte (auch für versehentlich genutzte Tailwind-Varianten
+ * wie `hover:ak-surface-2-hover`).
+ */
+
+:root {
+  --ak-glass-border-style: 0.5px solid var(--ak-glass-border);
+}
+
+@layer utilities {
+  .ak-glass {
+    border: var(--ak-glass-border-style);
+  }
+
+  .ak-glass-popover {
+    border: var(--ak-glass-border-style);
+  }
+
+  .ak-drawer-header {
+    height: var(--ak-drawer-header-height);
+    min-height: var(--ak-drawer-header-height);
+    padding: 0 var(--ak-space-4);
+    display: flex;
+    align-items: center;
+    background: var(--ak-glass-bg);
+    backdrop-filter: blur(var(--ak-glass-blur));
+    -webkit-backdrop-filter: blur(var(--ak-glass-blur));
+    border-bottom: var(--ak-border-hairline);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  .ak-drawer-footer {
+    padding: var(--ak-space-3) var(--ak-space-4);
+    background: var(--ak-glass-bg);
+    backdrop-filter: blur(var(--ak-glass-blur));
+    -webkit-backdrop-filter: blur(var(--ak-glass-blur));
+    border-top: var(--ak-border-hairline);
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+  }
+
+  .hover\:ak-surface-2-hover:hover {
+    background: var(--ak-surface-2-hover);
+  }
+
+  .hover\:ak-elev-1:hover {
+    box-shadow: var(--ak-elev-1);
+  }
+
+  .ak-sidebar-button {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ak-sidebar-button::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--ak-motion-duration-fast) var(--ak-motion-ease);
+    background: radial-gradient(
+      220px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(255, 255, 255, 0.55),
+      transparent 55%
+    );
+  }
+
+  .ak-theme-dark .ak-sidebar-button::after {
+    background: radial-gradient(
+      220px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(255, 255, 255, 0.12),
+      transparent 55%
+    );
+  }
+
+  .ak-sidebar-button:hover::after {
+    opacity: 0.35;
+  }
+
+  .ak-brand-mark {
+    background: radial-gradient(
+        120% 120% at 30% 20%,
+        rgba(255, 255, 255, 0.9),
+        rgba(255, 255, 255, 0.2) 60%,
+        rgba(0, 0, 0, 0.06) 100%
+      ),
+      var(--ak-glass-bg);
+    border: var(--ak-glass-border-style);
+    box-shadow: var(--ak-elev-2);
+    backdrop-filter: blur(var(--ak-glass-blur));
+    -webkit-backdrop-filter: blur(var(--ak-glass-blur));
+    border-radius: var(--ak-radius-xl);
+  }
+
+  .ak-theme-dark .ak-brand-mark {
+    background: radial-gradient(
+        120% 120% at 30% 20%,
+        rgba(255, 255, 255, 0.16),
+        rgba(255, 255, 255, 0.06) 60%,
+        rgba(0, 0, 0, 0.35) 100%
+      ),
+      var(--ak-glass-bg);
+    box-shadow: var(--ak-elev-2);
+  }
+}

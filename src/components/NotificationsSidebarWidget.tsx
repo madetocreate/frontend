@@ -5,13 +5,11 @@ import clsx from 'clsx'
 import {
   CheckCircleIcon,
   EllipsisHorizontalIcon,
-  AdjustmentsHorizontalIcon,
   DocumentTextIcon,
   EnvelopeIcon,
   ChartBarIcon,
   InformationCircleIcon,
   PencilSquareIcon,
-  BellIcon,
 } from '@heroicons/react/24/outline'
 
 type NotificationFilter = 'all' | 'mentions' | 'tasks' | 'system' | 'sales'
@@ -32,9 +30,7 @@ type NotificationGroup = {
   items: NotificationItem[]
 }
 
-type NotificationsSidebarWidgetProps = {
-  onInfoClick?: () => void
-}
+type NotificationsSidebarWidgetProps = Record<string, never>
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   'notebook-pencil': DocumentTextIcon,
@@ -130,12 +126,9 @@ const MOCK_NOTIFICATIONS: NotificationGroup[] = [
   },
 ]
 
-export function NotificationsSidebarWidget({ onInfoClick }: NotificationsSidebarWidgetProps) {
+export function NotificationsSidebarWidget() {
   const [selectedFilter, setSelectedFilter] = useState<NotificationFilter>('all')
   const [notifications] = useState<NotificationGroup[]>(MOCK_NOTIFICATIONS)
-  const unreadCount = notifications
-    .flatMap((group) => group.items)
-    .filter((item) => item.isUnread).length
 
   const handleFilterChange = (filterId: NotificationFilter) => {
     setSelectedFilter(filterId)

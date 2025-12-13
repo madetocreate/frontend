@@ -117,16 +117,6 @@ export type ChatStreamCallbacks = {
   onError?: (error: { message: string }) => void;
 };
 
-type SSEPayload = Record<string, unknown>;
-
-function _str(v: unknown): string {
-  return typeof v === "string" ? v : "";
-}
-
-function _arr<T>(v: unknown): T[] | undefined {
-  return Array.isArray(v) ? (v as T[]) : undefined;
-}
-
 export async function sendChatMessageStream(
   message: string,
   callbacks: ChatStreamCallbacks,

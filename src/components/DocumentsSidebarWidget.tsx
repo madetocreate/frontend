@@ -2,13 +2,12 @@
 
 import { useState, useMemo } from 'react'
 import clsx from 'clsx'
+import { AkSearchField } from '@/components/ui/AkSearchField'
 import {
-  InformationCircleIcon,
   EllipsisHorizontalIcon,
   BoltIcon,
   DocumentTextIcon,
   SparklesIcon,
-  ChevronRightIcon,
   Square3Stack3DIcon,
   PhotoIcon,
   DocumentIcon,
@@ -106,8 +105,6 @@ const MOCK_DOCUMENTS: DocumentItem[] = [
 
 export function DocumentsSidebarWidget({
   onDocumentClick,
-  onOpenDetail,
-  onOverviewClick,
 }: DocumentsSidebarWidgetProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'invoice' | 'contract' | 'photo' | 'other'>('all')
@@ -157,15 +154,15 @@ export function DocumentsSidebarWidget({
   return (
     <div className="flex h-full flex-col ak-surface-1" style={{ padding: 'var(--ak-space-3)' }}>
       {/* Suchfeld */}
-      <input
-        type="text"
-        name="search.query"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Dokumente durchsuchen…"
-        className="w-full rounded-md ak-border-default ak-surface-1 px-3 py-2 text-[var(--ak-font-size-sm)] text-[var(--ak-text-primary)] placeholder:text-[var(--ak-text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--ak-accent-docs)]"
-        style={{ marginBottom: 'var(--ak-space-3)' }}
-      />
+      <div style={{ marginBottom: 'var(--ak-space-3)' }}>
+        <AkSearchField
+          name="search.query"
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Dokumente durchsuchen…"
+          accent="documents"
+        />
+      </div>
 
       {/* Quick Actions */}
       <div className="flex flex-wrap items-center gap-2" style={{ marginBottom: 'var(--ak-space-3)' }}>

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import clsx from 'clsx'
+import { AkSearchField } from '@/components/ui/AkSearchField'
 import {
   EnvelopeIcon,
   DevicePhoneMobileIcon,
@@ -146,13 +147,13 @@ const BADGE_COLOR_MAP = {
   Wichtig: 'border-[var(--ak-color-border-warning)] bg-[var(--ak-color-bg-warning)] text-[var(--ak-color-text-warning)]',
 }
 
-export function InboxDrawerWidget({ onItemClick, onOverviewClick, onInfoClick }: InboxDrawerWidgetProps) {
+export function InboxDrawerWidget({ onItemClick, onOverviewClick: _onOverviewClick, onInfoClick: _onInfoClick }: InboxDrawerWidgetProps) {
   const [currentChannel, setCurrentChannel] = useState<InboxChannel>('all')
   const [items, setItems] = useState<InboxItem[]>(DEFAULT_ITEMS)
   const [, setIsLoading] = useState(false)
   const [uiState, setUiState] = useState<'ok' | 'error' | 'empty'>('ok')
   const [searchQuery, setSearchQuery] = useState('')
-  const [showSearch, setShowSearch] = useState(true)
+  const [showSearch] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -225,8 +226,6 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick, onInfoClick }:
     return filtered
   }, [items, currentChannel, searchQuery])
 
-  const unreadCount = items.filter((item) => item.unread).length
-
   const handleItemClick = (item: InboxItem) => {
     if (onItemClick) {
       onItemClick(item)
@@ -266,15 +265,15 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick, onInfoClick }:
     <div className="flex h-full flex-col ak-surface-1" style={{ padding: 'var(--ak-space-3)' }}>
       {/* Suchfeld ganz oben */}
       {showSearch && (
-        <input
-          type="text"
-          name="inbox.search"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Suchen…"
-          className="w-full rounded-md border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-2 text-[var(--ak-font-size-sm)] text-[var(--ak-text-primary)] placeholder:text-[var(--ak-text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--ak-accent-inbox)]"
-          style={{ marginBottom: 'var(--ak-space-3)' }}
-        />
+        <div style={{ marginBottom: 'var(--ak-space-3)' }}>
+          <AkSearchField
+            name="inbox.search"
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Suchen…"
+            accent="inbox"
+          />
+        </div>
       )}
 
       {/* Header mit Badge (Info-Button entfernt) - Badge entfernt wie angefordert */}

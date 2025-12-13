@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "./ak-typography.css";
 @import "./ak-tokens.css";
+@import "./ak-scaffold.css";
+@import "./ak-unified.css";
 
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -8,8 +10,8 @@
 
 /* Standard: Light Mode (White Mode) - ChatGPT/Apple Style */
 :root {
-  --ak-color-layer-0: #ffffff;
-  --ak-color-layer-1: #fafafa;
+  --ak-color-layer-0: #fafafa;
+  --ak-color-layer-1: #ffffff;
   --ak-color-layer-2: rgba(255, 255, 255, 0.85);
 
   --ak-color-bg-app: var(--ak-color-layer-0);

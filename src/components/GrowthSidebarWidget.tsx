@@ -2,9 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import clsx from 'clsx'
+import { AkSearchField } from '@/components/ui/AkSearchField'
 import {
   InformationCircleIcon,
-  BoltIcon,
   BriefcaseIcon,
   PencilSquareIcon,
   EnvelopeIcon,
@@ -32,16 +32,6 @@ type GrowthSidebarWidgetProps = {
   onOpenDetail?: (itemId: string) => void
   onOverviewClick?: () => void
 }
-
-// Badge-Farben-Mapping (angepasst an Design-System)
-const BADGE_COLOR_MAP = {
-  secondary: 'ak-surface-2 text-[var(--ak-text-secondary)]',
-  success: 'bg-[var(--ak-semantic-success-soft)] text-[var(--ak-semantic-success)]',
-  danger: 'bg-[var(--ak-semantic-danger-soft)] text-[var(--ak-semantic-danger)]',
-  warning: 'bg-[var(--ak-semantic-warn-soft)] text-[var(--ak-semantic-warn)]',
-  info: 'bg-[var(--ak-semantic-info-soft)] text-[var(--ak-semantic-info)]',
-  discovery: 'ak-surface-2 text-[var(--ak-accent-growth)]',
-} as const
 
 // Mock-Daten
 const MOCK_FILTER_OPTIONS: FilterOption[] = [
@@ -81,7 +71,7 @@ const MOCK_ITEMS: GrowthItem[] = [
   },
 ]
 
-export function GrowthSidebarWidget({ onItemClick, onOpenDetail, onOverviewClick }: GrowthSidebarWidgetProps) {
+export function GrowthSidebarWidget({ onItemClick, onOpenDetail }: GrowthSidebarWidgetProps) {
   const [selectedFilter, setSelectedFilter] = useState<'drafts' | 'planned' | 'results'>('planned')
   const [searchQuery, setSearchQuery] = useState('')
   const [showUpsell, setShowUpsell] = useState(false)
@@ -123,22 +113,17 @@ export function GrowthSidebarWidget({ onItemClick, onOpenDetail, onOverviewClick
     }
   }
 
-  const handleBoltClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    // TODO: Action Palette öffnen
-  }
-
   return (
     <div className="flex h-full flex-col ak-surface-1" style={{ padding: 'var(--ak-space-3)' }}>
       {/* Suchfeld */}
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Inhalte suchen…"
-        className="w-full rounded-md ak-border-default ak-surface-1 px-3 py-2 text-[var(--ak-font-size-sm)] text-[var(--ak-text-primary)] placeholder:text-[var(--ak-text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--ak-accent-growth)]"
-        style={{ marginBottom: 'var(--ak-space-3)' }}
-      />
+      <div style={{ marginBottom: 'var(--ak-space-3)' }}>
+        <AkSearchField
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Inhalte suchen…"
+          accent="growth"
+        />
+      </div>
 
       {/* Action Buttons */}
       <div className="flex flex-wrap items-center gap-2" style={{ marginBottom: 'var(--ak-space-3)' }}>
@@ -187,8 +172,6 @@ export function GrowthSidebarWidget({ onItemClick, onOpenDetail, onOverviewClick
         ) : (
           <div className="flex flex-col">
             {filteredItems.map((item) => {
-              const badgeColorClass = BADGE_COLOR_MAP[item.status.color]
-
               return (
                 <div
                   key={item.id}

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
-import { LinkIcon, StarIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { AkSearchField } from '@/components/ui/AkSearchField'
+import { LinkIcon, StarIcon } from '@heroicons/react/24/outline'
 import type { MemoryCategory } from './MemorySidebarWidget'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 
@@ -320,13 +321,12 @@ export function MemoryDetailPanel({ category }: MemoryDetailPanelProps) {
     <div className="flex h-full flex-col gap-3 overflow-y-auto rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/95 p-4 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl">
       <div className="flex items-center justify-between gap-3">
         <h2 className="ak-heading">Wissen & Memory</h2>
-        <div className="flex items-center gap-2 rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-2">
-          <MagnifyingGlassIcon className="h-4 w-4 text-[var(--ak-color-text-muted)]" />
-          <input
+        <div className="w-[220px]">
+          <AkSearchField
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={setSearchInput}
             placeholder="Memory durchsuchen"
-            className="ak-body w-[220px] border-none bg-transparent text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-muted)] focus-visible:outline-none"
+            size="sm"
           />
         </div>
       </div>

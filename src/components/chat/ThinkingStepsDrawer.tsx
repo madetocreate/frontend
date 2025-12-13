@@ -3,6 +3,8 @@
 import { useEffect } from 'react'
 import clsx from 'clsx'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { AkDrawerScaffold } from '@/components/ui/AkDrawerScaffold'
+import { AkIconButton } from '@/components/ui/AkIconButton'
 
 export type ThinkingStep = {
   id: string
@@ -47,24 +49,16 @@ export function ThinkingStepsDrawer({ open, onClose, steps, note, className }: T
         aria-label="Schließen"
       />
       <div className="absolute right-3 top-3 bottom-3 w-[360px] max-w-[92%] overflow-hidden rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-sidebar)] shadow-[var(--ak-shadow-strong)]">
-        <div className="flex items-start justify-between gap-3 border-b border-[var(--ak-color-border-subtle)] p-4">
-          <div className="min-w-0">
-            <p className="ak-heading truncate">Orchestrator</p>
-            <p className="ak-caption mt-1 text-[var(--ak-color-text-secondary)]">
-              {note ? note : 'Schritte & Status'}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
-            aria-label="Schließen"
-          >
-            <XMarkIcon className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
-
-        <div className="flex h-full flex-col overflow-y-auto p-4">
+        <AkDrawerScaffold
+          title="Orchestrator"
+          subtitle={note ? note : 'Schritte & Status'}
+          trailing={
+            <AkIconButton onClick={onClose} aria-label="Schließen">
+              <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+            </AkIconButton>
+          }
+          bodyClassName="ak-scrollbar p-4 flex flex-col"
+        >
           {steps.length === 0 ? (
             <div className="flex flex-1 items-center justify-center">
               <p className="ak-body text-[var(--ak-color-text-muted)]">Noch keine Schritte vorhanden.</p>
@@ -102,7 +96,7 @@ export function ThinkingStepsDrawer({ open, onClose, steps, note, className }: T
           )}
 
           <div className="h-10" />
-        </div>
+        </AkDrawerScaffold>
       </div>
     </div>
   )

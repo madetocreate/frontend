@@ -36,12 +36,6 @@ type LinkedChannel = {
   color: 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'discovery'
 }
 
-type InternalId = {
-  id: string
-  key: string
-  value: string
-}
-
 type CustomerDetailsDrawerProps = {
   customerId: string
   onClose?: () => void

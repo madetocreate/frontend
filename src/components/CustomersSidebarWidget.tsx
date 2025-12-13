@@ -2,14 +2,13 @@
 
 import { useState, useMemo } from 'react'
 import clsx from 'clsx'
+import { AkSearchField } from '@/components/ui/AkSearchField'
 import {
-  ArrowTopRightOnSquareIcon,
   EllipsisHorizontalIcon,
   Square3Stack3DIcon,
   MagnifyingGlassIcon,
   BookOpenIcon,
   UserIcon,
-  InformationCircleIcon,
 } from '@heroicons/react/24/outline'
 
 type CustomerItem = {
@@ -93,8 +92,6 @@ const MOCK_CUSTOMERS: CustomerItem[] = [
 
 export function CustomersSidebarWidget({
   onCustomerClick,
-  onOpenDetail,
-  onOverviewClick,
 }: CustomersSidebarWidgetProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSegment, setSelectedSegment] = useState<string>('Alle')
@@ -141,12 +138,11 @@ export function CustomersSidebarWidget({
     <div className="flex h-full flex-col gap-3 p-3">
       {/* Suchfeld ganz oben */}
       <form onSubmit={handleSearchSubmit}>
-        <input
-          type="text"
+        <AkSearchField
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={setSearchQuery}
           placeholder="Kunden suchen…"
-          className="w-full rounded-md border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-2 text-[var(--ak-font-size-sm)] text-[var(--ak-text-primary)] placeholder:text-[var(--ak-text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--ak-accent-inbox)]"
+          accent="customers"
         />
       </form>
 

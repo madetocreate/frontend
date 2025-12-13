@@ -6,7 +6,6 @@ import {
   SparklesIcon,
   ArrowTopRightOnSquareIcon,
   ArrowPathIcon,
-  ChevronRightIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 
@@ -106,8 +105,6 @@ export function DocumentDetailsDrawer({ documentId, onClose }: DocumentDetailsDr
       </div>
     )
   }
-
-  const statusBadgeColor = doc.status === 'Analysiert' ? 'success' : doc.status === 'In Arbeit' ? 'info' : 'danger'
 
   return (
     <div className="flex h-full flex-col gap-3 p-4">

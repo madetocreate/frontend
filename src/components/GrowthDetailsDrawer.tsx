@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 import {
   ArrowPathIcon,
-  InformationCircleIcon,
   SparklesIcon,
   CalendarIcon,
   Square3Stack3DIcon,

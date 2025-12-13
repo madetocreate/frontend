@@ -26,7 +26,8 @@ function getVoiceForLanguage(lang: string): string {
 }
 
 export function useSpeechSynthesis(defaultLang: string = 'de-DE') {
-  const [supported, setSupported] = useState(true) // OpenAI TTS ist immer unterstützt
+  // OpenAI TTS ist immer unterstützt
+  const supported = true
   const [speakingId, setSpeakingId] = useState<string | null>(null)
   const [status, setStatus] = useState<SpeechStatus>('idle')
 
@@ -240,7 +241,7 @@ export function useSpeechSynthesis(defaultLang: string = 'de-DE') {
         audioRef.current = null
       }
     },
-    [defaultLang, stop, supported]
+    [defaultLang, stop]
   )
 
   const toggle = useCallback(
@@ -255,7 +256,7 @@ export function useSpeechSynthesis(defaultLang: string = 'de-DE') {
   )
 
   return {
-    supported,
+    supported: true,
     speakingId,
     status,
     speak,

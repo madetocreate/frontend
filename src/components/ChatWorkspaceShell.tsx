@@ -12,7 +12,11 @@ import {
   InformationCircleIcon,
   BellIcon,
   Cog6ToothIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline'
+import { AkDrawerScaffold } from '@/components/ui/AkDrawerScaffold'
+import { AkIconButton } from '@/components/ui/AkIconButton'
 import { ChatSidebarContent } from '@/components/chat/ChatSidebarContent'
 import { InboxDrawerWidget } from '@/components/InboxDrawerWidget'
 import type { InboxItem } from '@/components/InboxDrawerWidget'
@@ -20,7 +24,6 @@ import { InboxDetailPanel } from '@/components/InboxDetailPanel'
 import { InboxDetailsDrawer } from '@/components/InboxDetailsDrawer'
 import { NotificationsSidebarWidget } from '@/components/NotificationsSidebarWidget'
 import { NotificationsSettingsDrawer } from '@/components/NotificationsSettingsDrawer'
-import type { ProfileUserState } from '@/components/ProfileMenu'
 import { SettingsSidebarWidget } from '@/components/SettingsSidebarWidget'
 import { SettingsDetailPanel, type SettingsCategory } from '@/components/SettingsDetailPanel'
 import { MemorySidebarWidget, type MemoryCategory } from '@/components/MemorySidebarWidget'
@@ -100,15 +103,6 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const [showDocumentsOverview, setShowDocumentsOverview] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [hoveredSidebarTooltip, setHoveredSidebarTooltip] = useState<string | null>(null)
-
-  const profileUser: ProfileUserState = {
-    isAuthenticated: false,
-    displayName: null,
-    email: null,
-    avatarUrl: null,
-    plan: null,
-    initials: 'AK',
-  }
 
   const handleModuleClick = (token: WorkspaceModuleToken) => {
     // Notifications öffnen - linke Sidebar öffnen, rechte leer lassen
@@ -489,43 +483,6 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     }
   }
 
-  const handleGrowthOverviewToggle = () => {
-    if (showGrowthOverview && rightDrawerOpen) {
-      setRightDrawerOpen(false)
-      setShowGrowthOverview(false)
-    } else {
-      setShowGrowthOverview(true)
-      setSelectedInboxItem(null)
-      setSelectedSettingsCategory(null)
-      setSelectedAutomationItem(null)
-      setSelectedMemoryCategory(null)
-      setSelectedCustomerId(null)
-      setSelectedGrowthItemId(null)
-      setSelectedDocumentId(null)
-      setShowInboxOverview(false)
-      setShowDocumentsOverview(false)
-      handleOpenDetails()
-    }
-  }
-
-  const handleDocumentsOverviewToggle = () => {
-    if (showDocumentsOverview && rightDrawerOpen) {
-      setRightDrawerOpen(false)
-      setShowDocumentsOverview(false)
-    } else {
-      setShowDocumentsOverview(true)
-      setSelectedInboxItem(null)
-      setSelectedSettingsCategory(null)
-      setSelectedAutomationItem(null)
-      setSelectedMemoryCategory(null)
-      setSelectedCustomerId(null)
-      setSelectedGrowthItemId(null)
-      setSelectedDocumentId(null)
-      setShowInboxOverview(false)
-      setShowGrowthOverview(false)
-      handleOpenDetails()
-    }
-  }
 
   const showLeft = leftDrawerOpen // Sidebar kann auch bei Notifications geöffnet sein
   const showRight =
@@ -563,6 +520,13 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   return (
     <div className="flex h-screen bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)]">
       <aside className="ak-glass flex w-16 flex-col items-center py-3 text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] border-r-0">
+        
+        <div className="mb-3">
+          <div className="ak-brand-mark flex h-10 w-10 items-center justify-center select-none">
+            <span className="text-xs font-semibold tracking-tight text-[var(--ak-color-text-primary)]">AK</span>
+          </div>
+        </div>
+
         {/* Notifications oben */}
         <div className="mb-4">
           <div className="relative">
@@ -703,117 +667,105 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
               )}
               style={leftDrawerStyle}
             >
-              <div className="flex h-[52px] items-center justify-between px-3">
-                <div className="flex-1 truncate text-lg font-semibold text-[var(--ak-color-text-primary)]">
-                  {activeModuleToken === 'settings' && selectedSettingsCategory === 'memory_crm'
+              <AkDrawerScaffold
+                title={
+                  activeModuleToken === 'settings' && selectedSettingsCategory === 'memory_crm'
                     ? 'Speicher & CRM'
                     : activeModuleToken === 'notifications'
                     ? 'Benachrichtigungen'
-                    : getModuleLabel(activeModuleToken)}
-                </div>
-                
-                <div className="flex items-center gap-2 pl-2">
-                  {/* Info Button - Toggle logic */}
-                  {(activeModuleToken === 'inbox' || activeModuleToken === 'new1' || activeModuleToken === 'new2' || activeModuleToken === 'automation' || activeModuleToken === 'notifications') && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (activeModuleToken === 'inbox') {
-                          // Toggle Inbox Overview oder Details
-                          if (rightDrawerOpen && (showInboxOverview || selectedInboxThreadId)) {
-                             handleCloseDetails()
-                          } else {
-                             handleInboxInfoClick()
+                    : getModuleLabel(activeModuleToken)
+                }
+                trailing={
+                  <div className="flex items-center gap-2">
+                    {(activeModuleToken === 'inbox' ||
+                      activeModuleToken === 'new1' ||
+                      activeModuleToken === 'new2' ||
+                      activeModuleToken === 'automation' ||
+                      activeModuleToken === 'notifications') && (
+                      <AkIconButton
+                        onClick={() => {
+                          if (activeModuleToken === 'inbox') {
+                            if (rightDrawerOpen && (showInboxOverview || selectedInboxThreadId)) {
+                              handleCloseDetails()
+                            } else {
+                              handleInboxInfoClick()
+                            }
+                          } else if (activeModuleToken === 'new1') {
+                            if (rightDrawerOpen && (showGrowthOverview || selectedGrowthItemId === 'gi_2025_001')) {
+                              handleCloseDetails()
+                            } else {
+                              setSelectedGrowthItemId('gi_2025_001')
+                              setSelectedInboxItem(null)
+                              setSelectedInboxThreadId(null)
+                              setSelectedSettingsCategory(null)
+                              setSelectedAutomationItem(null)
+                              setSelectedMemoryCategory(null)
+                              setSelectedCustomerId(null)
+                              setSelectedDocumentId(null)
+                              setShowInboxOverview(false)
+                              setShowGrowthOverview(false)
+                              setShowDocumentsOverview(false)
+                              handleOpenDetails()
+                            }
+                          } else if (activeModuleToken === 'new2') {
+                            if (rightDrawerOpen && (showDocumentsOverview || selectedDocumentId === 'd_123')) {
+                              handleCloseDetails()
+                            } else {
+                              setSelectedDocumentId('d_123')
+                              setSelectedInboxItem(null)
+                              setSelectedInboxThreadId(null)
+                              setSelectedSettingsCategory(null)
+                              setSelectedAutomationItem(null)
+                              setSelectedMemoryCategory(null)
+                              setSelectedCustomerId(null)
+                              setSelectedGrowthItemId(null)
+                              setShowInboxOverview(false)
+                              setShowGrowthOverview(false)
+                              setShowDocumentsOverview(false)
+                              handleOpenDetails()
+                            }
+                          } else if (activeModuleToken === 'automation') {
+                            if (rightDrawerOpen && selectedCustomerId === 'c1') {
+                              handleCloseDetails()
+                            } else {
+                              setSelectedCustomerId('c1')
+                              setSelectedInboxItem(null)
+                              setSelectedInboxThreadId(null)
+                              setSelectedSettingsCategory(null)
+                              setSelectedAutomationItem(null)
+                              setSelectedMemoryCategory(null)
+                              setSelectedGrowthItemId(null)
+                              setSelectedDocumentId(null)
+                              setShowInboxOverview(false)
+                              setShowGrowthOverview(false)
+                              setShowDocumentsOverview(false)
+                              handleOpenDetails()
+                            }
+                          } else if (activeModuleToken === 'notifications') {
+                            if (rightDrawerOpen && showNotifications) {
+                              handleCloseDetails()
+                            } else {
+                              handleNotificationsInfoClick()
+                            }
                           }
-                        } else if (activeModuleToken === 'new1') {
-                          // Toggle Growth Details
-                          if (rightDrawerOpen && (showGrowthOverview || selectedGrowthItemId === 'gi_2025_001')) {
-                            handleCloseDetails()
-                          } else {
-                            // Öffne GrowthDetailsDrawer
-                            setSelectedGrowthItemId('gi_2025_001')
-                            setSelectedInboxItem(null)
-                            setSelectedInboxThreadId(null)
-                            setSelectedSettingsCategory(null)
-                            setSelectedAutomationItem(null)
-                            setSelectedMemoryCategory(null)
-                            setSelectedCustomerId(null)
-                            setSelectedDocumentId(null)
-                            setShowInboxOverview(false)
-                            setShowGrowthOverview(false)
-                            setShowDocumentsOverview(false)
-                            handleOpenDetails()
-                          }
-                        } else if (activeModuleToken === 'new2') {
-                          // Toggle Document Details
-                          if (rightDrawerOpen && (showDocumentsOverview || selectedDocumentId === 'd_123')) {
-                            handleCloseDetails()
-                          } else {
-                            // Öffne DocumentDetailsDrawer
-                            setSelectedDocumentId('d_123')
-                            setSelectedInboxItem(null)
-                            setSelectedInboxThreadId(null)
-                            setSelectedSettingsCategory(null)
-                            setSelectedAutomationItem(null)
-                            setSelectedMemoryCategory(null)
-                            setSelectedCustomerId(null)
-                            setSelectedGrowthItemId(null)
-                            setShowInboxOverview(false)
-                            setShowGrowthOverview(false)
-                            setShowDocumentsOverview(false)
-                            handleOpenDetails()
-                          }
-                        } else if (activeModuleToken === 'automation') {
-                          // Toggle Customer Details
-                          if (rightDrawerOpen && selectedCustomerId === 'c1') {
-                            handleCloseDetails()
-                          } else {
-                            // Öffne CustomerDetailsDrawer
-                            setSelectedCustomerId('c1')
-                            setSelectedInboxItem(null)
-                            setSelectedInboxThreadId(null)
-                            setSelectedSettingsCategory(null)
-                            setSelectedAutomationItem(null)
-                            setSelectedMemoryCategory(null)
-                            setSelectedGrowthItemId(null)
-                            setSelectedDocumentId(null)
-                            setShowInboxOverview(false)
-                            setShowGrowthOverview(false)
-                            setShowDocumentsOverview(false)
-                            handleOpenDetails()
-                          }
-                        } else if (activeModuleToken === 'notifications') {
-                          // Toggle Notifications Details (rechter Drawer)
-                          handleNotificationsInfoClick()
-                        }
-                      }}
-                      className={clsx(
-                        "inline-flex h-7 w-7 items-center justify-center rounded-full transition-colors border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2",
-                        // Active state visualisieren wenn Drawer offen ist
-                        rightDrawerOpen 
-                          ? "bg-[var(--ak-surface-2-selected)] text-[var(--ak-color-text-primary)] border-[var(--ak-color-border-strong)]"
-                          : "text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]"
-                      )}
-                      aria-label="Details umschalten"
-                    >
-                      <InformationCircleIcon className="h-4 w-4" />
-                    </button>
-                  )}
+                        }}
+                        selected={showRight}
+                        aria-label="Details umschalten"
+                      >
+                        <InformationCircleIcon className="h-4 w-4" aria-hidden="true" />
+                      </AkIconButton>
+                    )}
 
-                  {/* Collapse Button - Toggle linke Sidebar */}
-                  <button
-                    type="button"
-                    onClick={() => setLeftDrawerOpen((prev) => !prev)}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] shadow-sm hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 focus-visible:ring-offset-2"
-                  >
-                    <span className="sr-only">Panel einklappen</span>
-                    <span aria-hidden="true" className="text-xs">
-                      ‹
-                    </span>
-                  </button>
-                </div>
-              </div>
-              <div className="flex-1 overflow-y-auto ak-scrollbar ak-body text-[var(--ak-color-text-secondary)]">
+                    <AkIconButton
+                      onClick={() => setLeftDrawerOpen((prev) => !prev)}
+                      aria-label="Panel einklappen"
+                    >
+                      <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />
+                    </AkIconButton>
+                  </div>
+                }
+                bodyClassName="ak-scrollbar ak-body text-[var(--ak-color-text-secondary)]"
+              >
                 {activeModuleToken === 'chat' ? (
                   <ChatSidebarContent />
                 ) : activeModuleToken === 'inbox' ? (
@@ -903,7 +855,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     </p>
                   </>
                 )}
-              </div>
+              </AkDrawerScaffold>
             </div>
           </div>
 
@@ -921,19 +873,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
             )}
             style={{ width: '100%' }} // Füllt immer den gesamten Container
             >
-              <div className="ak-glass-drawer-header flex items-center justify-between" style={{ padding: 'var(--ak-space-3) var(--ak-space-4)' }}>
-                <button
-                  type="button"
-                  onClick={handleCloseDetails}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-md ak-surface-2 text-[var(--ak-text-secondary)] transition-colors hover:ak-surface-2-hover hover:text-[var(--ak-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-accent-inbox)]/25 focus-visible:ring-offset-2"
-                >
-                  <span className="sr-only">Detailpanel einklappen</span>
-                  <span aria-hidden="true" className="text-xs">
-                    ›
-                  </span>
-                </button>
-                <div className="truncate ak-caption font-medium text-[var(--ak-text-primary)]" style={{ fontSize: 'var(--ak-font-size-sm)' }}>
-                  {showNotifications
+              <AkDrawerScaffold
+                title={
+                  showNotifications
                     ? 'Benachrichtigungen'
                     : showInboxOverview
                       ? 'Posteingang Übersicht'
@@ -946,7 +888,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                             : activeModuleToken === 'settings'
                         ? selectedSettingsCategory === 'memory_crm'
                           ? selectedMemoryCategory?.title ?? 'Speicher & CRM'
-                          : (selectedSettingsCategory ? 'Allgemein' : 'Einstellungen')
+                          : selectedSettingsCategory
+                            ? 'Allgemein'
+                            : 'Einstellungen'
                         : activeModuleToken === 'automation'
                           ? selectedCustomerId
                             ? 'Kundendetails'
@@ -959,13 +903,15 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                               ? selectedDocumentId
                                 ? 'Dokument Details'
                                 : 'Dokumente'
-                              : getModuleLabel(activeModuleToken)}
-                </div>
-                <div className="w-7" />
-              </div>
-              <div
-                className="flex-1 overflow-y-auto ak-scrollbar px-3 py-3 text-sm text-[var(--ak-color-text-secondary)]"
-                style={{ scrollbarWidth: 'thin' }}
+                              : getModuleLabel(activeModuleToken)
+                }
+                leading={
+                  <AkIconButton onClick={handleCloseDetails} aria-label="Detailpanel einklappen">
+                    <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />
+                  </AkIconButton>
+                }
+                trailing={<div className="w-7" />}
+                bodyClassName="ak-scrollbar px-3 py-3 text-sm text-[var(--ak-color-text-secondary)]"
               >
                 {showNotifications ? (
                   <NotificationsSettingsDrawer
@@ -1113,10 +1059,10 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     </p>
                   </div>
                 )}
-              </div>
+              </AkDrawerScaffold>
             </div>
           </div>
-        </main>
+        </main
       </div>
     </div>
   )

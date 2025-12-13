@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useCallback, useState, useEffect } from 'react'
+import { ReactNode, useCallback, useState } from 'react'
 import { useKeyboardShortcuts, KeyboardShortcut, formatShortcut } from '../hooks/useKeyboardShortcuts'
 import {
   XMarkIcon,
