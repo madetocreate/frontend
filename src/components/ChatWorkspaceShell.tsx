@@ -574,7 +574,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
               style={leftDrawerStyle}
             >
               <div className="flex items-center justify-between px-3 py-2">
-                <div className="truncate ak-caption font-medium text-[var(--ak-color-text-primary)]">
+                <div className="truncate text-lg font-semibold text-[var(--ak-color-text-primary)]">
                   {activeModuleToken === 'settings' && selectedSettingsCategory === 'memory_crm'
                     ? 'Speicher & CRM'
                     : getModuleLabel(activeModuleToken)}

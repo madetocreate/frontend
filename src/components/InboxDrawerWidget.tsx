@@ -277,13 +277,8 @@ export function InboxDrawerWidget({ onItemClick, onOverviewClick, onInfoClick }:
         />
       )}
 
-      {/* Header mit Badge (Info-Button entfernt) */}
+      {/* Header mit Badge (Info-Button entfernt) - Badge entfernt wie angefordert */}
       <div className="flex items-center gap-2" style={{ marginBottom: 'var(--ak-space-3)' }}>
-        {unreadCount > 0 && (
-          <span className="inline-flex items-center rounded-md border px-2 py-0.5 text-[var(--ak-font-size-xs)] font-medium" style={{ borderColor: 'var(--ak-semantic-info)', backgroundColor: 'var(--ak-semantic-info-soft)', color: 'var(--ak-semantic-info)' }}>
-            {unreadCount}
-          </span>
-        )}
         <div className="flex-1" />
       </div>
 
