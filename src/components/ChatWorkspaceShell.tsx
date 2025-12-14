@@ -14,6 +14,7 @@ import {
   Cog6ToothIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { AkDrawerScaffold } from '@/components/ui/AkDrawerScaffold'
 import { AkIconButton } from '@/components/ui/AkIconButton'
@@ -67,6 +68,8 @@ const MODULES: ModuleConfig[] = [
 const LEFT_RAIL_WIDTH = '64px'
 // Linkes Panel Breite (Pixelgenau für Apple-Style Präzision)
 const LEFT_DRAWER_WIDTH = '320px'
+// Rechtes Panel Breite (Inspector/Drawer)
+const RIGHT_DRAWER_WIDTH = '420px'
 
 function getModuleLabel(token: WorkspaceModuleToken): string {
   const match = MODULES.find((m) => m.id === token)
@@ -102,6 +105,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const [showGrowthOverview, setShowGrowthOverview] = useState(false)
   const [showDocumentsOverview, setShowDocumentsOverview] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [inspectorExpanded, setInspectorExpanded] = useState(false)
+
+  const closeRightDrawer = () => {
+    setRightDrawerOpen(false)
+    setInspectorExpanded(false)
+  }
   const [hoveredSidebarTooltip, setHoveredSidebarTooltip] = useState<string | null>(null)
 
   const handleModuleClick = (token: WorkspaceModuleToken) => {
@@ -117,7 +126,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
         return true
       })
       // Rechten Drawer schließen
-      setRightDrawerOpen(false)
+      closeRightDrawer()
       return
     }
 
@@ -132,7 +141,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     })
 
     // Rechten Drawer schließen beim Modulwechsel
-    setRightDrawerOpen(false)
+    closeRightDrawer()
 
     setSelectedInboxItem(null)
     setSelectedInboxThreadId(null)
@@ -150,7 +159,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const handleNotificationsInfoClick = () => {
     // Toggle rechten Drawer für Notifications
     if (rightDrawerOpen && showNotifications) {
-      setRightDrawerOpen(false)
+      closeRightDrawer()
     } else {
       setRightDrawerOpen(true)
       // Alle anderen States zurücksetzen
@@ -179,7 +188,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
           setShowNotifications((prev) => {
             if (prev) {
               // Schließen: Alles zurücksetzen
-              setRightDrawerOpen(false)
+              closeRightDrawer()
               setLeftDrawerOpen(false)
               return false
             } else {
@@ -277,7 +286,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const handleInboxItemClick = (item: InboxItem) => {
     // Wenn dasselbe Item nochmal geklickt wird, schließe den Drawer
     if (selectedInboxItem?.id === item.id && rightDrawerOpen) {
-      setRightDrawerOpen(false)
+      closeRightDrawer()
       setSelectedInboxItem(null)
       setSelectedInboxThreadId(null)
       return
@@ -299,7 +308,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
   const handleCustomerClick = (customerId: string) => {
     if (selectedCustomerId === customerId && rightDrawerOpen) {
-      setRightDrawerOpen(false)
+      closeRightDrawer()
       setSelectedCustomerId(null)
     } else {
       setSelectedCustomerId(customerId)
@@ -318,7 +327,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
   const handleGrowthItemClick = (itemId: string) => {
     if (selectedGrowthItemId === itemId && rightDrawerOpen) {
-      setRightDrawerOpen(false)
+      closeRightDrawer()
       setSelectedGrowthItemId(null)
     } else {
       setSelectedGrowthItemId(itemId)
@@ -337,7 +346,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
   const handleDocumentClick = (documentId: string) => {
     if (selectedDocumentId === documentId && rightDrawerOpen) {
-      setRightDrawerOpen(false)
+      closeRightDrawer()
       setSelectedDocumentId(null)
     } else {
       setSelectedDocumentId(documentId)
@@ -356,7 +365,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
   const handleMemoryCategoryClick = (category: MemoryCategory) => {
     if (selectedMemoryCategory?.id === category.id && rightDrawerOpen) {
-      setRightDrawerOpen(false)
+      closeRightDrawer()
       setSelectedMemoryCategory(null)
     } else {
       setSelectedMemoryCategory(category)
@@ -383,7 +392,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
   const handleSettingsCategorySelect = (category: SettingsCategory | null) => {
     if (selectedSettingsCategory === category && rightDrawerOpen) {
-      setRightDrawerOpen(false)
+      closeRightDrawer()
       setSelectedSettingsCategory(null)
       setSelectedMemoryCategory(null)
     } else {
@@ -404,18 +413,18 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
         // Für memory_crm öffnen wir den rechten Drawer nur wenn eine Memory-Category ausgewählt ist
         // Der linke Drawer zeigt bereits MemorySidebarWidget
         if (!selectedMemoryCategory) {
-          setRightDrawerOpen(false)
+          closeRightDrawer()
         }
       } else if (category) {
         handleOpenDetails()
       } else {
-        setRightDrawerOpen(false)
+        closeRightDrawer()
       }
     }
   }
 
   const handleCloseDetails = () => {
-    setRightDrawerOpen(false)
+    closeRightDrawer()
     setShowNotifications(false)
     setSelectedInboxItem(null)
     setSelectedInboxThreadId(null)
@@ -432,7 +441,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
   const handleInboxOverviewToggle = () => {
     if (showInboxOverview && rightDrawerOpen) {
-      setRightDrawerOpen(false)
+      closeRightDrawer()
       setShowInboxOverview(false)
     } else {
       setShowInboxOverview(true)
@@ -500,25 +509,25 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       showGrowthOverview ||
       showDocumentsOverview)
 
-  const chatStyle: CSSProperties =
-    showLeft ? { marginLeft: LEFT_DRAWER_WIDTH } : { marginLeft: 0 }
+  const chatStyle: CSSProperties = {
+    paddingLeft: showLeft ? LEFT_DRAWER_WIDTH : 0,
+    paddingRight: showRight && !inspectorExpanded ? RIGHT_DRAWER_WIDTH : 0,
+  }
 
   const leftDrawerStyle: CSSProperties = {
     width: LEFT_DRAWER_WIDTH,
   }
 
+  const rightBaseLeft = showNotifications ? '0px' : showLeft ? LEFT_DRAWER_WIDTH : LEFT_RAIL_WIDTH
+
   // Rechtes Panel: Positionierung abhängig vom Zustand
   const rightContainerStyle: CSSProperties = {
     right: 0,
-    left: showNotifications 
-      ? 0 
-      : showLeft 
-        ? LEFT_DRAWER_WIDTH 
-        : LEFT_RAIL_WIDTH, // Bei geschlossener Sidebar: bei Logos (64px) starten
+    left: rightBaseLeft, // bei geschlossener Sidebar an die Rail anlehnen
   }
 
   return (
-    <div className="flex h-screen bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)]">
+    <div className="flex h-screen w-screen overflow-hidden bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)]">
       <aside className="ak-glass flex w-16 flex-col items-center py-3 text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] border-r-0">
         
         <div className="mb-3">
@@ -645,10 +654,10 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
         </div>
       </aside>
 
-      <div className="relative flex flex-1 flex-col">
-        <main className="relative flex-1 overflow-hidden">
+      <div className="relative flex flex-1 flex-col min-w-0 overflow-hidden">
+        <main className="relative flex-1 overflow-hidden min-w-0 w-full">
           <div
-            className="h-full min-h-0 transition-[margin] duration-200 ease-out"
+            className="h-full w-full min-w-0 max-w-full transition-[padding-left,padding-right] duration-200 ease-out overflow-x-hidden box-border"
             style={chatStyle}
           >
             {children}
@@ -867,11 +876,16 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
             style={rightContainerStyle}
           >
             <div
-            className={clsx(
-              'ak-glass pointer-events-auto flex h-full flex-col transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
-              showRight ? 'translate-x-0' : 'translate-x-full'
-            )}
-            style={{ width: '100%' }} // Füllt immer den gesamten Container
+              className={clsx(
+                'ak-inspector-shell pointer-events-auto flex h-full flex-col transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+                showRight ? 'translate-x-0' : 'translate-x-full'
+              )}
+                style={{
+                  width: inspectorExpanded
+                    ? `calc(100vw - ${rightBaseLeft})`
+                    : RIGHT_DRAWER_WIDTH,
+                marginLeft: 'auto',
+              }}
             >
               <AkDrawerScaffold
                 title={
@@ -906,12 +920,29 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                               : getModuleLabel(activeModuleToken)
                 }
                 leading={
-                  <AkIconButton onClick={handleCloseDetails} aria-label="Detailpanel einklappen">
-                    <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />
+                  <div className="flex items-center gap-1">
+                    <AkIconButton
+                      onClick={() => setInspectorExpanded((prev) => !prev)}
+                      aria-label="Panelbreite umschalten"
+                      selected={inspectorExpanded}
+                    >
+                      {inspectorExpanded ? (
+                        <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />
+                      ) : (
+                        <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />
+                      )}
+                    </AkIconButton>
+                    <AkIconButton onClick={handleCloseDetails} aria-label="Detailpanel einklappen">
+                      <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />
+                    </AkIconButton>
+                  </div>
+                }
+                trailing={
+                  <AkIconButton onClick={handleCloseDetails} aria-label="Schließen">
+                    <XMarkIcon className="h-4 w-4" aria-hidden="true" />
                   </AkIconButton>
                 }
-                trailing={<div className="w-7" />}
-                bodyClassName="ak-scrollbar px-3 py-3 text-sm text-[var(--ak-color-text-secondary)]"
+                bodyClassName="ak-scrollbar ak-inspector-body text-sm text-[var(--ak-color-text-secondary)]"
               >
                 {showNotifications ? (
                   <NotificationsSettingsDrawer
@@ -966,7 +997,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                       onClose={() => {
                         setSelectedInboxThreadId(null)
                         setSelectedInboxItem(null)
-                        setRightDrawerOpen(false)
+                        closeRightDrawer()
                       }}
                     />
                   ) : selectedInboxItem ? (
@@ -1007,7 +1038,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                       customerId={selectedCustomerId}
                       onClose={() => {
                         setSelectedCustomerId(null)
-                        setRightDrawerOpen(false)
+                        closeRightDrawer()
                       }}
                     />
                   ) : (
@@ -1019,7 +1050,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                       growthItemId={selectedGrowthItemId}
                       onClose={() => {
                         setSelectedGrowthItemId(null)
-                        setRightDrawerOpen(false)
+                        closeRightDrawer()
                       }}
                     />
                   ) : (
@@ -1035,7 +1066,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                       documentId={selectedDocumentId}
                       onClose={() => {
                         setSelectedDocumentId(null)
-                        setRightDrawerOpen(false)
+                        closeRightDrawer()
                       }}
                     />
                   ) : (
@@ -1062,7 +1093,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
               </AkDrawerScaffold>
             </div>
           </div>
-        </main
+        </main>
       </div>
     </div>
   )

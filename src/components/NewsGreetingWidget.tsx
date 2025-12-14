@@ -148,7 +148,7 @@ export function NewsGreetingWidget() {
             )}
             <div className="flex-1">
               <div className="mb-1 flex items-center gap-2">
-                <span className="ak-caption inline-flex rounded-full bg-[var(--ak-color-bg-surface-muted)] px-2 font-medium uppercase tracking-wide text-[var(--ak-color-text-muted)]">
+                <span className="ak-caption inline-flex rounded-[var(--ak-radius-md)] bg-[var(--ak-color-bg-surface-muted)] px-2 font-medium uppercase tracking-wide text-[var(--ak-color-text-muted)]">
                   {card.type}
                 </span>
                 {card.source?.name && (

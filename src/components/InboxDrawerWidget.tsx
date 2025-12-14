@@ -2,40 +2,29 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import clsx from 'clsx'
-import { AkSearchField } from '@/components/ui/AkSearchField'
 import {
+  AdjustmentsHorizontalIcon,
+  ChatBubbleLeftRightIcon,
+  EllipsisHorizontalIcon,
   EnvelopeIcon,
-  DevicePhoneMobileIcon,
+  FunnelIcon,
   LifebuoyIcon,
+  MagnifyingGlassIcon,
   StarIcon,
-  GlobeAltIcon,
-  InformationCircleIcon,
-  PencilSquareIcon,
-  Square3Stack3DIcon,
-  ArrowPathIcon,
-  PlusIcon,
-  BoltIcon,
-  CheckCircleIcon,
-  DocumentTextIcon,
 } from '@heroicons/react/24/outline'
 
-export type InboxChannel = 'all' | 'email' | 'messenger' | 'reviews' | 'support'
+import { AkButton } from '@/components/ui/AkButton'
+import { AkChip } from '@/components/ui/AkChip'
+import { AkSearchField } from '@/components/ui/AkSearchField'
 
 export type InboxItem = {
   id: string
-  channel: Exclude<InboxChannel, 'all'>
-  icon: string
   title: string
   snippet: string
   time: string
-  unread: boolean
-  badge?: 'Neu' | 'Wichtig'
-  threadId?: string | null
-}
-
-type InboxApiResponse = {
-  items?: InboxItem[]
-  error?: string
+  unread?: boolean
+  channel: 'email' | 'chat' | 'reviews' | 'support'
+  badge?: string
 }
 
 type InboxDrawerWidgetProps = {
@@ -44,442 +33,270 @@ type InboxDrawerWidgetProps = {
   onInfoClick?: () => void
 }
 
-// Icon-Mapping
-const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  mail: EnvelopeIcon,
-  mobile: DevicePhoneMobileIcon,
-  lifesaver: LifebuoyIcon,
-  star: StarIcon,
-  globe: GlobeAltIcon,
-  'write-alt': PencilSquareIcon,
-  'square-text': Square3Stack3DIcon,
-  reload: ArrowPathIcon,
-  plus: PlusIcon,
-  bolt: BoltIcon,
-  info: InformationCircleIcon,
-  'page-blank': DocumentTextIcon,
-  'check-circle': CheckCircleIcon,
+const ICON_MAP: Record<InboxItem['channel'], React.ComponentType<{ className?: string }>> = {
+  email: EnvelopeIcon,
+  chat: ChatBubbleLeftRightIcon,
+  reviews: StarIcon,
+  support: LifebuoyIcon,
 }
 
-const DEFAULT_ITEMS: InboxItem[] = [
-  {
-    id: 't_101',
-    channel: 'email',
-    icon: 'mail',
-    title: 'Re: Angebot für Q1',
-    snippet: 'Max Mustermann – Können wir den Umfang am Montag finalisieren?',
-    time: '09:12',
-    unread: true,
-    badge: 'Wichtig',
-    threadId: 'th_12345',
-  },
-  {
-    id: 't_102',
-    channel: 'messenger',
-    icon: 'mobile',
-    title: 'Neue Chat-Anfrage',
-    snippet: 'Anna Schmidt – Hallo! Ich habe eine kurze Frage zu Ihrer Preisliste…',
-    time: '08:47',
-    unread: true,
-    badge: 'Neu',
-    threadId: 'th_12346',
-  },
-  {
-    id: 't_103',
-    channel: 'reviews',
-    icon: 'star',
-    title: 'Bewertung (4★) – Super schneller Support',
-    snippet: 'Trustpilot – Das Team hat mir innerhalb von 10 Minuten geholfen!',
-    time: 'Gestern',
-    unread: false,
-    threadId: 'th_12347',
-  },
-  {
-    id: 't_104',
-    channel: 'support',
-    icon: 'lifesaver',
-    title: 'Ticket #4821: Rechnung korrigieren',
-    snippet: 'Support – Bitte prüfen Sie Position 3 – falscher Betrag ausgewiesen.',
-    time: 'Mi',
-    unread: true,
-    threadId: 'th_12348',
-  },
-  {
-    id: 't_105',
-    channel: 'email',
-    icon: 'mail',
-    title: 'Newsletter Dezember',
-    snippet: 'Newsletter – Highlights: Produkt-Updates, Roadmap und Termine…',
-    time: 'Mo',
-    unread: false,
-    threadId: 'th_12349',
-  },
+const CHANNELS: Array<{
+  key: 'all' | InboxItem['channel']
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+}> = [
+  { key: 'all', label: 'Alle', icon: FunnelIcon },
+  { key: 'email', label: 'E-Mail', icon: EnvelopeIcon },
+  { key: 'chat', label: 'Chat', icon: ChatBubbleLeftRightIcon },
+  { key: 'reviews', label: 'Bewertungen', icon: StarIcon },
+  { key: 'support', label: 'Support', icon: LifebuoyIcon },
+  { key: 'unread', label: 'Ungelesen', icon: FunnelIcon },
+  { key: 'starred', label: 'Favoriten', icon: StarIcon },
 ]
 
-const CHANNELS = [
-  { key: 'all' as const, label: 'Alle', icon: 'globe' },
-  { key: 'email' as const, label: 'E‑Mail', icon: 'mail' },
-  { key: 'messenger' as const, label: 'Messenger', icon: 'mobile' },
-  { key: 'reviews' as const, label: 'Bewertungen', icon: 'star' },
-  { key: 'support' as const, label: 'Support', icon: 'lifesaver' },
+const ACTIONS: Array<{
+  key: 'filter' | 'settings' | 'search'
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+}> = [
+  { key: 'filter', label: 'Filter', icon: FunnelIcon },
+  { key: 'settings', label: 'Regeln', icon: AdjustmentsHorizontalIcon },
+  { key: 'search', label: 'Suche', icon: MagnifyingGlassIcon },
 ]
 
-const ACTIONS_DOCK = [
-  {
-    key: 'inbox_suggest_replies',
-    label: 'Antworten',
-    icon: 'write-alt',
-  },
-  {
-    key: 'inbox_summarize',
-    label: 'Zusammenfassen',
-    icon: 'square-text',
-  },
-  {
-    key: 'inbox_cleanup',
-    label: 'Aufräumen',
-    icon: 'reload',
-  },
-]
-
-const BADGE_COLOR_MAP = {
-  Neu: 'border-[var(--ak-color-border-discovery)] bg-[var(--ak-color-bg-discovery)] text-[var(--ak-color-text-discovery)]',
-  Wichtig: 'border-[var(--ak-color-border-warning)] bg-[var(--ak-color-bg-warning)] text-[var(--ak-color-text-warning)]',
+const ICON_COLOR_MAP: Record<InboxItem['channel'], string> = {
+  email: 'text-blue-500',
+  chat: 'text-emerald-500',
+  reviews: 'text-amber-500',
+  support: 'text-rose-500',
 }
 
-export function InboxDrawerWidget({ onItemClick, onOverviewClick: _onOverviewClick, onInfoClick: _onInfoClick }: InboxDrawerWidgetProps) {
-  const [currentChannel, setCurrentChannel] = useState<InboxChannel>('all')
-  const [items, setItems] = useState<InboxItem[]>(DEFAULT_ITEMS)
-  const [, setIsLoading] = useState(false)
-  const [uiState, setUiState] = useState<'ok' | 'error' | 'empty'>('ok')
+export function InboxDrawerWidget({ onItemClick }: InboxDrawerWidgetProps) {
+  const [items, setItems] = useState<InboxItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
+  const [currentChannel, setCurrentChannel] = useState<'all' | InboxItem['channel']>('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [showSearch] = useState(true)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   useEffect(() => {
-    let cancelled = false
-
-    async function loadInbox() {
-      try {
-        setIsLoading(true)
-        setUiState('ok')
-
-        const response = await fetch('/api/inbox', {
-          method: 'GET',
-        })
-
-        if (!response.ok) {
-          if (!cancelled) {
-            setUiState('error')
-          }
-          return
-        }
-
-        const data = (await response.json()) as InboxApiResponse
-
-        if (cancelled) {
-          return
-        }
-
-        if (Array.isArray(data.items) && data.items.length > 0) {
-          setItems(data.items)
-          setUiState('ok')
-        } else {
-          setItems(DEFAULT_ITEMS)
-          setUiState('ok')
-        }
-      } catch {
-        if (!cancelled) {
-          setUiState('error')
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    loadInbox()
-
-    return () => {
-      cancelled = true
-    }
+    const timer = setTimeout(() => {
+      setItems([
+        {
+          id: '1',
+          title: 'Neue Reservierungsanfrage',
+          snippet: '2 Personen morgen 19:00 — Tisch am Fenster?',
+          time: 'vor 2 Min',
+          unread: true,
+          channel: 'email',
+          badge: 'Neu',
+        },
+        {
+          id: '2',
+          title: 'Chat: Lieferstatus',
+          snippet: 'Kunde fragt nach ETA fuer Bestellung #1042',
+          time: 'vor 12 Min',
+          unread: true,
+          channel: 'chat',
+          badge: 'Dringend',
+        },
+        {
+          id: '3',
+          title: 'Bewertung: 5 Sterne',
+          snippet: 'Sehr lecker, schneller Service',
+          time: 'vor 1 Std',
+          unread: false,
+          channel: 'reviews',
+          badge: 'VIP',
+        },
+        {
+          id: '4',
+          title: 'Support: Passwort zuruecksetzen',
+          snippet: 'Nutzer meldet Login-Probleme nach Update',
+          time: 'gestern',
+          unread: false,
+          channel: 'support',
+        },
+      ])
+      setIsLoading(false)
+      setHasError(false)
+    }, 900)
+    return () => clearTimeout(timer)
   }, [])
 
   const filteredItems = useMemo(() => {
-    let filtered = items
-
-    // Filter nach Channel
+    let result = items
     if (currentChannel !== 'all') {
-      filtered = filtered.filter((item) => item.channel === currentChannel)
+      result = result.filter((item) => item.channel === currentChannel)
     }
-
-    // Filter nach Suchbegriff
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(
-        (item) =>
-          item.title.toLowerCase().includes(query) ||
-          item.snippet.toLowerCase().includes(query)
-      )
+    const q = searchQuery.trim().toLowerCase()
+    if (q) {
+      result = result.filter((item) => {
+        return (
+          item.title.toLowerCase().includes(q) ||
+          item.snippet.toLowerCase().includes(q) ||
+          item.channel.toLowerCase().includes(q) ||
+          (item.badge ?? '').toLowerCase().includes(q)
+        )
+      })
     }
-
-    return filtered
+    return result
   }, [items, currentChannel, searchQuery])
 
   const handleItemClick = (item: InboxItem) => {
-    if (onItemClick) {
-      onItemClick(item)
-    }
-
-    if (typeof window !== 'undefined' && item.threadId) {
-      const detail = {
-        threadId: item.threadId,
-        composerText: undefined as string | undefined,
-      }
-
-      window.dispatchEvent(
-        new CustomEvent('aklow-focus-thread', {
-          detail,
-        }),
-      )
+    setSelectedId(item.id)
+    onItemClick?.(item)
+    if (item.unread) {
+      setTimeout(() => {
+        setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, unread: false } : i)))
+      }, 700)
     }
   }
 
   const handleActionClick = (e: React.MouseEvent, actionKey: string) => {
     e.stopPropagation()
-    // TODO: Action handlers
-    console.log('Action:', actionKey, 'Channel:', currentChannel)
+    if (actionKey === 'filter') {
+      setHasError(false)
+    }
   }
 
   const handleMenuClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    // TODO: Action Palette öffnen
   }
 
   const handleReload = () => {
-    // TODO: Reload action
-    window.location.reload()
+    setHasError(false)
+    setIsLoading(true)
+    setTimeout(() => setIsLoading(false), 600)
   }
 
   return (
-    <div className="flex h-full flex-col ak-surface-1" style={{ padding: 'var(--ak-space-3)' }}>
-      {/* Suchfeld ganz oben */}
-      {showSearch && (
-        <div style={{ marginBottom: 'var(--ak-space-3)' }}>
-          <AkSearchField
-            name="inbox.search"
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Suchen…"
-            accent="inbox"
-          />
+    <div className="flex h-full flex-col">
+      <div className="flex flex-col gap-3 px-3 pb-3 flex-1 overflow-hidden pt-3">
+        <AkSearchField
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+          placeholder="Suchen..."
+          accent="inbox"
+          aria-label="Inbox durchsuchen"
+        />
+
+        <div className="flex flex-wrap gap-2">
+          {CHANNELS.map((channel) => {
+            const IconComponent = channel.icon
+            const pressed = currentChannel === channel.key
+            return (
+              <AkChip
+                key={channel.key}
+                pressed={pressed}
+                onClick={() => setCurrentChannel(channel.key)}
+              >
+                <IconComponent className="h-3 w-3" aria-hidden="true" />
+                {channel.label}
+              </AkChip>
+            )
+          })}
         </div>
-      )}
 
-      {/* Header mit Badge (Info-Button entfernt) - Badge entfernt wie angefordert */}
-      <div className="flex items-center gap-2" style={{ marginBottom: 'var(--ak-space-3)' }}>
-        <div className="flex-1" />
-      </div>
+        <div className="flex flex-wrap gap-2">
+          {ACTIONS.map((action) => {
+            const IconComponent = action.icon
+            return (
+              <AkChip
+                key={action.key}
+                onClick={(e) => handleActionClick(e, action.key)}
+              >
+                <IconComponent className="h-3 w-3" aria-hidden="true" />
+                {action.label}
+              </AkChip>
+            )
+          })}
 
-      {/* Channel Filter Buttons */}
-      <div className="flex items-center gap-1" style={{ marginBottom: 'var(--ak-space-3)' }}>
-        {CHANNELS.map((channel) => {
-          const IconComponent = ICON_MAP[channel.icon] || GlobeAltIcon
-          return (
-            <button
-              key={channel.key}
-              type="button"
-              onClick={() => setCurrentChannel(channel.key)}
-              className={clsx(
-                'ak-button-sm inline-flex items-center justify-center gap-1.5 ak-border-default font-medium transition-colors',
-                currentChannel === channel.key
-                  ? 'ak-surface-2-selected ak-border-strong text-[var(--ak-text-primary)] ak-elev-1'
-                  : 'ak-surface-1 text-[var(--ak-text-secondary)] hover:ak-surface-2-hover'
-              )}
-            >
-              <IconComponent className="h-4 w-4" />
-              {channel.label}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Actions Dock */}
-      <div className="flex items-center gap-1" style={{ marginBottom: 'var(--ak-space-3)' }}>
-        {ACTIONS_DOCK.map((action) => {
-          const IconComponent = ICON_MAP[action.icon] || BoltIcon
-          return (
-            <button
-              key={action.key}
-              type="button"
-              onClick={(e) => handleActionClick(e, action.key)}
-              className="ak-button-sm inline-flex items-center justify-center gap-1.5 ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
-            >
-              <IconComponent className="h-4 w-4" />
-              {action.label}
-            </button>
-          )
-        })}
-        <div className="flex-1" />
-        <button
-          type="button"
-          onClick={handleMenuClick}
-          className="ak-button-sm inline-flex items-center justify-center gap-1.5 ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
-        >
-          <PlusIcon className="h-4 w-4" />
-          Mehr…
-        </button>
-      </div>
-
-      {/* Error State */}
-      {uiState === 'error' && (
-        <div className="ak-card ak-surface-2" style={{ marginBottom: 'var(--ak-space-3)' }}>
-          <div className="flex items-center gap-2">
-            <ArrowPathIcon className="h-4 w-4 text-[var(--ak-text-secondary)]" />
-            <p className="ak-body flex-1 text-[var(--ak-font-size-sm)] text-[var(--ak-text-primary)]">
-              Posteingang gerade nicht erreichbar
-            </p>
-            <button
-              type="button"
-              onClick={handleReload}
-              className="ak-button-sm inline-flex items-center justify-center ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
-            >
-              Neu laden
-            </button>
-          </div>
+          <AkChip onClick={handleMenuClick}>
+            Mehr...
+            <EllipsisHorizontalIcon className="h-3 w-3" aria-hidden="true" />
+          </AkChip>
         </div>
-      )}
 
-      {/* Empty State */}
-      {uiState === 'empty' && (
-        <div className="ak-card ak-surface-1" style={{ marginBottom: 'var(--ak-space-3)' }}>
-          <p className="ak-body text-center text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">
-            Noch keine Nachrichten – sobald etwas reinkommt, landet es hier.
-          </p>
-        </div>
-      )}
-
-      {/* ListView */}
-      {uiState === 'ok' && (
-        <div className="flex-1 overflow-y-auto">
-          {filteredItems.length === 0 ? (
-            <div className="flex h-32 items-center justify-center px-3 text-xs text-slate-500">
-              Keine Einträge für diesen Filter.
+        <div className="flex-1 overflow-y-auto ak-scrollbar -mx-1 px-1">
+          {isLoading ? (
+            <div className="space-y-2">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="rounded-xl border border-slate-200 bg-white/60 p-3"
+                >
+                  <div className="h-3 w-2/3 rounded bg-slate-100" />
+                  <div className="mt-2 h-2 w-full rounded bg-slate-100 opacity-60" />
+                </div>
+              ))}
+            </div>
+          ) : hasError ? (
+            <div className="rounded-xl border border-slate-200 bg-white/60 p-3">
+              <p className="ak-caption text-[var(--ak-color-text-muted)]">Konnte Inbox nicht laden. Bitte neu versuchen.</p>
+              <div className="mt-3">
+                <AkButton size="sm" variant="secondary" accent="inbox" onClick={handleReload}>
+                  Neu laden
+                </AkButton>
+              </div>
+            </div>
+          ) : filteredItems.length === 0 ? (
+            <div className="rounded-xl border border-slate-200 bg-white/60 p-3">
+              <p className="ak-caption text-[var(--ak-color-text-muted)]">Keine Treffer.</p>
             </div>
           ) : (
-            <div className="flex flex-col">
+            <ul className="flex flex-col gap-2">
               {filteredItems.map((item) => {
-                const IconComponent = ICON_MAP[item.icon] || EnvelopeIcon
-
+                const IconComponent = ICON_MAP[item.channel]
+                const isSelected = selectedId === item.id
                 return (
-                  <div
-                    key={item.id}
-                    onClick={() => handleItemClick(item)}
-                    className={clsx(
-                      'group ak-list-row flex w-full items-center gap-3 ak-surface-1 ak-border-hairline cursor-pointer',
-                      'hover:ak-surface-2-hover hover:ak-elev-1',
-                      item.unread && 'ak-surface-2-selected'
-                    )}
-                    style={{
-                      borderTop: 'none',
-                      borderLeft: 'none',
-                      borderRight: 'none',
-                      borderBottom: 'var(--ak-border-hairline)',
-                    }}
-                  >
-                    {/* Icon Box */}
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md ak-surface-2">
-                      <IconComponent className="h-5 w-5 text-[var(--ak-text-primary)]" />
-                    </div>
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleItemClick(item)}
+                      className={clsx(
+                        'relative flex w-full flex-col gap-2 rounded-xl border p-3 text-left transition-all',
+                        'bg-white/60 backdrop-blur-sm',
+                        isSelected
+                          ? 'border-[var(--ak-color-accent)] ring-1 ring-[var(--ak-color-accent)]'
+                          : 'border-slate-200 hover:bg-white/80'
+                      )}
+                    >
+                      <div className="flex w-full items-start gap-3">
+                        <div className={clsx(
+                            "grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[var(--ak-color-border)] bg-white/50",
+                            ICON_COLOR_MAP[item.channel]
+                          )}>
+                          <IconComponent className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                           <p className={clsx(
+                             "ak-body text-slate-900 truncate",
+                             item.unread ? "font-semibold" : "font-medium"
+                           )}>
+                             {item.title}
+                           </p>
+                           <p className="ak-caption text-slate-500 line-clamp-2 mt-0.5">
+                             {item.snippet}
+                           </p>
+                        </div>
+                      </div>
 
-                    {/* Content Col mit flex: 1 */}
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      {/* Row mit Titel und Badge */}
-                      <div className="flex items-baseline gap-2">
-                        <p className="ak-body flex-1 truncate text-[var(--ak-font-size-sm)] font-semibold leading-tight text-[var(--ak-text-primary)]">
-                          {item.title}
-                        </p>
-                        {item.badge && (
-                          <span
-                            className={clsx(
-                              'inline-flex items-center rounded-full border px-2 py-0.5 text-[var(--ak-font-size-xs)] font-medium',
-                              BADGE_COLOR_MAP[item.badge]
-                            )}
-                          >
-                            {item.badge}
-                          </span>
+                      <div className="flex w-full items-center justify-between mt-1">
+                        <span className="text-[10px] text-slate-400">{item.time}</span>
+                        {item.unread && (
+                           <span className="h-2 w-2 rounded-full bg-blue-500 shadow-sm" aria-label="Ungelesen" />
                         )}
                       </div>
-                      {/* Snippet */}
-                      <p className="ak-body truncate text-[var(--ak-font-size-sm)] leading-tight text-[var(--ak-text-secondary)]">
-                        {item.snippet}
-                      </p>
-                    </div>
-
-                    {/* Col mit Zeit und unread-Punkt */}
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="ak-caption text-[var(--ak-font-size-xs)] text-[var(--ak-text-secondary)]">
-                        {item.time}
-                      </span>
-                      {item.unread && (
-                        <div className="h-1.5 w-1.5 rounded-full bg-[var(--ak-semantic-info)]" />
-                      )}
-                    </div>
-
-                    {/* Action Buttons Row - nur bei Hover sichtbar */}
-                    <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleMenuClick(e)
-                        }}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--ak-text-secondary)] transition-colors hover:bg-[var(--ak-surface-2-hover)] hover:text-[var(--ak-text-primary)]"
-                        aria-label="Aktionen"
-                      >
-                        <BoltIcon className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          // TODO: Open thread details
-                        }}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--ak-text-secondary)] transition-colors hover:bg-[var(--ak-surface-2-hover)] hover:text-[var(--ak-text-primary)]"
-                        aria-label="Details"
-                      >
-                        <InformationCircleIcon className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          // TODO: Archive thread
-                        }}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--ak-text-secondary)] transition-colors hover:bg-[var(--ak-surface-2-hover)] hover:text-[var(--ak-text-primary)]"
-                        aria-label="Archivieren"
-                      >
-                        <DocumentTextIcon className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          // TODO: Mark as read
-                        }}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--ak-text-secondary)] transition-colors hover:bg-[var(--ak-surface-2-hover)] hover:text-[var(--ak-text-primary)]"
-                        aria-label="Als gelesen markieren"
-                      >
-                        <CheckCircleIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
+                    </button>
+                  </li>
                 )
               })}
-            </div>
+            </ul>
           )}
         </div>
-      )}
+      </div>
     </div>
   )
 }
+

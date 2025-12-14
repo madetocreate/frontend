@@ -2,7 +2,10 @@
 @import "./ak-typography.css";
 @import "./ak-tokens.css";
 @import "./ak-scaffold.css";
+@import "./ak-inspector.css";
 @import "./ak-unified.css";
+@import "./ak-controls.css";
+@import "./ak-badges.css";
 
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";

@@ -1,388 +1,325 @@
 'use client'
 
-import { useState } from 'react'
-import clsx from 'clsx'
-import {
-  ArrowPathIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  InformationCircleIcon,
-} from '@heroicons/react/24/outline'
+import { useEffect, useMemo, useState } from 'react'
+import { AkButton } from '@/components/ui/AkButton'
+import { AkChip } from '@/components/ui/AkChip'
+import { AkBadge } from '@/components/ui/AkBadge'
 
-type InboxDetailsDrawerProps = {
+type SelectOption = {
+  label: string
+  value: string
+  disabled?: boolean
+}
+
+export type InboxDetailsDrawerIds = {
+  conversationId?: string
+  providerId?: string
+  messageId?: string
+}
+
+export type InboxDetailsDrawerProps = {
   threadId: string
-  channel: 'email' | 'messenger' | 'review' | 'support'
+  channel: string
   sender: string
   dateShort: string
-  statusOptions?: Array<{ label: string; value: string; disabled?: boolean; description?: string }>
-  status?: string
+  statusOptions: SelectOption[]
+  status: string
   important?: boolean
-  assigneeOptions?: Array<{ label: string; value: string; disabled?: boolean; description?: string }>
-  assignee?: string
+  assigneeOptions: SelectOption[]
+  assignee: string
   tags?: string
   customer?: string
   project?: string
   lastSync?: string
-  connectionStatus?: 'OK' | 'Problem'
+  connectionStatus?: 'OK' | 'Problem' | string
   advancedVisible?: boolean
-  ids?: {
-    conversationId: string
-    providerId: string
-    messageId: string
-  }
+  ids?: InboxDetailsDrawerIds
   canSpamControls?: boolean
-  state?: 'loading' | 'loaded' | 'error' | 'notFound'
+  state?: 'loading' | 'loaded' | 'error'
   onClose?: () => void
 }
 
-type InboxDetailsState = 'loading' | 'loaded' | 'error' | 'notFound'
+type Tab = 'overview' | 'emails' | 'attachments'
 
 export function InboxDetailsDrawer({
   threadId,
   channel,
   sender,
   dateShort,
-  statusOptions: propStatusOptions,
-  status: propStatus,
-  important: propImportant,
-  assigneeOptions: propAssigneeOptions,
-  assignee: propAssignee,
-  tags: propTags,
-  customer: propCustomer,
-  project: propProject,
-  lastSync: propLastSync,
-  connectionStatus: propConnectionStatus,
-  advancedVisible: propAdvancedVisible,
-  ids: propIds,
-  canSpamControls: propCanSpamControls,
-  state: propState,
+  statusOptions,
+  status: statusProp,
+  important: importantProp = false,
+  assigneeOptions,
+  assignee: assigneeProp,
+  tags: tagsProp = '',
+  customer: customerProp = '',
+  project: projectProp = '',
+  lastSync = '',
+  connectionStatus = 'OK',
+  advancedVisible = false,
+  ids,
+  canSpamControls = false,
+  state = 'loaded',
   onClose,
 }: InboxDetailsDrawerProps) {
-  const [state, setState] = useState<InboxDetailsState>(propState || 'loaded')
-  const [status, setStatus] = useState(propStatus || 'open')
-  const [important, setImportant] = useState(propImportant ?? false)
-  const [assignee, setAssignee] = useState(propAssignee || '')
-  const [tags, setTags] = useState(propTags || 'onboarding, follow-up')
-  const [customer, setCustomer] = useState(propCustomer || 'Acme GmbH')
-  const [project, setProject] = useState(propProject || '')
-  const [lastSync, setLastSync] = useState(propLastSync || '13:22 Uhr')
-  const [connectionStatus, setConnectionStatus] = useState<'OK' | 'Problem'>(propConnectionStatus || 'OK')
-  const [advancedVisible, setAdvancedVisible] = useState(propAdvancedVisible ?? false)
-  const [canSpamControls, setCanSpamControls] = useState(propCanSpamControls ?? true)
+  const [activeTab, setActiveTab] = useState<Tab>('overview')
+  const [status, setStatus] = useState(statusProp)
+  const [assignee, setAssignee] = useState(assigneeProp)
+  const [tags, setTags] = useState(tagsProp)
+  const [customer, setCustomer] = useState(customerProp)
+  const [project, setProject] = useState(projectProp)
+  const [important, setImportant] = useState(importantProp)
+  const [showAdvanced, setShowAdvanced] = useState(advancedVisible)
 
-  const statusOptions = propStatusOptions || [
-    { label: 'Offen', value: 'open' },
-    { label: 'In Arbeit', value: 'in_progress' },
-    { label: 'Erledigt', value: 'done' },
-  ]
+  useEffect(() => {
+    // Use setTimeout to avoid synchronous setState in effect
+    const timer = setTimeout(() => {
+      setStatus(statusProp)
+      setAssignee(assigneeProp)
+      setTags(tagsProp)
+      setCustomer(customerProp)
+      setProject(projectProp)
+      setImportant(importantProp)
+      setShowAdvanced(advancedVisible)
+      setActiveTab('overview')
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [threadId, statusProp, assigneeProp, tagsProp, customerProp, projectProp, importantProp, advancedVisible])
 
-  const assigneeOptions = propAssigneeOptions || [
-    { label: 'Unzugewiesen', value: '' },
-    { label: 'Anna', value: 'anna' },
-    { label: 'Ben', value: 'ben' },
-    { label: 'Du', value: 'me' },
-  ]
-
-  const ids = propIds || {
-    conversationId: 'conv_987654',
-    providerId: 'gmail',
-    messageId: '174a-ef23-9912',
-  }
-
-  const channelLabel = {
-    email: 'E‑Mail',
-    messenger: 'Messenger',
-    review: 'Bewertung',
-    support: 'Support',
-  }[channel]
-
-  const titleLabel = {
-    email: 'E‑Mail – Details',
-    messenger: 'Nachricht – Details',
-    review: 'Bewertung – Details',
-    support: 'Anfrage – Details',
-  }[channel]
-
-  if (state === 'loading') {
-    return (
-      <div className="flex h-full flex-col gap-4 p-4">
-        <div className="flex flex-col gap-4" style={{ paddingTop: 'var(--ak-space-2)', paddingBottom: 'var(--ak-space-2)' }}>
-          <h3 className="ak-heading text-[var(--ak-font-size-sm)]">Details werden geladen…</h3>
-          <div className="h-14 ak-surface-2 rounded-md" />
-          <div className="h-10 ak-surface-2 rounded-md" />
-          <div className="h-10 ak-surface-2 rounded-md" />
-        </div>
-      </div>
-    )
-  }
-
-  if (state === 'error') {
-    return (
-      <div className="flex h-full flex-col gap-3 p-4">
-        <div className="flex flex-col gap-3" style={{ paddingTop: 'var(--ak-space-2)', paddingBottom: 'var(--ak-space-2)' }}>
-          <h3 className="ak-heading text-[var(--ak-font-size-sm)]">Ups, da ging etwas schief.</h3>
-          <p className="ak-body text-[var(--ak-text-secondary)]">Bitte versuche es erneut.</p>
-          <div className="flex items-center justify-end">
-            <button
-              type="button"
-              onClick={() => setState('loading')}
-              className="ak-button-sm inline-flex items-center justify-center ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
-            >
-              Erneut versuchen
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (state === 'notFound') {
-    return (
-      <div className="flex h-full flex-col gap-3 p-4">
-        <div className="flex flex-col gap-3" style={{ paddingTop: 'var(--ak-space-2)', paddingBottom: 'var(--ak-space-2)' }}>
-          <h3 className="ak-heading text-[var(--ak-font-size-sm)]">Thread nicht gefunden</h3>
-          <p className="ak-body text-[var(--ak-text-secondary)]">Dieser Eintrag ist nicht mehr verfügbar.</p>
-        </div>
-      </div>
-    )
-  }
+  const connectionTone = useMemo(() => {
+    if (String(connectionStatus).toUpperCase() === 'OK') return 'success'
+    return 'warning'
+  }, [connectionStatus])
 
   return (
-    <div className="flex h-full flex-col gap-5" style={{ padding: 'var(--ak-space-4)' }}>
-      {/* Header */}
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center justify-between">
-          <h3 className="ak-heading text-[var(--ak-font-size-sm)]">{titleLabel}</h3>
-          <button
-            type="button"
-            className="ak-button-sm inline-flex items-center justify-center gap-1.5 ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
-          >
-            <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-            Im Chat anzeigen
-          </button>
-        </div>
-        <p className="ak-body text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">
-          {sender} • {dateShort}
-        </p>
-      </div>
-
-      <div className="h-px ak-border-hairline" />
-
-      {/* Übersicht */}
-      <div className="flex flex-col gap-3">
-        <h4 className="ak-caption">Übersicht</h4>
-        <div className="flex items-center justify-between">
-          <span className="ak-body text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">Status</span>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="ak-button-sm ak-border-default ak-surface-1 rounded-md px-3 py-1.5 text-[var(--ak-font-size-sm)]"
-          >
-            {statusOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={important}
-              onChange={(e) => setImportant(e.target.checked)}
-              className="rounded border-[var(--ak-border-default)]"
-            />
-            <span className="ak-body text-[var(--ak-font-size-sm)]">Wichtig</span>
-          </label>
-          <div className="flex-1" />
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="ak-body text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">Zugewiesen an</span>
-          <select
-            value={assignee}
-            onChange={(e) => setAssignee(e.target.value)}
-            className="ak-button-sm ak-border-default ak-surface-1 rounded-md px-3 py-1.5 text-[var(--ak-font-size-sm)]"
-          >
-            {assigneeOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="ak-body text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">Tags</span>
-          <input
-            type="text"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            placeholder="klein, komma-getrennt"
-            className="ak-button-sm ak-border-default ak-surface-1 rounded-md px-3 py-1.5 text-[var(--ak-font-size-sm)] flex-1 max-w-[200px]"
-          />
-        </div>
-      </div>
-
-      <div className="h-px ak-border-hairline" />
-
-      {/* Verknüpfen */}
-      <div className="flex flex-col gap-3">
-        <h4 className="ak-caption">Verknüpfen</h4>
-        <div className="flex items-center justify-between">
-          <span className="ak-body text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">Kunde</span>
-          <input
-            type="text"
-            value={customer}
-            onChange={(e) => setCustomer(e.target.value)}
-            placeholder="Suchen…"
-            className="ak-button-sm ak-border-default ak-surface-1 rounded-md px-3 py-1.5 text-[var(--ak-font-size-sm)] flex-1 max-w-[200px]"
-          />
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="ak-body text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">Projekt/Deal</span>
-          <input
-            type="text"
-            value={project}
-            onChange={(e) => setProject(e.target.value)}
-            placeholder="Optional"
-            className="ak-button-sm ak-border-default ak-surface-1 rounded-md px-3 py-1.5 text-[var(--ak-font-size-sm)] flex-1 max-w-[200px]"
-          />
-        </div>
-        <div className="flex items-center justify-end">
-          <button
-            type="button"
-            className="ak-button-sm inline-flex items-center justify-center ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
-          >
-            Neuen Kunden anlegen
-          </button>
-        </div>
-      </div>
-
-      <div className="h-px ak-border-hairline" />
-
-      {/* Quelle & Sync */}
-      <div className="flex flex-col gap-3">
-        <h4 className="ak-caption">Quelle & Sync</h4>
-        <div className="flex items-center justify-between">
-          <span className="ak-body text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">Kanal</span>
-          <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[var(--ak-font-size-xs)] font-medium" style={{ borderColor: 'var(--ak-semantic-info)', backgroundColor: 'var(--ak-semantic-info-soft)', color: 'var(--ak-semantic-info)' }}>
-            {channelLabel}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="ak-body text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">Zuletzt synchronisiert</span>
-          <span className="ak-body text-[var(--ak-font-size-sm)]">{lastSync}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="ak-body text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">Verbindung</span>
-          <span
-            className={clsx(
-              'inline-flex items-center rounded-full border px-2 py-0.5 text-[var(--ak-font-size-xs)] font-medium',
-              connectionStatus === 'OK'
-                ? 'border-[var(--ak-semantic-success)] bg-[var(--ak-semantic-success-soft)] text-[var(--ak-semantic-success)]'
-                : 'border-[var(--ak-semantic-danger)] bg-[var(--ak-semantic-danger-soft)] text-[var(--ak-semantic-danger)]'
-            )}
-          >
-            {connectionStatus}
-          </span>
-        </div>
-        <div className="flex items-center justify-end">
-          <button
-            type="button"
-            className="ak-button-sm inline-flex items-center justify-center ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
-          >
-            Verbindung testen
-          </button>
-        </div>
-      </div>
-
-      <div className="h-px ak-border-hairline" />
-
-      {/* Erweitert */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <h4 className="ak-caption">Erweitert</h4>
-          <button
-            type="button"
-            onClick={() => setAdvancedVisible(!advancedVisible)}
-            className="ak-button-sm inline-flex items-center justify-center ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
-          >
-            {advancedVisible ? 'Einklappen' : 'Ausklappen'}
-          </button>
-        </div>
-        {advancedVisible && (
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1">
-              <h5 className="ak-caption text-[var(--ak-text-secondary)]">IDs</h5>
-              <div className="flex items-center justify-between">
-                <span className="ak-body text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">conversationId</span>
-                <span className="ak-body text-[var(--ak-font-size-sm)]">{ids.conversationId}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="ak-body text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">providerId</span>
-                <span className="ak-body text-[var(--ak-font-size-sm)]">{ids.providerId}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="ak-body text-[var(--ak-font-size-sm)] text-[var(--ak-text-secondary)]">messageId</span>
-                <span className="ak-body text-[var(--ak-font-size-sm)]">{ids.messageId}</span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <h5 className="ak-caption text-[var(--ak-text-secondary)]">Rohdaten / Header</h5>
-              {channel === 'email' && (
-                <div className="flex items-center justify-end">
-                  <button
-                    type="button"
-                    className="ak-button-sm inline-flex items-center justify-center ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
-                  >
-                    Original anzeigen
-                  </button>
-                </div>
-              )}
-              <p className="ak-body text-[var(--ak-font-size-sm)] text-[var(--ak-text-muted)]">
-                Für Fehlersuche / Zustellung
-              </p>
-            </div>
-            {canSpamControls && (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="ak-button-sm inline-flex items-center justify-center ak-border-default ak-surface-1 font-medium transition-colors hover:ak-surface-2-hover"
-                  style={{ color: 'var(--ak-semantic-danger)', borderColor: 'var(--ak-semantic-danger)' }}
-                >
-                  Absender blockieren
-                </button>
-                <button
-                  type="button"
-                  className="ak-button-sm inline-flex items-center justify-center ak-border-default ak-surface-1 font-medium transition-colors hover:ak-surface-2-hover"
-                  style={{ color: 'var(--ak-semantic-success)', borderColor: 'var(--ak-semantic-success)' }}
-                >
-                  Erlauben (Whitelist)
-                </button>
-              </div>
-            )}
+    <div className="flex flex-col gap-4">
+      <div className="ak-section">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="ak-caption uppercase tracking-wide text-[var(--ak-color-text-muted)]">{channel}</p>
+            <h3 className="ak-heading text-base">{sender}</h3>
+            <p className="ak-caption text-[var(--ak-color-text-secondary)]">{dateShort}</p>
           </div>
-        )}
+
+          <div className="flex items-center gap-2">
+            {important ? <AkBadge tone="accent">wichtig</AkBadge> : <AkBadge tone="muted">normal</AkBadge>}
+            <AkButton
+              accent="inbox"
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                onClose?.()
+              }}
+            >
+              Im Chat öffnen
+            </AkButton>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <AkChip
+            pressed={activeTab === 'overview'}
+            onClick={() => setActiveTab('overview')}
+          >
+            Übersicht
+          </AkChip>
+          <AkChip
+            pressed={activeTab === 'emails'}
+            onClick={() => setActiveTab('emails')}
+          >
+            E-Mails
+          </AkChip>
+          <AkChip
+            pressed={activeTab === 'attachments'}
+            onClick={() => setActiveTab('attachments')}
+          >
+            Anhänge
+          </AkChip>
+        </div>
       </div>
 
-      <div className="h-px ak-border-hairline" />
+      {state === 'loading' ? (
+        <div className="ak-section">
+          <p className="ak-body">Lade Details…</p>
+        </div>
+      ) : state === 'error' ? (
+        <div className="ak-section">
+          <p className="ak-body text-[var(--ak-color-text-danger)]">Details konnten nicht geladen werden.</p>
+          <div className="mt-3">
+            <AkButton variant="secondary" size="sm" onClick={() => console.log('retry load')}>
+              Erneut versuchen
+            </AkButton>
+          </div>
+        </div>
+      ) : activeTab === 'overview' ? (
+        <>
+          <div className="ak-section">
+            <p className="ak-section-title">Triage</p>
 
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-2">
-        <button
-          type="button"
-          className="ak-button-sm inline-flex items-center justify-center ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
-        >
-          Archivieren
-        </button>
-        <button
-          type="button"
-          className="ak-button-sm inline-flex items-center justify-center ak-border-default ak-surface-1 font-medium text-[var(--ak-text-primary)] transition-colors hover:ak-surface-2-hover"
-        >
-          Export
-        </button>
-      </div>
+            <div className="ak-row">
+              <span className="ak-row-label">Status</span>
+              <select
+                className="ak-input h-9 min-w-[180px] px-3 text-sm"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                {statusOptions.map((o) => (
+                  <option key={o.value} value={o.value} disabled={o.disabled}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="ak-row">
+              <span className="ak-row-label">Zuständig</span>
+              <select
+                className="ak-input h-9 min-w-[180px] px-3 text-sm"
+                value={assignee}
+                onChange={(e) => setAssignee(e.target.value)}
+              >
+                {assigneeOptions.map((o) => (
+                  <option key={o.value} value={o.value} disabled={o.disabled}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="ak-row">
+              <span className="ak-row-label">Wichtig</span>
+              <AkButton variant="secondary" size="sm" pressed={important} onClick={() => setImportant((v) => !v)}>
+                {important ? 'Ja' : 'Nein'}
+              </AkButton>
+            </div>
+          </div>
+
+          <div className="ak-section">
+            <p className="ak-section-title">Bezüge</p>
+
+            <div className="ak-row">
+              <span className="ak-row-label">Kunde</span>
+              <input
+                className="ak-input h-9 w-[220px] px-3 text-sm"
+                value={customer}
+                onChange={(e) => setCustomer(e.target.value)}
+                placeholder="Kunde…"
+              />
+            </div>
+
+            <div className="ak-row">
+              <span className="ak-row-label">Projekt</span>
+              <input
+                className="ak-input h-9 w-[220px] px-3 text-sm"
+                value={project}
+                onChange={(e) => setProject(e.target.value)}
+                placeholder="Projekt…"
+              />
+            </div>
+
+            <div className="ak-row">
+              <span className="ak-row-label">Tags</span>
+              <input
+                className="ak-input h-9 w-[220px] px-3 text-sm"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="comma,separated"
+              />
+            </div>
+          </div>
+
+          <div className="ak-section">
+            <p className="ak-section-title">System</p>
+
+            <div className="ak-row">
+              <span className="ak-row-label">Thread</span>
+              <span className="ak-row-value">{threadId}</span>
+            </div>
+
+            <div className="ak-row">
+              <span className="ak-row-label">Letzter Sync</span>
+              <span className="ak-row-value">{lastSync || '—'}</span>
+            </div>
+
+            <div className="ak-row">
+              <span className="ak-row-label">Verbindung</span>
+              <div className="flex items-center gap-2">
+                <AkBadge tone={connectionTone}>{connectionStatus}</AkBadge>
+              </div>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between">
+              <span className="ak-caption text-[var(--ak-color-text-secondary)]">Erweitert</span>
+              <AkButton variant="ghost" size="sm" pressed={showAdvanced} onClick={() => setShowAdvanced((v) => !v)}>
+                {showAdvanced ? 'Ausblenden' : 'Einblenden'}
+              </AkButton>
+            </div>
+
+            {showAdvanced ? (
+              <div className="mt-3 flex flex-col gap-2 text-sm">
+                <div className="ak-row">
+                  <span className="ak-row-label">Conversation</span>
+                  <span className="ak-row-value">{ids?.conversationId || '—'}</span>
+                </div>
+                <div className="ak-row">
+                  <span className="ak-row-label">Provider</span>
+                  <span className="ak-row-value">{ids?.providerId || '—'}</span>
+                </div>
+                <div className="ak-row">
+                  <span className="ak-row-label">Message</span>
+                  <span className="ak-row-value">{ids?.messageId || '—'}</span>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          {canSpamControls ? (
+            <div className="ak-section">
+              <p className="ak-section-title">Spam</p>
+              <div className="flex flex-wrap gap-2">
+                <AkButton variant="secondary" size="sm" onClick={() => console.log('mark spam')}>
+                  Als Spam markieren
+                </AkButton>
+                <AkButton variant="ghost" size="sm" onClick={() => console.log('block sender')}>
+                  Absender blockieren
+                </AkButton>
+              </div>
+            </div>
+          ) : null}
+        </>
+      ) : activeTab === 'emails' ? (
+        <div className="ak-section">
+          <p className="ak-section-title">E-Mails</p>
+          <div className="flex flex-col gap-3">
+            <div className="rounded-[var(--ak-radius-lg)] border border-[var(--ak-color-border-fine)] bg-[var(--ak-color-bg-surface)] p-3">
+              <p className="ak-body">Betreff: Rückfrage</p>
+              <p className="ak-caption mt-1 text-[var(--ak-color-text-secondary)]">Beispiel-Inhalt…</p>
+            </div>
+            <div className="rounded-[var(--ak-radius-lg)] border border-[var(--ak-color-border-fine)] bg-[var(--ak-color-bg-surface)] p-3">
+              <p className="ak-body">Betreff: Re: Rückfrage</p>
+              <p className="ak-caption mt-1 text-[var(--ak-color-text-secondary)]">Beispiel-Inhalt…</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="ak-section">
+          <p className="ak-section-title">Anhänge</p>
+          <div className="flex flex-col gap-2">
+            <div className="ak-row">
+              <span className="ak-row-label">Angebot.pdf</span>
+              <AkButton variant="ghost" size="sm" onClick={() => console.log('download')}>
+                Download
+              </AkButton>
+            </div>
+            <div className="ak-row">
+              <span className="ak-row-label">Screenshot.png</span>
+              <AkButton variant="ghost" size="sm" onClick={() => console.log('download')}>
+                Download
+              </AkButton>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
-

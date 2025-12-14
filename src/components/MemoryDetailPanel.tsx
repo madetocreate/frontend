@@ -313,7 +313,7 @@ export function MemoryDetailPanel({ category }: MemoryDetailPanelProps) {
     )
   }
 
-  const chipBase = 'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]'
+  const chipBase = 'inline-flex items-center rounded-[var(--ak-radius-md)] border px-2 py-0.5 text-[11px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]'
   const chipOn = 'border-[var(--ak-color-border-strong)] bg-[var(--ak-color-accent-soft)] text-[var(--ak-color-text-primary)]'
   const chipOff = 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-hover)]'
 
@@ -455,7 +455,7 @@ export function MemoryDetailPanel({ category }: MemoryDetailPanelProps) {
                 >
                   <div className="flex items-center gap-2">
                     <p className="ak-body flex-1 truncate font-semibold">{item.title}</p>
-                    <span className="inline-flex items-center rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--ak-color-text-secondary)]">
+                    <span className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--ak-color-text-secondary)]">
                       {item.typeLabel}
                     </span>
                   </div>
@@ -483,7 +483,7 @@ export function MemoryDetailPanel({ category }: MemoryDetailPanelProps) {
               <div className="rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-3">
                 <div className="mb-2 flex items-center justify-between">
                   <h3 className="ak-heading">{selected.title}</h3>
-                  <span className="inline-flex items-center rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-2 py-0.5 text-[11px] font-medium text-[var(--ak-color-text-secondary)]">
+                  <span className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-2 py-0.5 text-[11px] font-medium text-[var(--ak-color-text-secondary)]">
                     {selected.typeLabel}
                   </span>
                 </div>
@@ -519,7 +519,7 @@ export function MemoryDetailPanel({ category }: MemoryDetailPanelProps) {
                       {selected.tags.map((tag, idx) => (
                         <span
                           key={idx}
-                          className="inline-flex items-center rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--ak-color-text-primary)]"
+                          className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--ak-color-text-primary)]"
                         >
                           {tag}
                         </span>

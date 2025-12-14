@@ -222,7 +222,7 @@ export function MemoryOverviewWidget() {
           </div>
           <button
             type="button"
-            className="inline-flex items-center justify-center gap-1 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-[11px] text-slate-600"
+            className="inline-flex items-center justify-center gap-1 rounded-[var(--ak-radius-md)] border border-slate-200 bg-white/80 px-2.5 py-1 text-[11px] text-slate-600"
           >
             <FunnelIcon className="h-3.5 w-3.5" />
             Filter
@@ -236,7 +236,7 @@ export function MemoryOverviewWidget() {
               type="button"
               onClick={() => setActiveFilter(filter.value)}
               className={clsx(
-                'inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px]',
+                'inline-flex items-center rounded-[var(--ak-radius-md)] px-2.5 py-0.5 text-[11px]',
                 activeFilter === filter.value
                   ? 'bg-slate-900 text-slate-50'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
@@ -278,7 +278,7 @@ export function MemoryOverviewWidget() {
                           <div className="flex flex-wrap items-center gap-2">
                             <span
                               className={clsx(
-                                'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium',
+                                'inline-flex items-center gap-1 rounded-[var(--ak-radius-md)] border px-2 py-0.5 text-[11px] font-medium',
                                 accent.badgeBg,
                                 accent.badgeFg,
                                 'border-transparent',
@@ -314,7 +314,7 @@ export function MemoryOverviewWidget() {
                               <span
                                 key={tag}
                                 className={clsx(
-                                  'inline-flex items-center rounded-full px-2 py-0.5 text-[10px]',
+                                  'inline-flex items-center rounded-[var(--ak-radius-md)] px-2 py-0.5 text-[10px]',
                                   item.important
                                     ? 'bg-slate-900 text-slate-50'
                                     : 'bg-slate-100/80 text-slate-600',
@@ -336,7 +336,7 @@ export function MemoryOverviewWidget() {
           <div className="border-t border-slate-100 px-3 py-2 text-[11px] text-slate-500">
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/80 px-2.5 py-0.5 text-[11px] text-slate-600"
+              className="inline-flex items-center gap-1 rounded-[var(--ak-radius-md)] border border-slate-200 bg-white/80 px-2.5 py-0.5 text-[11px] text-slate-600"
             >
               <ArrowPathIcon className="h-3 w-3" />
               Mehr laden

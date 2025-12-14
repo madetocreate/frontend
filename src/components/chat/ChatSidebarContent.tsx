@@ -1,418 +1,216 @@
-"use client";
+'use client'
 
-import { useState, useMemo, useEffect, useCallback } from "react";
-import clsx from "clsx";
-import { AkSearchField } from "@/components/ui/AkSearchField";
-import {
-  EllipsisVerticalIcon,
-  ChatBubbleLeftRightIcon,
-  ChevronDownIcon,
-} from "@heroicons/react/24/outline";
-
-type ChatThread = {
-  id: string;
-  title: string;
-  lastMessageAt: number;
-  preview?: string;
-  archived?: boolean;
-};
-
-// SSR-sicherer Startwert (keine Zeit-/Random-Aufrufe)
-const DEFAULT_THREAD: ChatThread = {
-  id: "thread-default",
-  title: "Neuer Chat",
-  lastMessageAt: 0,
-  preview: "",
-};
-
-const THREADS_KEY = "aklow_chat_threads";
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import clsx from 'clsx'
+import { ArchiveBoxIcon, EllipsisVerticalIcon, PencilSquareIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import { AkButton } from '@/components/ui/AkButton'
+import { AkBadge } from '@/components/ui/AkBadge'
+import { AkChip } from '@/components/ui/AkChip'
+import { AkSearchField } from '@/components/ui/AkSearchField'
+import { ensureSeedChatThread, useChatThreads, writeChatThreads, type ChatThread } from '@/lib/chatThreadsStore'
 
 export function ChatSidebarContent() {
-  const loadThreads = useCallback((): ChatThread[] => {
-    if (typeof window === "undefined") return [DEFAULT_THREAD];
-    try {
-      const raw = localStorage.getItem(THREADS_KEY);
-      if (!raw) return [DEFAULT_THREAD];
-      const parsed = JSON.parse(raw) as ChatThread[];
-      if (!Array.isArray(parsed) || parsed.length === 0) return [DEFAULT_THREAD];
-      return parsed;
-    } catch {
-      return [DEFAULT_THREAD];
-    }
-  }, []);
+  const threads = useChatThreads()
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null)
+  const [chatsCollapsed, setChatsCollapsed] = useState(false)
 
-  const saveThreads = useCallback((list: ChatThread[]) => {
-    try {
-      localStorage.setItem(THREADS_KEY, JSON.stringify(list));
-    } catch (e) {
-      console.warn("Konnte Threads nicht speichern", e);
-    }
-  }, []);
+  const effectiveActiveThreadId = activeThreadId ?? (threads[0]?.id ?? null)
 
-  // Initial SSR-sicher; echte Daten erst nach Hydration laden
-  const [threads, setThreads] = useState<ChatThread[]>([DEFAULT_THREAD]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [hoveredThreadId, setHoveredThreadId] = useState<string | null>(null);
-  const [openKebabId, setOpenKebabId] = useState<string | null>(null);
-  const [activeThreadId, setActiveThreadId] = useState<string | null>(DEFAULT_THREAD.id);
-  const [editingThreadId, setEditingThreadId] = useState<string | null>(null);
-  const [editingTitle, setEditingTitle] = useState<string>("");
-  const [chatsExpanded, setChatsExpanded] = useState(true);
-  const [, setHydrated] = useState(false); // Track hydration state (setter only, value not used)
-
-  // Lade Threads nur auf dem Client nach Hydration
   useEffect(() => {
-    const loaded = loadThreads();
-    setThreads(loaded);
-    if (loaded.length > 0) {
-      setActiveThreadId((prev) => prev ?? loaded[0].id);
-    }
-    setHydrated(true);
-  }, [loadThreads]);
+    ensureSeedChatThread()
+  }, [])
 
-  const filteredThreads = useMemo(() => {
-    const base = threads.filter((t) => !t.archived);
-    if (!searchQuery.trim()) return base;
-    const query = searchQuery.toLowerCase();
-    return base.filter(
-      (t) =>
-        t.title.toLowerCase().includes(query) ||
-        t.preview?.toLowerCase().includes(query)
-    );
-  }, [threads, searchQuery]);
-
-  const handleKebabClick = (e: React.MouseEvent, threadId: string) => {
-    e.stopPropagation();
-    setOpenKebabId(openKebabId === threadId ? null : threadId);
-  };
-
-  const handleNewChat = () => {
-    const newId = "thread-" + Date.now();
-    const newThread: ChatThread = {
-      id: newId,
-      title: "Neuer Chat",
-      lastMessageAt: Date.now(),
-      preview: "",
-    };
-    const next = [newThread, ...threads].slice(0); // shallow copy
-    setThreads(next);
-    saveThreads(next);
-    setActiveThreadId(newId);
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("aklow-new-chat", {
-          detail: { threadId: newId },
-        })
-      );
-    }
-  };
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return threads
+    return threads.filter((t) => {
+      const hay = `${t.title} ${t.preview}`.toLowerCase()
+      return hay.includes(q)
+    })
+  }, [threads, query])
 
   const handleThreadSelect = (threadId: string) => {
-    setActiveThreadId(threadId);
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("aklow-select-thread", {
-          detail: { threadId },
-        })
-      );
+    setActiveThreadId(threadId)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('aklow-select-thread', { detail: { threadId } }))
     }
-  };
+  }
 
-  const handleDeleteThread = useCallback((threadId: string) => {
-    setThreads((prev) => {
-      const next = prev.filter((t) => t.id !== threadId)
-      saveThreads(next)
-      return next
-    })
+  const buildNewChat = useCallback((base: ChatThread[]) => {
+    const now = Date.now()
+    const newId = `thread-${now}`
+    const newThread: ChatThread = {
+      id: newId,
+      title: 'Neuer Chat',
+      lastMessageAt: now,
+      preview: '',
+    }
+    const next = [newThread, ...base].slice(0)
+    return { newId, next }
+  }, [])
+
+  const handleNewChat = useCallback(() => {
+    const built = buildNewChat(threads)
+    writeChatThreads(built.next)
+    setActiveThreadId(built.newId)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('aklow-new-chat', { detail: { threadId: built.newId } }))
+    }
+  }, [buildNewChat, threads])
+
+  const handleDeleteThread = useCallback(
+    (threadId: string) => {
+      const base = threads.filter((t) => t.id !== threadId)
+      if (effectiveActiveThreadId === threadId) {
+        const built = buildNewChat(base)
+        writeChatThreads(built.next)
+        setActiveThreadId(built.newId)
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('aklow-new-chat', { detail: { threadId: built.newId } }))
+        }
+      } else {
+        writeChatThreads(base)
+      }
+      setOpenKebabId(null)
+    },
+    [buildNewChat, effectiveActiveThreadId, threads]
+  )
+
+  const handleArchiveThread = useCallback(
+    (threadId: string) => {
+      const base = threads.map((t) => (t.id === threadId ? { ...t, archived: !t.archived } : t))
+      if (effectiveActiveThreadId === threadId) {
+        const built = buildNewChat(base)
+        writeChatThreads(built.next)
+        setActiveThreadId(built.newId)
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('aklow-new-chat', { detail: { threadId: built.newId } }))
+        }
+      } else {
+        writeChatThreads(base)
+      }
+      setOpenKebabId(null)
+    },
+    [buildNewChat, effectiveActiveThreadId, threads]
+  )
+
+  const handleRenameThread = (threadId: string) => {
+    if (typeof window === 'undefined') return
+    const t = threads.find((x) => x.id === threadId)
+    const nextTitle = window.prompt('Neuer Titel', t?.title ?? '')
+    if (!nextTitle) return
+    const next = threads.map((x) => (x.id === threadId ? { ...x, title: nextTitle } : x))
+    writeChatThreads(next)
     setOpenKebabId(null)
-    if (activeThreadId === threadId) {
-      handleNewChat()
-    }
-  }, [activeThreadId, handleNewChat, saveThreads, threads]);
+  }
 
-  const handleRenameThread = useCallback((threadId: string) => {
-    const thread = threads.find((t) => t.id === threadId);
-    if (thread) {
-      setEditingThreadId(threadId);
-      setEditingTitle(thread.title);
-      setOpenKebabId(null);
-    }
-  }, [threads]);
-
-  const handleSaveRename = (threadId: string) => {
-    const trimmedTitle = editingTitle.trim()
-    if (!trimmedTitle) {
-      setEditingThreadId(null)
-      return
-    }
-
-    setThreads((prev) => {
-      const next = prev.map((t) => (t.id === threadId ? { ...t, title: trimmedTitle } : t))
-      saveThreads(next)
-      return next
-    })
-
-    setEditingThreadId(null)
-    setEditingTitle("")
-  };
-
-  const handleCancelRename = () => {
-    setEditingThreadId(null);
-    setEditingTitle("");
-  };
-
-  const handleArchiveThread = useCallback((threadId: string) => {
-    setThreads((prev) => {
-      const next = prev.map((t) =>
-        t.id === threadId ? { ...t, archived: true } : t
-      );
-      saveThreads(next);
-      return next;
-    });
-    setOpenKebabId(null);
-    if (activeThreadId === threadId) {
-      handleNewChat();
-    }
-  }, [activeThreadId, handleNewChat, saveThreads]);
-
-  // Command Palette Event Handlers
-  useEffect(() => {
-    const handleArchiveThreadCommand = () => {
-      if (activeThreadId) {
-        handleArchiveThread(activeThreadId);
-      }
-    };
-
-    const handleDeleteThreadCommand = () => {
-      if (activeThreadId) {
-        handleDeleteThread(activeThreadId);
-      }
-    };
-
-    const handleRenameThreadCommand = () => {
-      if (activeThreadId) {
-        handleRenameThread(activeThreadId);
-      }
-    };
-
-    window.addEventListener('aklow-archive-thread-command', handleArchiveThreadCommand as EventListener);
-    window.addEventListener('aklow-delete-thread-command', handleDeleteThreadCommand as EventListener);
-    window.addEventListener('aklow-rename-thread-command', handleRenameThreadCommand as EventListener);
-
-    return () => {
-      window.removeEventListener('aklow-archive-thread-command', handleArchiveThreadCommand as EventListener);
-      window.removeEventListener('aklow-delete-thread-command', handleDeleteThreadCommand as EventListener);
-      window.removeEventListener('aklow-rename-thread-command', handleRenameThreadCommand as EventListener);
-    };
-  }, [activeThreadId, handleDeleteThread, handleRenameThread, handleArchiveThread]);
-
-  const handleRenameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, threadId: string) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSaveRename(threadId);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      handleCancelRename();
-    }
-  };
-
-  // Listener für Updates aus ChatShell (letzte Nachricht + Titel)
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as
-        | { threadId: string; preview: string; lastMessageAt: number; title?: string }
-        | undefined;
-      if (!detail?.threadId) return;
-      setThreads((prev) => {
-        const found = prev.find((t) => t.id === detail.threadId);
-        const nextTitle =
-          detail.title && detail.title.trim().length > 0
-            ? detail.title.trim()
-            : found?.title || "Neuer Chat";
-        const updated: ChatThread = found
-          ? { ...found, preview: detail.preview, lastMessageAt: detail.lastMessageAt, title: nextTitle }
-          : {
-              id: detail.threadId,
-              title: nextTitle,
-              preview: detail.preview,
-              lastMessageAt: detail.lastMessageAt,
-              archived: false,
-            };
-        const others = prev.filter((t) => t.id !== detail.threadId);
-        const next = [updated, ...others]
-          .filter((t) => !t.archived)
-          .sort((a, b) => b.lastMessageAt - a.lastMessageAt);
-        saveThreads(next);
-        return next;
-      });
-    };
-    window.addEventListener("aklow-thread-preview", handler as EventListener);
-    return () => {
-      window.removeEventListener("aklow-thread-preview", handler as EventListener);
-    };
-  }, [saveThreads]);
-
-  // Initial select first thread
-  useEffect(() => {
-    if (activeThreadId || threads.length === 0) return;
-    const first = threads[0];
-    handleThreadSelect(first.id);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [threads]);
+  const toggleChatsVisibility = () => {
+    setChatsCollapsed((prev) => !prev)
+  }
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header: New Chat + Search */}
-      <div className="flex flex-col gap-2 p-3">
-        <button
-          type="button"
+      <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+        <div className="flex-1">
+          <AkSearchField value={query} onChange={setQuery} placeholder="Suchen..." />
+        </div>
+        <AkButton
+          variant="secondary"
+          size="sm"
           onClick={handleNewChat}
-          className="flex w-full items-center gap-2 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-2 text-sm font-medium text-[var(--ak-color-text-primary)] transition-all duration-200 hover:bg-[var(--ak-color-bg-surface-muted)] hover:border-[var(--ak-color-border-strong)] ak-button-interactive"
+          className="shrink-0 rounded-[4px] px-2 h-8 text-[12px] gap-1"
         >
-          <ChatBubbleLeftRightIcon className="h-4 w-4" />
-          <span>Neuer Chat</span>
-        </button>
-
-        <AkSearchField
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Chats durchsuchen..."
-        />
+          <PencilSquareIcon className="h-3.5 w-3.5" />
+          Neuer Chat
+        </AkButton>
       </div>
 
-      {/* Collapsible Chats Section */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setChatsExpanded((prev) => !prev)}
-          className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-[var(--ak-color-bg-surface-muted)] transition-colors ak-button-interactive"
-        >
-          <span className="text-sm font-medium text-[var(--ak-color-text-secondary)]">
-            Chats
-          </span>
-          <ChevronDownIcon
-            className={clsx(
-              "h-4 w-4 text-[var(--ak-color-text-muted)] transition-transform duration-200",
-              chatsExpanded ? "rotate-0" : "-rotate-90"
-            )}
-          />
-        </button>
+      {/* Filter Chips */}
+      <div className="flex flex-wrap gap-2 px-3 pb-2">
+        <AkChip onClick={toggleChatsVisibility}>
+          {chatsCollapsed ? (
+            <ChevronRightIcon className="h-3 w-3" />
+          ) : (
+            <ChevronLeftIcon className="h-3 w-3" />
+          )}
+        </AkChip>
+        <AkChip pressed={true} onClick={() => {}}>Alle</AkChip>
+        <AkChip onClick={() => {}}>Archiv</AkChip>
+        <AkChip onClick={() => {}}>Favoriten</AkChip>
       </div>
 
-      {/* Thread-Liste */}
-      {chatsExpanded && (
-        <div className="flex-1 overflow-y-auto">
-        {filteredThreads.length === 0 ? (
-          <div className="flex h-full items-center justify-center p-4 text-center text-sm text-[var(--ak-color-text-muted)]">
-            {searchQuery ? "Keine Chats gefunden" : "Noch keine Chats"}
-          </div>
-        ) : (
-          <div className="p-2">
-            {filteredThreads.map((thread) => {
-              const isActive = activeThreadId === thread.id;
-              const isHovered = hoveredThreadId === thread.id;
-              const showKebab = isActive || isHovered;
-
-              return (
-                <div
-                  key={thread.id}
-                  className="group relative mb-1"
-                  onMouseEnter={() => setHoveredThreadId(thread.id)}
-                  onMouseLeave={() => setHoveredThreadId(null)}
+      <div className="flex-1 overflow-y-auto px-2 pb-3">
+        <div className="space-y-1">
+          {chatsCollapsed ? (
+            <div className="p-3 text-sm text-slate-500">Chats ausgeblendet</div>
+          ) : filtered.length === 0 ? (
+            <div className="p-3 text-sm text-slate-500">Keine Threads gefunden.</div>
+          ) : (
+            filtered.map((thread) => (
+              <div
+                key={thread.id}
+                className={clsx(
+                  'group flex items-center justify-between rounded-lg px-3 py-2 text-sm',
+                  effectiveActiveThreadId === thread.id ? 'bg-slate-100 text-slate-900' : 'hover:bg-slate-50 text-slate-700'
+                )}
+              >
+                <button
+                  type="button"
+                  className="flex-1 text-left"
+                  onClick={() => handleThreadSelect(thread.id)}
                 >
-                  {editingThreadId === thread.id ? (
-                    <div className="flex w-full items-start gap-2 rounded-lg px-3 py-2.5">
-                      <ChatBubbleLeftRightIcon className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                      <input
-                        type="text"
-                        value={editingTitle}
-                        onChange={(e) => setEditingTitle(e.target.value)}
-                        onKeyDown={(e) => handleRenameKeyDown(e, thread.id)}
-                        onBlur={() => handleSaveRename(thread.id)}
-                        className="ak-body min-w-0 flex-1 border-none bg-transparent font-medium outline-none focus:ring-0"
-                        autoFocus
-                      />
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleThreadSelect(thread.id)}
-                      className={clsx(
-                        "flex w-full items-start gap-2 rounded-lg px-3 py-2.5 text-left transition-all duration-150 ak-button-interactive",
-                        isActive
-                          ? "bg-[var(--ak-color-accent-soft)] text-[var(--ak-color-text-primary)]"
-                          : "text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-surface-muted)]"
-                      )}
-                    >
-                      <ChatBubbleLeftRightIcon className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <div className="ak-body truncate font-medium">
-                          {thread.title}
-                        </div>
-                        {thread.preview && (
-                          <div className="ak-caption mt-0.5 truncate text-[var(--ak-color-text-muted)]">
-                            {thread.preview}
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <span className="truncate font-medium">{thread.title}</span>
+                    {thread.archived ? <AkBadge tone="muted">archiviert</AkBadge> : null}
+                  </div>
+                  <div className="truncate text-xs text-slate-500">{thread.preview || '—'}</div>
+                </button>
 
-                  {/* Kebab-Menü */}
-                  {showKebab && (
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 z-[320]">
+                <div className="relative">
+                  <button
+                    type="button"
+                    className="rounded-md p-1 opacity-0 transition group-hover:opacity-100 hover:bg-slate-200"
+                    onClick={() => setOpenKebabId((prev) => (prev === thread.id ? null : thread.id))}
+                  >
+                    <EllipsisVerticalIcon className="h-4 w-4" />
+                  </button>
+
+                  {openKebabId === thread.id ? (
+                    <div className="absolute right-0 z-20 mt-2 w-44 rounded-md border border-slate-200 bg-white shadow-sm">
                       <button
                         type="button"
-                        onClick={(e) => handleKebabClick(e, thread.id)}
-                        className="flex h-6 w-6 items-center justify-center rounded text-[var(--ak-color-text-muted)] hover:bg-[var(--ak-color-bg-surface-muted)] hover:text-[var(--ak-color-text-primary)]"
-                        aria-label="Mehr Optionen"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50"
+                        onClick={() => handleRenameThread(thread.id)}
                       >
-                        <EllipsisVerticalIcon className="h-4 w-4" />
+                        <PencilSquareIcon className="h-4 w-4" />
+                        Umbenennen
                       </button>
-
-                      {openKebabId === thread.id && (
-                        <>
-                          {/* Deckendes Overlay */}
-                          <div
-                            className="fixed inset-0 z-[9996]"
-                            onClick={() => setOpenKebabId(null)}
-                          />
-                          {/* Kebab-Menü */}
-                          <div className="absolute right-0 top-7 z-[9997] w-40 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] shadow-[var(--ak-shadow-soft)]">
-                            <button
-                              type="button"
-                              onClick={() => handleRenameThread(thread.id)}
-                              className="w-full px-3 py-2 text-left text-sm text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-surface-muted)]"
-                            >
-                              Umbenennen
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleArchiveThread(thread.id)}
-                              className="w-full px-3 py-2 text-left text-sm text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-surface-muted)]"
-                            >
-                              Archivieren
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteThread(thread.id)}
-                              className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                            >
-                              Löschen
-                            </button>
-                          </div>
-                        </>
-                      )}
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50"
+                        onClick={() => handleArchiveThread(thread.id)}
+                      >
+                        <ArchiveBoxIcon className="h-4 w-4" />
+                        {thread.archived ? 'Wiederherstellen' : 'Archivieren'}
+                      </button>
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50"
+                        onClick={() => handleDeleteThread(thread.id)}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                        Löschen
+                      </button>
                     </div>
-                  )}
+                  ) : null}
                 </div>
-              );
-            })}
-          </div>
-        )}
+              </div>
+            ))
+          )}
         </div>
-      )}
+      </div>
     </div>
-  );
+  )
 }
-

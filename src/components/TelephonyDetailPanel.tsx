@@ -187,14 +187,14 @@ export function TelephonyDetailPanel({ item }: TelephonyDetailPanelProps) {
               <h2 className="ak-heading truncate">{item.caller || item.title}</h2>
               <span
                 className={clsx(
-                  'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium',
+                  'inline-flex items-center rounded-[var(--ak-radius-md)] border px-2 py-0.5 text-[11px] font-medium',
                   modeColor,
                 )}
               >
                 {modeLabel}
               </span>
               {isReplay && (
-                <span className="inline-flex items-center rounded-full border border-[var(--ak-color-border-strong)] bg-[var(--ak-color-bg-surface-muted)] px-2 py-0.5 text-[11px] font-medium text-[var(--ak-color-text-secondary)]">
+                <span className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-[var(--ak-color-border-strong)] bg-[var(--ak-color-bg-surface-muted)] px-2 py-0.5 text-[11px] font-medium text-[var(--ak-color-text-secondary)]">
                   Archiviert
                 </span>
               )}
@@ -351,7 +351,7 @@ export function TelephonyDetailPanel({ item }: TelephonyDetailPanelProps) {
               </div>
               <span
                 className={clsx(
-                  'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium',
+                  'inline-flex items-center rounded-[var(--ak-radius-md)] border px-2 py-0.5 text-[11px] font-medium',
                   MODE_COLORS[hist.mode],
                 )}
               >
@@ -364,7 +364,7 @@ export function TelephonyDetailPanel({ item }: TelephonyDetailPanelProps) {
               </div>
               <span
                 className={clsx(
-                  'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium',
+                  'inline-flex items-center rounded-[var(--ak-radius-md)] border px-2 py-0.5 text-[11px] font-medium',
                   STATUS_COLORS[hist.status],
                 )}
               >

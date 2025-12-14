@@ -1,244 +1,186 @@
 'use client'
 
-import { useState, useMemo } from 'react'
 import clsx from 'clsx'
+import { useMemo, useState } from 'react'
+import { AkChip } from '@/components/ui/AkChip'
 import { AkSearchField } from '@/components/ui/AkSearchField'
-import {
-  InformationCircleIcon,
-  BriefcaseIcon,
-  PencilSquareIcon,
-  EnvelopeIcon,
-  PlusIcon,
-} from '@heroicons/react/24/outline'
+import { WidgetCard } from '@/components/ui/WidgetCard'
+
+type GrowthSidebarWidgetProps = {
+  onItemClick?: (itemId: string) => void
+  onOverviewClick?: () => void
+}
+
+type GrowthStatus = 'Aktiv' | 'Geplant' | 'Abgeschlossen'
 
 type GrowthItem = {
   id: string
   title: string
-  status: {
-    label: string
-    color: 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'discovery'
-  }
-  channel: string
-  date: string
+  subtitle: string
+  status: GrowthStatus
+  progress: number
+  updatedLabel: string
 }
 
-type FilterOption = {
-  label: string
-  value: 'drafts' | 'planned' | 'results'
-}
-
-type GrowthSidebarWidgetProps = {
-  onItemClick?: (itemId: string) => void
-  onOpenDetail?: (itemId: string) => void
-  onOverviewClick?: () => void
-}
-
-// Mock-Daten
-const MOCK_FILTER_OPTIONS: FilterOption[] = [
-  { label: 'Entwürfe', value: 'drafts' },
-  { label: 'Geplant', value: 'planned' },
-  { label: 'Ergebnisse', value: 'results' },
-]
-
-const MOCK_ITEMS: GrowthItem[] = [
+const ITEMS: GrowthItem[] = [
   {
-    id: 'it_001',
-    title: 'LinkedIn: Jahresrückblick',
-    status: { label: 'Geplant', color: 'info' },
-    channel: 'Social',
-    date: '15. Dez',
+    id: 'growth_1',
+    title: 'Activation Funnel',
+    subtitle: 'Signup → First Value',
+    status: 'Aktiv',
+    progress: 62,
+    updatedLabel: 'vor 1h',
   },
   {
-    id: 'it_002',
-    title: 'Newsletter Q4 Wrap-up',
-    status: { label: 'Live', color: 'success' },
-    channel: 'Newsletter',
-    date: '05. Dez',
+    id: 'growth_2',
+    title: 'Onboarding E-Mails',
+    subtitle: 'Sequenz A/B Test',
+    status: 'Aktiv',
+    progress: 35,
+    updatedLabel: 'vor 6h',
   },
   {
-    id: 'it_003',
-    title: 'Winter Sale Landingpage',
-    status: { label: 'Entwurf', color: 'discovery' },
-    channel: 'Kampagne',
-    date: '10. Dez',
+    id: 'growth_3',
+    title: 'Pricing Page Refresh',
+    subtitle: 'Copy + Visuals',
+    status: 'Geplant',
+    progress: 10,
+    updatedLabel: 'morgen',
   },
   {
-    id: 'it_004',
-    title: 'YouTube Short: Feature X',
-    status: { label: 'Entwurf', color: 'discovery' },
-    channel: 'Social',
-    date: '12. Dez',
+    id: 'growth_4',
+    title: 'Referral Loop',
+    subtitle: 'Invite Mechanik',
+    status: 'Geplant',
+    progress: 5,
+    updatedLabel: 'nächste Woche',
+  },
+  {
+    id: 'growth_5',
+    title: 'Churn Rescue',
+    subtitle: 'Winback Playbook',
+    status: 'Abgeschlossen',
+    progress: 100,
+    updatedLabel: 'vor 2w',
   },
 ]
 
-export function GrowthSidebarWidget({ onItemClick, onOpenDetail }: GrowthSidebarWidgetProps) {
-  const [selectedFilter, setSelectedFilter] = useState<'drafts' | 'planned' | 'results'>('planned')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showUpsell, setShowUpsell] = useState(false)
+const STATUS_CLASSES: Record<GrowthStatus, string> = {
+  Aktiv: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  Geplant: 'border-amber-200 bg-amber-50 text-amber-700',
+  Abgeschlossen: 'border-zinc-200 bg-zinc-50 text-zinc-700',
+}
 
-  // Filtere Items
-  const filteredItems = useMemo(() => {
-    let items = MOCK_ITEMS
+export function GrowthSidebarWidget({
+  onItemClick,
+  onOverviewClick,
+}: GrowthSidebarWidgetProps) {
+  const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState<'all' | GrowthStatus>('all')
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
-    if (selectedFilter === 'drafts') {
-      items = items.filter((item) => item.status.label === 'Entwurf')
-    } else if (selectedFilter === 'planned') {
-      items = items.filter((item) => item.status.label === 'Geplant')
-    } else if (selectedFilter === 'results') {
-      items = items.filter((item) => item.status.label === 'Live' || item.status.label === 'Abgeschlossen')
-    }
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return ITEMS.filter((item) => {
+      const matchesFilter = filter === 'all' || item.status === filter
+      if (!matchesFilter) return false
+      if (!q) return true
+      return item.title.toLowerCase().includes(q) || item.subtitle.toLowerCase().includes(q)
+    })
+  }, [filter, query])
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      items = items.filter(
-        (item) =>
-          item.title.toLowerCase().includes(query) ||
-          item.channel.toLowerCase().includes(query)
-      )
-    }
-
-    return items
-  }, [selectedFilter, searchQuery])
-
-  const handleItemClick = (item: GrowthItem) => {
-    if (onItemClick) {
-      onItemClick(item.id)
-    }
-  }
-
-  const handleInfoClick = (e: React.MouseEvent, itemId: string) => {
-    e.stopPropagation()
-    if (onOpenDetail) {
-      onOpenDetail(itemId)
-    }
+  const handleSelect = (id: string) => {
+    setSelectedId(id)
+    onItemClick?.(id)
   }
 
   return (
-    <div className="flex h-full flex-col ak-surface-1" style={{ padding: 'var(--ak-space-3)' }}>
-      {/* Suchfeld */}
-      <div style={{ marginBottom: 'var(--ak-space-3)' }}>
+    <WidgetCard
+      className="h-full border-0 shadow-none bg-transparent"
+      padding="sm"
+    >
+      <div className="flex flex-col gap-3">
         <AkSearchField
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Inhalte suchen…"
+          value={query}
+          onChange={setQuery}
+          placeholder="Search..."
           accent="growth"
         />
-      </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-wrap items-center gap-2" style={{ marginBottom: 'var(--ak-space-3)' }}>
-        <button className="ak-button-sm inline-flex items-center gap-1.5 ak-border-default ak-surface-1 text-[var(--ak-text-primary)] hover:ak-surface-2-hover">
-          <BriefcaseIcon className="h-4 w-4" />
-          Kampagne
-        </button>
-        <button className="ak-button-sm inline-flex items-center gap-1.5 ak-border-default ak-surface-1 text-[var(--ak-text-primary)] hover:ak-surface-2-hover">
-          <PencilSquareIcon className="h-4 w-4" />
-          Post
-        </button>
-        <button className="ak-button-sm inline-flex items-center gap-1.5 ak-border-default ak-surface-1 text-[var(--ak-text-primary)] hover:ak-surface-2-hover">
-          <EnvelopeIcon className="h-4 w-4" />
-          Mail
-        </button>
-        <button className="ak-button-sm inline-flex items-center gap-1.5 ak-border-default ak-surface-1 text-[var(--ak-text-primary)] hover:ak-surface-2-hover px-2">
-          <PlusIcon className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-1 border-b border-[var(--ak-color-border-hairline)] pb-2 mb-2">
-        {MOCK_FILTER_OPTIONS.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => setSelectedFilter(option.value)}
-            className={clsx(
-              'px-2.5 py-1 text-[var(--ak-font-size-xs)] font-medium transition-colors rounded-md',
-              selectedFilter === option.value
-                ? 'text-[var(--ak-text-primary)] bg-[var(--ak-surface-2)]'
-                : 'text-[var(--ak-text-muted)] hover:text-[var(--ak-text-primary)] hover:bg-[var(--ak-surface-2-hover)]'
-            )}
+        <div className="flex flex-wrap gap-2 items-center flex-nowrap overflow-hidden">
+          <AkChip onClick={onOverviewClick}>
+            Übersicht
+          </AkChip>
+          <AkChip
+            pressed={filter === 'all'}
+            onClick={() => setFilter('all')}
           >
-            {option.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Liste */}
-      <div className="flex-1 overflow-y-auto -mx-2 px-2">
-        {filteredItems.length === 0 ? (
-          <div className="flex h-32 items-center justify-center text-[var(--ak-font-size-xs)] text-[var(--ak-text-muted)]">
-            Keine Einträge.
-          </div>
-        ) : (
-          <div className="flex flex-col">
-            {filteredItems.map((item) => {
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => handleItemClick(item)}
-                  className="group relative flex items-center gap-3 ak-list-row ak-list-row-hover cursor-pointer rounded-md"
-                  style={{ height: '52px' }}
-                >
-                  {/* Status Indicator (links, sehr subtil) */}
-                  <div className={clsx("w-1 h-8 rounded-full opacity-50", 
-                    item.status.color === 'success' ? 'bg-[var(--ak-semantic-success)]' :
-                    item.status.color === 'info' ? 'bg-[var(--ak-semantic-info)]' :
-                    item.status.color === 'discovery' ? 'bg-[var(--ak-accent-growth)]' :
-                    'bg-[var(--ak-text-muted)]'
-                  )} />
-
-                  <div className="flex min-w-0 flex-1 flex-col justify-center">
-                    <div className="flex items-center justify-between">
-                      <span className="ak-body-sm-semibold truncate text-[var(--ak-text-primary)]">
-                        {item.title}
-                      </span>
-                      <span className="ak-caption-xs text-[var(--ak-text-muted)] ml-2">
-                        {item.date}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                       <span className="ak-caption-xs text-[var(--ak-text-secondary)]">
-                        {item.channel}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Actions (erscheinen bei Hover) */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      type="button"
-                      onClick={(e) => handleInfoClick(e, item.id)}
-                      className="p-1 rounded-md text-[var(--ak-text-secondary)] hover:bg-[var(--ak-surface-2-hover)] hover:text-[var(--ak-text-primary)]"
-                    >
-                      <InformationCircleIcon className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Upsell (optional, subtiler) */}
-      {showUpsell && (
-        <div className="mt-3 p-3 rounded-md ak-surface-2 border border-[var(--ak-color-border-hairline)]">
-          <p className="ak-caption-xs text-[var(--ak-text-primary)] mb-2">
-            Automatisierung vorschlagen?
-          </p>
-          <div className="flex gap-2">
-            <button className="ak-button-sm flex-1 bg-[var(--ak-accent-growth)] text-white hover:opacity-90 border-transparent">
-              Ja
-            </button>
-            <button 
-              onClick={() => setShowUpsell(false)}
-              className="ak-button-sm flex-1 ak-surface-1 border border-[var(--ak-color-border-default)]"
-            >
-              Nein
-            </button>
+            Alle
+          </AkChip>
+          <AkChip
+            pressed={filter === 'Aktiv'}
+            onClick={() => setFilter('Aktiv')}
+          >
+            Aktiv
+          </AkChip>
+          <div className="ml-auto shrink-0">
+             <AkChip onClick={() => {}}>
+              Mehr...
+            </AkChip>
           </div>
         </div>
-      )}
-    </div>
+
+        {filtered.length === 0 ? (
+          <div className="ak-body rounded-2xl border border-dashed border-[var(--ak-color-border)] p-4 text-center text-[var(--ak-color-text-muted)]">
+            Keine Treffer.
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {filtered.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => handleSelect(item.id)}
+                  className={clsx(
+                    'flex w-full flex-col gap-2 rounded-xl border p-3 text-left transition-all',
+                    'bg-white/60 backdrop-blur-sm',
+                    selectedId === item.id
+                      ? 'border-[var(--ak-color-accent)] ring-1 ring-[var(--ak-color-accent)]'
+                      : 'border-slate-200 hover:bg-white/80'
+                  )}
+                >
+                  <div className="flex w-full items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="ak-body font-medium text-slate-900 truncate">{item.title}</p>
+                      <p className="ak-caption text-slate-500 truncate">{item.subtitle}</p>
+                    </div>
+                    <span
+                      className={clsx(
+                        'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium',
+                        STATUS_CLASSES[item.status],
+                      )}
+                    >
+                      {item.status}
+                    </span>
+                  </div>
+                  
+                  <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-[var(--ak-color-accent)]" 
+                      style={{ width: `${item.progress}%` }} 
+                    />
+                  </div>
+
+                  <div className="flex w-full items-center justify-between">
+                    <span className="text-[10px] text-slate-400">{item.updatedLabel}</span>
+                    <span className="text-[10px] text-slate-400">{item.progress}%</span>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </WidgetCard>
   )
 }

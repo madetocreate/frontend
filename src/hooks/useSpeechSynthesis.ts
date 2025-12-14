@@ -241,7 +241,7 @@ export function useSpeechSynthesis(defaultLang: string = 'de-DE') {
         audioRef.current = null
       }
     },
-    [defaultLang, stop]
+    [defaultLang, stop, supported]
   )
 
   const toggle = useCallback(
@@ -256,7 +256,7 @@ export function useSpeechSynthesis(defaultLang: string = 'de-DE') {
   )
 
   return {
-    supported: true,
+    supported,
     speakingId,
     status,
     speak,

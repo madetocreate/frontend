@@ -5,12 +5,14 @@ import clsx from "clsx";
 import { RectangleStackIcon, ClipboardDocumentIcon, BookmarkIcon, ArrowPathIcon, SpeakerWaveIcon, PencilSquareIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { WidgetRenderer } from "./chat/WidgetRenderer";
 import { sendChatMessageStream, ChatResponse } from "../lib/chatClient";
+import { fetchFastActions, type FastActionSuggestion } from "../lib/fastActionsClient";
 import { filterDuplicateTextUiMessages } from "../lib/uiMessageText";
 import { useDictation } from "../hooks/useDictation";
 import { useRealtimeVoice } from "../hooks/useRealtimeVoice";
 import { useSpeechSynthesis } from "../hooks/useSpeechSynthesis";
 import { ThinkingStepsDrawer } from "./chat/ThinkingStepsDrawer";
 import { ChatMarkdown } from "./chat/markdown/ChatMarkdown";
+import { FastActionsChips } from "./chat/FastActionsChips";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 
 type ChatMessage = {
@@ -46,6 +48,8 @@ export function ChatShell() {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
   const [savedMessageId, setSavedMessageId] = useState<string | null>(null);
+  const [fastActionsOpenMessageId, setFastActionsOpenMessageId] = useState<string | null>(null);
+  const [fastActionsByMessageId, setFastActionsByMessageId] = useState<Record<string, FastActionSuggestion[]>>({});
 
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressRef = useRef(false);
@@ -723,9 +727,45 @@ export function ChatShell() {
       }
     };
 
-    const handleQuickActions = () => {
-      // TODO: Implement quick actions functionality
-      console.log("Quick actions for message:", message.id);
+    const handleQuickActions = async () => {
+      if (fastActionsOpenMessageId === message.id) {
+        setFastActionsOpenMessageId(null);
+        return;
+      }
+
+      const messageIndex = messages.findIndex((m) => m.id === message.id);
+      let lastUserMessage = "";
+      if (messageIndex > 0) {
+        for (let i = messageIndex - 1; i >= 0; i -= 1) {
+          if (messages[i]?.role === "user") {
+            lastUserMessage = messages[i]?.text ?? "";
+            break;
+          }
+        }
+      }
+
+      try {
+        const res = await fetchFastActions({
+          surface: "inline",
+          channel: "web_chat",
+          thread_id: currentThreadRef.current ?? undefined,
+          message_id: message.id,
+          language: "de",
+          last_user_message: lastUserMessage,
+          last_assistant_message: message.text ?? "",
+          conversation_summary: "",
+        });
+
+        setFastActionsByMessageId((prev) => ({
+          ...prev,
+          [message.id]: Array.isArray(res.suggestions) ? res.suggestions : [],
+        }));
+        setFastActionsOpenMessageId(message.id);
+      } catch (err) {
+        console.error(err);
+        setFastActionsByMessageId((prev) => ({ ...prev, [message.id]: [] }));
+        setFastActionsOpenMessageId(message.id);
+      }
     };
 
     return (
@@ -966,6 +1006,24 @@ export function ChatShell() {
               </div>
             </div>
 
+            {fastActionsOpenMessageId === message.id &&
+            Array.isArray(fastActionsByMessageId[message.id]) &&
+            fastActionsByMessageId[message.id].length > 0 ? (
+              <div className="mt-2 w-full">
+                <FastActionsChips
+                  suggestions={fastActionsByMessageId[message.id]}
+                  onSelect={(s) => {
+                    const text = s.payload?.text;
+                    if (s.handler === "prefill_prompt" && typeof text === "string" && text.trim().length > 0) {
+                      setInput(text);
+                      setFastActionsOpenMessageId(null);
+                      if (inputRef.current) inputRef.current.focus();
+                    }
+                  }}
+                />
+              </div>
+            ) : null}
+
             {Array.isArray(message.uiMessages) && message.uiMessages.length > 0 ? (
               <div className="mt-3 w-full space-y-3">
                 {message.uiMessages.map((uiMessage, index) => (
@@ -1152,7 +1210,7 @@ export function ChatShell() {
                     threadId,
                     title,
                     preview: finalContent.slice(0, 120) || trimmed,
-                    lastMessageAt: performance.now(),
+                    lastMessageAt: Date.now(),
                   },
                 })
               );
@@ -1232,13 +1290,7 @@ export function ChatShell() {
 
   return (
     <div
-      className="flex h-full flex-col gap-4 rounded-2xl px-4 pt-4 pb-2 relative"
-      style={{
-        background: "rgba(255, 255, 255, 0.3)",
-        backdropFilter: "blur(20px) saturate(180%)",
-        WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        boxShadow: "var(--ak-shadow-glass)",
-      }}
+      className="flex h-full w-full max-w-full flex-col gap-4 px-4 pt-4 pb-2 relative overflow-x-hidden"
     >
       <style jsx>{`
         @keyframes thinking-dot-blink {
@@ -1278,7 +1330,7 @@ export function ChatShell() {
         note={thinkingNote}
       />
 
-      <div className="flex-1 overflow-y-auto space-y-6 px-[5%] py-2 pb-20 mx-auto max-w-3xl">
+      <div className="flex-1 overflow-y-auto space-y-6 px-4 py-2 pb-20 w-full max-w-full">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
             <div className="ak-heading font-medium text-[var(--ak-color-text-primary)]" style={{ fontSize: "2rem" }}>
@@ -1327,12 +1379,12 @@ export function ChatShell() {
         )}
       </div>
 
-      <form onSubmit={handleSend} className="px-[5%]">
+      <form onSubmit={handleSend} className="w-full max-w-full px-[10%]">
         <div className={clsx(
-          "relative flex items-center gap-2 rounded-xl px-4 py-3 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] shadow-[var(--ak-shadow-glass)] focus-within:scale-[1.01] border backdrop-blur-2xl outline-none ring-0 focus-within:outline-none focus-within:ring-0",
+          "relative flex items-center gap-2 rounded-2xl px-5 py-4 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] shadow-[0_20px_45px_rgba(14,23,38,0.2)] focus-within:scale-[1.01] border outline-none ring-0 focus-within:outline-none focus-within:ring-0",
           isRealtimeActive 
-            ? "bg-red-500/20 border-red-400/50 focus-within:border-red-400/70" 
-            : "border-gray-300 bg-gradient-to-b from-gray-100/80 via-gray-100/70 to-gray-100/60 focus-within:border-gray-300"
+            ? "bg-red-500/15 border-red-300/50 focus-within:border-red-400/70"
+            : "bg-white/85 border-white/40 backdrop-blur-2xl focus-within:border-white/70"
         )}>
           {/* Audio-Wellen-Visualisierung - zentriert, schwarz, doppelt so breit, mit echten Audio-Daten oder zufälliger Animation */}
           {isMicrophoneActive && (

@@ -6,7 +6,6 @@ import {
   SparklesIcon,
   ArrowTopRightOnSquareIcon,
   ArrowPathIcon,
-  XMarkIcon,
 } from '@heroicons/react/24/outline'
 
 type DocumentKind = 'Rechnung' | 'Vertrag' | 'Foto' | 'Sonstiges'
@@ -86,6 +85,7 @@ export function DocumentDetailsDrawer({ documentId, onClose }: DocumentDetailsDr
   const handleShowInChat = () => {
     // TODO: Show document in chat
     console.log('Show document in chat:', documentId)
+    onClose?.()
   }
 
   const handleDownload = () => {
@@ -100,28 +100,20 @@ export function DocumentDetailsDrawer({ documentId, onClose }: DocumentDetailsDr
 
   if (!hasDoc || !doc) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 p-4">
+      <div className="flex h-full flex-col items-center justify-center gap-2">
         <h3 className="ak-heading text-sm">Kein Dokument ausgewählt</h3>
       </div>
     )
   }
 
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
+    <div className="flex h-full flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <p className="ak-caption text-sm text-[var(--ak-color-text-secondary)]">Dokument – Details</p>
           <h2 className="ak-heading line-clamp-1 text-base">{doc.title}</h2>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="inline-flex h-8 w-8 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-colors hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]"
-          aria-label="Schließen"
-        >
-          <XMarkIcon className="h-5 w-5" />
-        </button>
       </div>
 
       {/* Action Buttons */}
@@ -180,7 +172,7 @@ export function DocumentDetailsDrawer({ documentId, onClose }: DocumentDetailsDr
               <p className="ak-body text-sm text-[var(--ak-color-text-secondary)]">Status</p>
               <span
                 className={clsx(
-                  'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium',
+                  'inline-flex items-center rounded-[var(--ak-radius-md)] border px-2 py-0.5 text-[10px] font-medium',
                   STATUS_BADGE_COLOR_MAP[doc.status]
                 )}
               >

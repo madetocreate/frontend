@@ -257,16 +257,16 @@ const handleSuggestionClick = async (s: MarketingSuggestion) => {
             <h2 className="ak-heading">Marketing-Aktionen</h2>
           </div>
           <div className="flex flex-wrap items-center gap-1">
-            <span className="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-700">
+            <span className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-purple-200 bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-700">
               Social
             </span>
-            <span className="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-700">
+            <span className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-purple-200 bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-700">
               Newsletter
             </span>
-            <span className="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-700">
+            <span className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-purple-200 bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-700">
               Anzeigen
             </span>
-            <span className="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-700">
+            <span className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-purple-200 bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-700">
               Print
             </span>
           </div>
@@ -314,7 +314,7 @@ const handleSuggestionClick = async (s: MarketingSuggestion) => {
               type="button"
               onClick={() => handleTypeSelect(type.id)}
               className={clsx(
-                'inline-flex items-center rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+                'inline-flex items-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 text-[12px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
                 type.selected
                   ? 'border-purple-300 bg-purple-100 text-purple-700 shadow-sm'
                   : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]',
@@ -364,7 +364,7 @@ const handleSuggestionClick = async (s: MarketingSuggestion) => {
                     type="button"
                     onClick={() => handleChannelSelect(ch.value)}
                     className={clsx(
-                      'inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+                      'inline-flex items-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 text-[11px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
                       ch.selected
                         ? 'border-blue-300 bg-blue-100 text-blue-700'
                         : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-secondary)] hover:border-[var(--ak-color-border-strong)]',
@@ -408,7 +408,7 @@ const handleSuggestionClick = async (s: MarketingSuggestion) => {
                     type="button"
                     onClick={() => handleToneSelect(tone.value)}
                     className={clsx(
-                      'inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+                      'inline-flex items-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 text-[11px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
                       tone.selected
                         ? 'border-slate-300 bg-slate-900 text-slate-50'
                         : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-secondary)] hover:border-[var(--ak-color-border-strong)]',
@@ -427,7 +427,7 @@ const handleSuggestionClick = async (s: MarketingSuggestion) => {
             <h3 className="ak-heading mb-1">{preview.headline}</h3>
             <p className="ak-body mb-2 text-[var(--ak-color-text-secondary)]">{preview.body}</p>
             <div className="mb-2 flex items-center gap-2">
-              <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+              <span className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
                 CTA
               </span>
               <p className="ak-body text-[var(--ak-color-text-primary)]">{preview.cta}</p>
@@ -471,10 +471,10 @@ const handleSuggestionClick = async (s: MarketingSuggestion) => {
                 className="flex items-center gap-2 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 p-2"
               >
                 <p className="ak-body text-[var(--ak-color-text-secondary)]">{item.date}</p>
-                <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                <span className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-700">
                   {item.type}
                 </span>
-                <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                <span className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
                   {item.channel}
                 </span>
                 <p className="ak-body flex-1 truncate text-[var(--ak-color-text-primary)]">
@@ -482,7 +482,7 @@ const handleSuggestionClick = async (s: MarketingSuggestion) => {
                 </p>
                 <span
                   className={clsx(
-                    'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium',
+                    'inline-flex items-center rounded-[var(--ak-radius-md)] border px-2 py-0.5 text-[11px] font-medium',
                     getStatusColor(item.status),
                   )}
                 >

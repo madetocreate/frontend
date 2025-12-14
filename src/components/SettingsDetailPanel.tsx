@@ -149,7 +149,7 @@ export function SettingsDetailPanel({ category }: SettingsDetailPanelProps) {
                 type="button"
                 onClick={() => handleSettingsChange('appearance.mode', 'system')}
                 className={clsx(
-                  'inline-flex items-center justify-center rounded-full border px-3 py-1.5 ak-caption font-medium transition-all',
+                  'inline-flex items-center justify-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 ak-caption font-medium transition-all',
                   settings.appearance.mode === 'system'
                     ? 'border-slate-300 bg-slate-100 text-slate-900'
                     : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
@@ -161,7 +161,7 @@ export function SettingsDetailPanel({ category }: SettingsDetailPanelProps) {
                 type="button"
                 onClick={() => handleSettingsChange('appearance.mode', 'hell')}
                 className={clsx(
-                  'inline-flex items-center justify-center rounded-full border px-3 py-1.5 ak-caption font-medium transition-all',
+                  'inline-flex items-center justify-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 ak-caption font-medium transition-all',
                   settings.appearance.mode === 'hell'
                     ? 'border-slate-300 bg-slate-100 text-slate-900'
                     : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
@@ -173,7 +173,7 @@ export function SettingsDetailPanel({ category }: SettingsDetailPanelProps) {
                 type="button"
                 onClick={() => handleSettingsChange('appearance.mode', 'dunkel')}
                 className={clsx(
-                  'inline-flex items-center justify-center rounded-full border px-3 py-1.5 ak-caption font-medium transition-all',
+                  'inline-flex items-center justify-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 ak-caption font-medium transition-all',
                   settings.appearance.mode === 'dunkel'
                     ? 'border-slate-300 bg-slate-100 text-slate-900'
                     : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
@@ -196,7 +196,7 @@ export function SettingsDetailPanel({ category }: SettingsDetailPanelProps) {
                 type="button"
                 onClick={() => handleSettingsChange('appearance.accentColor', 'standard')}
                 className={clsx(
-                  'inline-flex items-center justify-center rounded-full border px-3 py-1.5 ak-caption font-medium transition-all',
+                  'inline-flex items-center justify-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 ak-caption font-medium transition-all',
                   settings.appearance.accentColor === 'standard'
                     ? 'border-slate-300 bg-slate-100 text-slate-900'
                     : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
@@ -208,7 +208,7 @@ export function SettingsDetailPanel({ category }: SettingsDetailPanelProps) {
                 type="button"
                 onClick={() => handleSettingsChange('appearance.accentColor', 'blau')}
                 className={clsx(
-                  'inline-flex items-center justify-center rounded-full border px-3 py-1.5 ak-caption font-medium transition-all',
+                  'inline-flex items-center justify-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 ak-caption font-medium transition-all',
                   settings.appearance.accentColor === 'blau'
                     ? 'border-blue-300 bg-blue-50 text-blue-700'
                     : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300'
@@ -220,7 +220,7 @@ export function SettingsDetailPanel({ category }: SettingsDetailPanelProps) {
                 type="button"
                 onClick={() => handleSettingsChange('appearance.accentColor', 'gruen')}
                 className={clsx(
-                  'inline-flex items-center justify-center rounded-full border px-3 py-1.5 ak-caption font-medium transition-all',
+                  'inline-flex items-center justify-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 ak-caption font-medium transition-all',
                   settings.appearance.accentColor === 'gruen'
                     ? 'border-green-300 bg-green-50 text-green-700'
                     : 'border-slate-200 bg-white text-slate-600 hover:border-green-300'
@@ -232,7 +232,7 @@ export function SettingsDetailPanel({ category }: SettingsDetailPanelProps) {
                 type="button"
                 onClick={() => handleSettingsChange('appearance.accentColor', 'lila')}
                 className={clsx(
-                  'inline-flex items-center justify-center rounded-full border px-3 py-1.5 ak-caption font-medium transition-all',
+                  'inline-flex items-center justify-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 ak-caption font-medium transition-all',
                   settings.appearance.accentColor === 'lila'
                     ? 'border-purple-300 bg-purple-50 text-purple-700'
                     : 'border-slate-200 bg-white text-slate-600 hover:border-purple-300'
@@ -400,7 +400,7 @@ export function SettingsDetailPanel({ category }: SettingsDetailPanelProps) {
               </p>
             </div>
             <div className="flex flex-1 items-center gap-2">
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 ak-caption font-medium text-slate-700">
+              <span className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-slate-200 bg-slate-50 px-3 py-1 ak-caption font-medium text-slate-700">
                 {settings.workspace.defaultWorkspaceName}
               </span>
               <button

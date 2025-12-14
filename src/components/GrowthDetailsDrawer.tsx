@@ -11,7 +11,6 @@ import {
   EnvelopeIcon,
   DevicePhoneMobileIcon,
   Cog6ToothIcon,
-  XMarkIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 
@@ -207,13 +206,6 @@ export function GrowthDetailsDrawer({ growthItemId, onClose }: GrowthDetailsDraw
     })
   }
 
-  const handleReload = () => {
-    setViewState('loading')
-    setTimeout(() => {
-      setViewState('ready')
-    }, 500)
-  }
-
   const handleCopyAsset = (assetId: string) => {
     // TODO: Copy asset
     console.log('Copy asset:', assetId)
@@ -226,7 +218,7 @@ export function GrowthDetailsDrawer({ growthItemId, onClose }: GrowthDetailsDraw
 
   if (viewState === 'loading') {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 p-6">
+      <div className="flex h-full flex-col items-center justify-center gap-2">
         <ArrowPathIcon className="h-8 w-8 animate-spin text-[var(--ak-color-text-secondary)]" />
         <p className="ak-body text-sm text-[var(--ak-color-text-secondary)]">Wird geladen…</p>
       </div>
@@ -235,69 +227,27 @@ export function GrowthDetailsDrawer({ growthItemId, onClose }: GrowthDetailsDraw
 
   if (viewState === 'error') {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 p-6">
+      <div className="flex h-full flex-col items-center justify-center gap-3">
         <span className="inline-flex items-center rounded-full border border-[var(--ak-color-border-danger)] bg-[var(--ak-color-bg-danger)] px-2 py-0.5 text-[10px] font-medium text-[var(--ak-color-text-danger)]">
           Fehler
         </span>
-        <button
-          type="button"
-          onClick={handleReload}
-          className="inline-flex items-center justify-center rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-4 py-2 text-sm font-medium text-[var(--ak-color-text-primary)] transition-colors hover:bg-[var(--ak-color-bg-hover)]"
-        >
-          Erneut versuchen
-        </button>
-      </div>
-    )
-  }
-
-  if (viewState === 'empty') {
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 p-6">
-        <span className="inline-flex items-center rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--ak-color-text-secondary)]">
-          Leer
-        </span>
-        <button
-          type="button"
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--ak-color-accent)] bg-[var(--ak-color-accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--ak-color-accent)]/90"
-        >
-          <SparklesIcon className="h-4 w-4" />
-          Im Chat erstellen
-        </button>
+        {/* Im Chat weiterarbeiten Button */}
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--ak-color-accent)] bg-[var(--ak-color-accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--ak-color-accent)]/90"
+          >
+            <SparklesIcon className="h-4 w-4" />
+            Im Chat weiterarbeiten
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="flex-1">
-          <h2 className="ak-heading text-base">{itemTypeLabel}</h2>
-          <p className="ak-caption text-[var(--ak-color-text-secondary)]">
-            {status} • Geändert: {lastUpdated}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="inline-flex h-8 w-8 items-center justify-center rounded text-[var(--ak-color-text-secondary)] transition-colors hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]"
-          aria-label="Schließen"
-        >
-          <XMarkIcon className="h-5 w-5" />
-        </button>
-      </div>
-
-      {/* Im Chat weiterarbeiten Button */}
-      <div className="flex justify-end">
-        <button
-          type="button"
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--ak-color-accent)] bg-[var(--ak-color-accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--ak-color-accent)]/90"
-        >
-          <SparklesIcon className="h-4 w-4" />
-          Im Chat weiterarbeiten
-        </button>
-      </div>
-
+    <div className="flex h-full flex-col gap-4">
       <div className="h-px bg-[var(--ak-color-border-subtle)]" />
 
       {/* Formular */}
@@ -307,6 +257,11 @@ export function GrowthDetailsDrawer({ growthItemId, onClose }: GrowthDetailsDraw
           <div className="flex flex-col gap-2">
             <p className="ak-caption text-[var(--ak-color-text-secondary)]">Überblick</p>
             
+            <div className="flex items-center justify-between">
+               <span className="ak-body text-sm font-medium">{itemTypeLabel}</span>
+               <span className="ak-caption text-[var(--ak-color-text-muted)]">{lastUpdated}</span>
+            </div>
+
             {/* Status */}
             <div className="flex items-center justify-between">
               <label className="ak-body text-sm text-[var(--ak-color-text-primary)]">Status</label>

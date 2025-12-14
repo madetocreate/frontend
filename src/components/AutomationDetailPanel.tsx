@@ -377,7 +377,7 @@ const handleRunSelect = (id: string) => {
                   <p className="ak-body text-sm text-[var(--ak-color-text-primary)]">{run.dateTime}</p>
                   <span
                     className={clsx(
-                      'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium',
+                      'inline-flex items-center rounded-[var(--ak-radius-md)] border px-2 py-0.5 text-[11px] font-medium',
                       STATUS_COLORS[run.statusColor],
                     )}
                   >
@@ -400,7 +400,7 @@ const handleRunSelect = (id: string) => {
                           {run.metrics.map((m, idx) => (
                             <span
                               key={`${run.id}-m${idx}`}
-                              className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700"
+                              className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700"
                             >
                               {m.label}: {m.value}
                             </span>

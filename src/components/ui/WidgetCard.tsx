@@ -20,36 +20,34 @@ export function WidgetCard({
   children,
   className,
   padding = "md",
+  shadow = true,
 }: WidgetCardProps) {
-  const paddingClass = {
-    sm: "p-3",
-    md: "p-4",
-    lg: "p-6",
-  }[padding];
+  const paddingClass =
+    padding === "sm" ? "px-3 py-3" : padding === "lg" ? "px-6 py-6" : "px-4 py-4";
+
+  const hasHeader = Boolean(title || subtitle || actions);
 
   return (
     <div
       className={clsx(
-        "flex flex-col rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/95 p-3 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl",
-        className
+        "flex flex-col rounded-[var(--ak-radius-xl)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]",
+        shadow ? "shadow-[var(--ak-elev-1)]" : "",
+        className,
       )}
     >
-      {(title || subtitle || actions) && (
-        <div className="mb-3 flex items-start justify-between border-b border-[var(--ak-color-border-subtle)] pb-3">
-          <div className="flex-1">
-            {title && <h3 className="ak-heading mb-1">{title}</h3>}
-            {subtitle && (
-              <p className="ak-caption text-[var(--ak-color-text-secondary)]">
-                {subtitle}
-              </p>
-            )}
+      {hasHeader ? (
+        <div className="flex items-start justify-between gap-3 px-4 py-3">
+          <div className="min-w-0 flex-1">
+            {title ? <h3 className="ak-heading text-sm">{title}</h3> : null}
+            {subtitle ? (
+              <p className="ak-caption mt-0.5 text-[var(--ak-color-text-secondary)]">{subtitle}</p>
+            ) : null}
           </div>
-          {actions && <div className="ml-4">{actions}</div>}
+          {actions ? <div className="shrink-0">{actions}</div> : null}
         </div>
-      )}
-      <div className={clsx("flex-1", padding === "sm" ? "px-0 py-0" : paddingClass)}>
-        {children}
-      </div>
+      ) : null}
+
+      <div className={clsx("flex-1", paddingClass)}>{children}</div>
     </div>
   );
 }

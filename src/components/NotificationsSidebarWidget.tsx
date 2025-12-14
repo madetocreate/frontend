@@ -1,310 +1,274 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState, type ElementType } from 'react'
 import clsx from 'clsx'
 import {
-  CheckCircleIcon,
-  EllipsisHorizontalIcon,
-  DocumentTextIcon,
-  EnvelopeIcon,
-  ChartBarIcon,
+  AdjustmentsHorizontalIcon,
+  BellAlertIcon,
+  ExclamationTriangleIcon,
   InformationCircleIcon,
-  PencilSquareIcon,
+  LightBulbIcon
 } from '@heroicons/react/24/outline'
+import { AkButton } from '@/components/ui/AkButton'
+import { AkChip } from '@/components/ui/AkChip'
+import { AkIconButton } from '@/components/ui/AkIconButton'
 
-type NotificationFilter = 'all' | 'mentions' | 'tasks' | 'system' | 'sales'
+type NotificationPriority = 'high' | 'medium' | 'low'
+type NotificationKind = 'task' | 'mention' | 'system' | 'insight'
+type FilterId = 'all' | NotificationKind | 'unread' | 'high_priority'
 
-type NotificationItem = {
+export type NotificationItem = {
   id: string
   title: string
-  subtitle: string
+  message: string
   time: string
-  icon: 'notebook-pencil' | 'mail' | 'chart' | 'info' | 'write-alt'
-  iconColor: string
-  isUnread: boolean
-  background: 'surface-secondary' | 'surface'
+  priority: NotificationPriority
+  kind: NotificationKind
+  iconColor: 'blue-500' | 'orange-500' | 'green-500' | 'purple-500'
+  isNew: boolean
 }
 
-type NotificationGroup = {
-  label: string
-  items: NotificationItem[]
+export type NotificationsSidebarWidgetProps = {
+  onInfoClick?: () => void
 }
 
-type NotificationsSidebarWidgetProps = Record<string, never>
-
-const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  'notebook-pencil': DocumentTextIcon,
-  mail: EnvelopeIcon,
-  chart: ChartBarIcon,
-  info: InformationCircleIcon,
-  'write-alt': PencilSquareIcon,
+const ICONS: Record<NotificationKind, ElementType> = {
+  task: ExclamationTriangleIcon,
+  mention: BellAlertIcon,
+  system: InformationCircleIcon,
+  insight: LightBulbIcon
 }
 
-const COLOR_MAP: Record<string, string> = {
-  'blue-500': 'bg-blue-500',
-  'purple-500': 'bg-purple-500',
-  'green-500': 'bg-green-500',
-  'slate-500': 'bg-slate-500',
-  'orange-500': 'bg-orange-500',
+const TEXT_COLOR_MAP: Record<NotificationItem['iconColor'], string> = {
+  'blue-500': 'text-blue-500',
+  'orange-500': 'text-orange-500',
+  'green-500': 'text-green-500',
+  'purple-500': 'text-purple-500'
 }
 
-const MOCK_NOTIFICATIONS: NotificationGroup[] = [
-  {
-    label: 'Heute',
-    items: [
+export function NotificationsSidebarWidget({ onInfoClick }: NotificationsSidebarWidgetProps) {
+  const [activeFilter, setActiveFilter] = useState<FilterId>('all')
+  const [activeId, setActiveId] = useState<string | null>(null)
+
+  const notificationGroups = useMemo(() => {
+    const items: NotificationItem[] = [
       {
-        id: 'n-001',
-        title: 'Neues Ticket zugewiesen',
-        subtitle: 'Projekt X',
-        time: 'vor 5 Min',
-        icon: 'notebook-pencil',
-        iconColor: 'blue-500',
-        isUnread: true,
-        background: 'surface-secondary',
-      },
-      {
-        id: 'n-002',
-        title: 'Du wurdest erwähnt',
-        subtitle: 'Kanal: Team-Updates',
-        time: 'vor 23 Min',
-        icon: 'mail',
-        iconColor: 'purple-500',
-        isUnread: true,
-        background: 'surface-secondary',
-      },
-      {
-        id: 'n-003',
-        title: 'Kampagne erfolgreich abgeschlossen',
-        subtitle: 'Kampagne Z',
-        time: 'vor 2 Std',
-        icon: 'chart',
-        iconColor: 'green-500',
-        isUnread: false,
-        background: 'surface',
-      },
-    ],
-  },
-  {
-    label: 'Gestern',
-    items: [
-      {
-        id: 'n-004',
-        title: 'Wartungsfenster abgeschlossen',
-        subtitle: 'Status: Erfolgreich',
-        time: 'gestern',
-        icon: 'info',
-        iconColor: 'slate-500',
-        isUnread: false,
-        background: 'surface',
-      },
-      {
-        id: 'n-005',
-        title: 'Aufgabe fällig',
-        subtitle: 'Kunde Y',
-        time: 'gestern, 16:20',
-        icon: 'notebook-pencil',
+        id: 'notif-001',
+        title: 'Neue Aufgabe: Angebot nachfassen',
+        message: 'Acme GmbH wartet auf ein Update zum Zeitplan.',
+        time: '09:12',
+        priority: 'high',
+        kind: 'task',
         iconColor: 'orange-500',
-        isUnread: false,
-        background: 'surface',
+        isNew: true
       },
-    ],
-  },
-  {
-    label: 'Früher',
-    items: [
       {
-        id: 'n-006',
-        title: 'Neuer Kommentar',
-        subtitle: 'Projekt Delta',
-        time: 'vor 3 Tagen',
-        icon: 'write-alt',
-        iconColor: 'slate-500',
-        isUnread: false,
-        background: 'surface',
+        id: 'notif-002',
+        title: '@Matthias erwähnt',
+        message: '„Kannst du kurz in die Inbox schauen?“',
+        time: '08:55',
+        priority: 'medium',
+        kind: 'mention',
+        iconColor: 'blue-500',
+        isNew: true
       },
-    ],
-  },
-]
+      {
+        id: 'notif-003',
+        title: 'System: Sync erfolgreich',
+        message: 'E-Mail-Connector wurde aktualisiert.',
+        time: '07:40',
+        priority: 'low',
+        kind: 'system',
+        iconColor: 'green-500',
+        isNew: false
+      },
+      {
+        id: 'notif-004',
+        title: 'Insight: Upsell-Chance erkannt',
+        message: 'Hohe Nutzungsintensität im letzten Monat.',
+        time: 'Gestern',
+        priority: 'medium',
+        kind: 'insight',
+        iconColor: 'purple-500',
+        isNew: false
+      },
+      {
+        id: 'notif-005',
+        title: 'Aufgabe: Follow-up vorbereiten',
+        message: 'Entwurf für die nächste E-Mail ist bereit.',
+        time: 'Gestern',
+        priority: 'low',
+        kind: 'task',
+        iconColor: 'orange-500',
+        isNew: false
+      }
+    ]
 
-export function NotificationsSidebarWidget() {
-  const [selectedFilter, setSelectedFilter] = useState<NotificationFilter>('all')
-  const [notifications] = useState<NotificationGroup[]>(MOCK_NOTIFICATIONS)
+    return [
+      { title: 'Heute', items: items.slice(0, 3) },
+      { title: 'Gestern', items: items.slice(3) }
+    ]
+  }, [])
 
-  const handleFilterChange = (filterId: NotificationFilter) => {
-    setSelectedFilter(filterId)
-  }
+  const allItems = useMemo(
+    () => notificationGroups.flatMap((g) => g.items),
+    [notificationGroups]
+  )
 
-  const handleNotificationClick = (id: string) => {
+  const counts = useMemo(() => {
+    const base = {
+      all: allItems.length,
+      task: 0,
+      mention: 0,
+      system: 0,
+      insight: 0,
+      unread: 0,
+      high_priority: 0
+    } as Record<FilterId, number>
+
+    for (const it of allItems) {
+      base[it.kind] += 1
+      if (it.isNew) base.unread += 1
+      if (it.priority === 'high') base.high_priority += 1
+    }
+    return base
+  }, [allItems])
+
+  const unreadCount = useMemo(
+    () => allItems.filter((it) => it.isNew).length,
+    [allItems]
+  )
+
+  const filteredGroups = useMemo(() => {
+    if (activeFilter === 'all') return notificationGroups
+    
+    let filterFn: (item: NotificationItem) => boolean
+    if (activeFilter === 'unread') {
+      filterFn = (item) => item.isNew
+    } else if (activeFilter === 'high_priority') {
+      filterFn = (item) => item.priority === 'high'
+    } else {
+      filterFn = (item) => item.kind === activeFilter
+    }
+
+    const next = notificationGroups
+      .map((g) => ({ ...g, items: g.items.filter(filterFn) }))
+      .filter((g) => g.items.length > 0)
+    return next
+  }, [activeFilter, notificationGroups])
+
+  const filterChips = useMemo(
+    () =>
+      ([
+        { id: 'all', label: 'Alle' },
+        { id: 'unread', label: 'Ungelesen' },
+        { id: 'high_priority', label: 'Wichtig' },
+        { id: 'task', label: 'Aufgaben' },
+        { id: 'mention', label: 'Erwähnungen' },
+        { id: 'system', label: 'System' },
+        { id: 'insight', label: 'Insights' }
+      ] as const),
+    []
+  )
+
+  const handleClick = (id: string) => {
+    setActiveId(id)
     console.log('Open notification:', id)
   }
 
-  const handleMarkRead = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    console.log('Mark as read:', id)
-  }
-
-  const handleMute = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    console.log('Mute notification:', id)
-  }
-
   return (
-    <div className="flex h-full flex-col">
-      {/* Filter Buttons */}
-      <div className="flex flex-wrap items-center gap-2 px-3 pb-3">
-        <button
-          type="button"
-          onClick={() => handleFilterChange('all')}
-          className={clsx(
-            'inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
-            selectedFilter === 'all'
-              ? 'border-blue-300 bg-blue-100 text-blue-700 shadow-sm'
-              : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
-          )}
-        >
-          Alle
-        </button>
-        <button
-          type="button"
-          onClick={() => handleFilterChange('mentions')}
-          className={clsx(
-            'inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
-            selectedFilter === 'mentions'
-              ? 'border-blue-300 bg-blue-100 text-blue-700 shadow-sm'
-              : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
-          )}
-        >
-          Erwähnungen
-        </button>
-        <button
-          type="button"
-          onClick={() => handleFilterChange('tasks')}
-          className={clsx(
-            'inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
-            selectedFilter === 'tasks'
-              ? 'border-blue-300 bg-blue-100 text-blue-700 shadow-sm'
-              : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
-          )}
-        >
-          Aufgaben
-        </button>
-        <button
-          type="button"
-          onClick={() => handleFilterChange('system')}
-          className={clsx(
-            'inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
-            selectedFilter === 'system'
-              ? 'border-blue-300 bg-blue-100 text-blue-700 shadow-sm'
-              : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
-          )}
-        >
-          System
-        </button>
-        <button
-          type="button"
-          onClick={() => handleFilterChange('sales')}
-          className={clsx(
-            'inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
-            selectedFilter === 'sales'
-              ? 'border-blue-300 bg-blue-100 text-blue-700 shadow-sm'
-              : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
-          )}
-        >
-          Sales & Marketing
-        </button>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <div className="ak-caption">{unreadCount} ungelesen</div>
+        {onInfoClick ? (
+          <AkIconButton label="Einstellungen" onClick={onInfoClick}>
+            <AdjustmentsHorizontalIcon className="h-4 w-4" />
+          </AkIconButton>
+        ) : null}
       </div>
 
-      <div className="h-px bg-[var(--ak-color-border-subtle)] mx-3 mb-3" />
+      <div className="flex flex-wrap items-center gap-2">
+        {filterChips.map((f) => (
+          <AkChip
+            key={f.id}
+            pressed={activeFilter === f.id}
+            onClick={() => setActiveFilter(f.id)}
+          >
+            <span>{f.label}</span>
+            <span className="ml-1 rounded-full bg-black/5 px-1.5 py-0.5 text-[9px] font-medium">
+              {counts[f.id]}
+            </span>
+          </AkChip>
+        ))}
+      </div>
 
-      {/* Notifications List */}
-      <div className="flex-1 overflow-y-auto px-3">
-        <div className="flex flex-col gap-1">
-          {notifications.map((group) => (
-            <div key={group.label}>
-              <div className="px-1 py-1">
-                <p className="ak-caption font-semibold text-[var(--ak-color-text-muted)]">
-                  {group.label}
-                </p>
-              </div>
+      <div className="space-y-4">
+        {filteredGroups.map((group) => (
+          <div key={group.title} className="space-y-2">
+            <div className="ak-caption uppercase tracking-wide text-[var(--ak-color-text-muted)]">{group.title}</div>
+
+            <ul className="flex flex-col gap-2">
               {group.items.map((item) => {
-                const IconComponent = ICON_MAP[item.icon] || InformationCircleIcon
+                const Icon = ICONS[item.kind]
+                const isSelected = activeId === item.id
                 return (
-                  <div
-                    key={item.id}
-                    onClick={() => handleNotificationClick(item.id)}
-                    className="w-full cursor-pointer"
-                  >
-                    <div
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleClick(item.id)}
                       className={clsx(
-                        'flex items-start gap-3 rounded-lg border border-[var(--ak-color-border-subtle)] p-2 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
-                        item.background === 'surface-secondary'
-                          ? 'bg-[var(--ak-color-bg-surface-muted)]'
-                          : 'bg-[var(--ak-color-bg-surface)]',
-                        'hover:border-[var(--ak-color-border-strong)] hover:shadow-[var(--ak-shadow-card)]'
+                        'relative flex w-full flex-col gap-2 rounded-xl border p-3 text-left transition-all',
+                        'bg-white/60 backdrop-blur-sm',
+                        isSelected
+                          ? 'border-[var(--ak-color-accent)] ring-1 ring-[var(--ak-color-accent)]'
+                          : 'border-slate-200 hover:bg-white/80'
                       )}
                     >
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-[var(--ak-color-bg-surface-muted)]">
-                        <IconComponent className={clsx('h-5 w-5', `text-${item.iconColor}`)} />
-                      </div>
-                      <div className="flex min-w-0 flex-1 flex-col gap-0">
-                        <p
-                          className={clsx(
-                            'ak-body truncate',
-                            item.isUnread ? 'font-semibold' : 'font-normal'
-                          )}
-                        >
-                          {item.title}
-                        </p>
-                        <p className="ak-body truncate text-sm text-[var(--ak-color-text-secondary)]">
-                          {item.subtitle}
-                        </p>
-                      </div>
-                      <div className="flex flex-shrink-0 flex-col items-end gap-1">
-                        <div className="flex items-center gap-2">
-                          <p className="ak-caption text-[var(--ak-color-text-muted)]">
-                            {item.time}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleMarkRead(item.id, e)
-                            }}
-                            className="inline-flex h-6 w-6 items-center justify-center rounded-lg border border-transparent bg-transparent text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
-                            aria-label="Als gelesen markieren"
-                          >
-                            <CheckCircleIcon className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleMute(item.id, e)
-                            }}
-                            className="inline-flex h-6 w-6 items-center justify-center rounded-lg border border-transparent bg-transparent text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
-                            aria-label="Stummschalten"
-                          >
-                            <EllipsisHorizontalIcon className="h-4 w-4" />
-                          </button>
-                          {item.isUnread && (
-                            <div
-                              className={clsx(
-                                'h-2 w-2 rounded-full',
-                                COLOR_MAP[item.iconColor] || 'bg-blue-500'
-                              )}
-                            />
-                          )}
+                      <div className="flex w-full items-start gap-3">
+                        <div className={clsx(
+                            "grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[var(--ak-color-border)] bg-white/50",
+                            TEXT_COLOR_MAP[item.iconColor]
+                          )}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                           <p className={clsx(
+                             "ak-body text-slate-900 truncate",
+                             item.isNew ? "font-semibold" : "font-medium"
+                           )}>
+                             {item.title}
+                           </p>
+                           <p className="ak-caption text-slate-500 line-clamp-2 mt-0.5">
+                             {item.message}
+                           </p>
                         </div>
                       </div>
-                    </div>
-                  </div>
+
+                      <div className="flex w-full items-center justify-between mt-1">
+                        <span className="text-[10px] text-slate-400">{item.time}</span>
+                        {item.isNew && (
+                           <span className="h-2 w-2 rounded-full bg-blue-500 shadow-sm" aria-label="Ungelesen" />
+                        )}
+                      </div>
+                    </button>
+                  </li>
                 )
               })}
-            </div>
-          ))}
-        </div>
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <div className="pt-1">
+        <AkButton
+          size="sm"
+          variant="secondary"
+          className="w-full"
+          onClick={() => console.log('Load more notifications')}
+        >
+          Mehr anzeigen
+        </AkButton>
       </div>
     </div>
   )
 }
-

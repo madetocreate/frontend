@@ -84,7 +84,7 @@ export const ProfileMenu: FC<ProfileMenuProps> = ({ user, onAction }) => {
               {displayName}
             </div>
             {user.plan ? (
-              <span className="inline-flex items-center truncate rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700 ring-1 ring-sky-100">
+              <span className="inline-flex items-center truncate rounded-[var(--ak-radius-md)] bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700 ring-1 ring-sky-100">
                 {user.plan}
               </span>
             ) : null}

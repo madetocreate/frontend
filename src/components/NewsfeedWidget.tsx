@@ -123,7 +123,7 @@ export function NewsfeedWidget({ stories, onStoryClick }: NewsfeedWidgetProps) {
                       {/* Badge über Source */}
                       <span
                         className={clsx(
-                          'text-[10px] inline-flex w-fit items-center rounded-full border px-1.5 py-0.5 font-medium',
+                          'text-[10px] inline-flex w-fit items-center rounded-[var(--ak-radius-md)] border px-1.5 py-0.5 font-medium',
                           BADGE_COLORS[story.badgeColor]
                         )}
                       >

@@ -174,7 +174,7 @@ export function NotificationsDetailPanel() {
             type="button"
             onClick={() => handleFilterChange('all')}
             className={clsx(
-              'inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+              'inline-flex items-center justify-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 text-[11px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
               selectedFilter === 'all'
                 ? 'border-blue-300 bg-blue-100 text-blue-700 shadow-sm'
                 : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
@@ -186,7 +186,7 @@ export function NotificationsDetailPanel() {
             type="button"
             onClick={() => handleFilterChange('mentions')}
             className={clsx(
-              'inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+              'inline-flex items-center justify-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 text-[11px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
               selectedFilter === 'mentions'
                 ? 'border-blue-300 bg-blue-100 text-blue-700 shadow-sm'
                 : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
@@ -198,7 +198,7 @@ export function NotificationsDetailPanel() {
             type="button"
             onClick={() => handleFilterChange('tasks')}
             className={clsx(
-              'inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+              'inline-flex items-center justify-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 text-[11px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
               selectedFilter === 'tasks'
                 ? 'border-blue-300 bg-blue-100 text-blue-700 shadow-sm'
                 : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
@@ -210,7 +210,7 @@ export function NotificationsDetailPanel() {
             type="button"
             onClick={() => handleFilterChange('system')}
             className={clsx(
-              'inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+              'inline-flex items-center justify-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 text-[11px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
               selectedFilter === 'system'
                 ? 'border-blue-300 bg-blue-100 text-blue-700 shadow-sm'
                 : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
@@ -222,7 +222,7 @@ export function NotificationsDetailPanel() {
             type="button"
             onClick={() => handleFilterChange('sales')}
             className={clsx(
-              'inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+              'inline-flex items-center justify-center rounded-[var(--ak-radius-md)] border px-2.5 py-1 text-[11px] font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
               selectedFilter === 'sales'
                 ? 'border-blue-300 bg-blue-100 text-blue-700 shadow-sm'
                 : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
@@ -243,7 +243,7 @@ export function NotificationsDetailPanel() {
             >
               <BellIcon className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute right-1 top-1 inline-flex h-2.5 min-w-[10px] items-center justify-center rounded-full bg-red-500 text-[9px] font-semibold text-white px-0.5">
+                <span className="absolute right-1 top-1 inline-flex h-2.5 min-w-[10px] items-center justify-center rounded-[var(--ak-radius-md)] bg-red-500 text-[9px] font-semibold text-white px-0.5">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
