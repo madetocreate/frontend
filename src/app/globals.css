@@ -46,16 +46,24 @@
   --ak-color-tooltip-text: #fafafa;
   --ak-color-border-hairline: rgba(0, 0, 0, 0.1);
 
-  --ak-shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --ak-shadow-card: 0 4px 16px rgba(0, 0, 0, 0.06);
-  --ak-shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.08);
-  --ak-shadow-glass: 0 4px 20px rgba(0, 0, 0, 0.06);
+  /* Subtile Schatten - Apple Style */
+  --ak-shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --ak-shadow-md: 0 2px 6px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --ak-shadow-card: 0 4px 12px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02);
+  --ak-shadow-strong: 0 8px 20px rgba(0, 0, 0, 0.05), 0 4px 8px rgba(0, 0, 0, 0.03);
+  --ak-shadow-glass: 0 4px 20px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.02);
 
-  --ak-motion-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
-  --ak-motion-duration: 0.25s;
-  --ak-motion-duration-fast: 0.2s;
+  /* Sanftere Animationen - Apple Style */
+  --ak-motion-ease: cubic-bezier(0.28, 0.11, 0.32, 1);
+  --ak-motion-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ak-motion-duration: 0.35s;
+  --ak-motion-duration-fast: 0.25s;
+  --ak-motion-duration-slow: 0.5s;
 
-  --ak-radius-card: 12px;
+  /* Größere Rounded Corners - Apple Style */
+  --ak-radius-card: 16px;
+  --ak-radius-lg: 20px;
+  --ak-radius-xl: 24px;
   --ak-color-hover: var(--ak-color-bg-hover);
 }
 
@@ -94,16 +102,24 @@
   --ak-color-tooltip-text: #f2f2f7;
   --ak-color-border-hairline: rgba(255, 255, 255, 0.12);
 
-  --ak-shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --ak-shadow-card: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --ak-shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --ak-shadow-glass: 0 4px 20px rgba(0, 0, 0, 0.4);
+  /* Subtile Schatten - Dark Mode */
+  --ak-shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --ak-shadow-md: 0 2px 6px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --ak-shadow-card: 0 4px 12px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4);
+  --ak-shadow-strong: 0 8px 20px rgba(0, 0, 0, 0.7), 0 4px 8px rgba(0, 0, 0, 0.5);
+  --ak-shadow-glass: 0 4px 20px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
 
-  --ak-motion-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
-  --ak-motion-duration: 0.25s;
-  --ak-motion-duration-fast: 0.2s;
+  /* Sanftere Animationen - Dark Mode */
+  --ak-motion-ease: cubic-bezier(0.28, 0.11, 0.32, 1);
+  --ak-motion-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ak-motion-duration: 0.35s;
+  --ak-motion-duration-fast: 0.25s;
+  --ak-motion-duration-slow: 0.5s;
 
-  --ak-radius-card: 12px;
+  /* Größere Rounded Corners - Dark Mode */
+  --ak-radius-card: 16px;
+  --ak-radius-lg: 20px;
+  --ak-radius-xl: 24px;
   --ak-color-hover: var(--ak-color-bg-hover);
 }
 

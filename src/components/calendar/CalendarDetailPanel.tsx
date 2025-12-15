@@ -70,7 +70,6 @@ export function CalendarDetailPanel() {
   const [focusSlots, setFocusSlots] = useState<FocusSlot[]>([])
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
   const [daySummary] = useState<DaySummary | null>(null)
-  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     loadTodayEvents()
@@ -79,7 +78,6 @@ export function CalendarDetailPanel() {
 
   const loadTodayEvents = async () => {
     try {
-      setLoading(true)
       const accountId = 'default' // TODO: Get from auth context
       const today = new Date().toISOString().split('T')[0]
       const response = await fetch(`/api/calendar/events?account_id=${accountId}&start_date=${today}&end_date=${today}`)

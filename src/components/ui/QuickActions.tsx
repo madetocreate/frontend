@@ -2,7 +2,6 @@
 
 import { BoltIcon } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
-import { useActionHandler } from '@/hooks/useActionHandler'
 import type { AIActionContext } from './AIActions'
 import { createActionHandler } from '@/lib/actionHandlers'
 

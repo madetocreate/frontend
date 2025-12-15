@@ -223,7 +223,7 @@ function handleQuickAction(payload: ActionPayload) {
 function handleAIAction(payload: ActionPayload) {
   // AI Actions already trigger the wizard via CustomEvent
   // This is handled in ChatWorkspaceShell
-  const { actionId, context } = payload
+  const { actionId } = payload
   
   // Some AI actions might need immediate handling
   switch (actionId) {

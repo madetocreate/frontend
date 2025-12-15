@@ -143,9 +143,6 @@ export class FrontendWiring {
     if (!path) return
 
     if (typeof window !== 'undefined') {
-      // Use Next.js router if available
-      const { useRouter } = await import('next/navigation')
-      // This will be handled by components using the hook
       window.dispatchEvent(new CustomEvent('aklow-navigate', { detail: { path } }))
     }
   }

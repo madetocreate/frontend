@@ -229,7 +229,8 @@ export function TelephonyDetailPanel({ item }: TelephonyDetailPanelProps) {
                       })
                     )
                   }
-                } catch (error) {
+                } catch (_error) {
+                  console.error('Telephony action error', _error)
                   window.dispatchEvent(
                     new CustomEvent('aklow-notification', {
                       detail: { type: 'error', message: 'Fehler beim Übernehmen' }
@@ -263,7 +264,8 @@ export function TelephonyDetailPanel({ item }: TelephonyDetailPanelProps) {
                       })
                     )
                   }
-                } catch (error) {
+                } catch (_error) {
+                  console.error('Telephony action error', _error)
                   window.dispatchEvent(
                     new CustomEvent('aklow-notification', {
                       detail: { type: 'error', message: 'Fehler beim Pausieren' }
@@ -298,7 +300,8 @@ export function TelephonyDetailPanel({ item }: TelephonyDetailPanelProps) {
                         })
                       )
                     }
-                  } catch (error) {
+                  } catch (_error) {
+                    console.error('Telephony action error', _error)
                     window.dispatchEvent(
                       new CustomEvent('aklow-notification', {
                         detail: { type: 'error', message: 'Fehler beim Beenden' }

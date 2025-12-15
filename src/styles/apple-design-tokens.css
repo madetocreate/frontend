@@ -57,49 +57,49 @@
   --apple-text-tertiary-dark: #EBEBF599;
   --apple-text-quaternary-dark: #EBEBF54D;
   
-  /* Glassmorphism */
-  --apple-glass-bg: rgba(255, 255, 255, 0.7);
-  --apple-glass-bg-dark: rgba(28, 28, 30, 0.7);
-  --apple-glass-border: rgba(255, 255, 255, 0.18);
-  --apple-glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  --apple-glass-blur: blur(20px);
+  /* Glassmorphism - Mehr Transparenz und Blur */
+  --apple-glass-bg: rgba(255, 255, 255, 0.65);
+  --apple-glass-bg-dark: rgba(28, 28, 30, 0.65);
+  --apple-glass-border: rgba(255, 255, 255, 0.2);
+  --apple-glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
+  --apple-glass-blur: blur(40px);
   
-  /* Shadows - Apple style */
-  --apple-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --apple-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --apple-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-  --apple-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
-  --apple-shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.15);
-  --apple-shadow-colored: 0 10px 30px rgba(0, 122, 255, 0.3);
+  /* Shadows - Subtiler, weicher */
+  --apple-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.02), 0 1px 1px rgba(0, 0, 0, 0.02);
+  --apple-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --apple-shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.03);
+  --apple-shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.05), 0 4px 8px rgba(0, 0, 0, 0.03);
+  --apple-shadow-2xl: 0 16px 32px rgba(0, 0, 0, 0.06), 0 8px 16px rgba(0, 0, 0, 0.04);
+  --apple-shadow-colored: 0 8px 24px rgba(0, 122, 255, 0.15);
   
-  /* Border Radius */
-  --apple-radius-xs: 6px;
-  --apple-radius-sm: 8px;
-  --apple-radius-md: 12px;
-  --apple-radius-lg: 16px;
-  --apple-radius-xl: 20px;
-  --apple-radius-2xl: 24px;
+  /* Border Radius - Größere, konsistentere Werte */
+  --apple-radius-xs: 8px;
+  --apple-radius-sm: 12px;
+  --apple-radius-md: 16px;
+  --apple-radius-lg: 20px;
+  --apple-radius-xl: 24px;
+  --apple-radius-2xl: 32px;
   --apple-radius-full: 9999px;
   
-  /* Spacing */
-  --apple-space-xs: 4px;
-  --apple-space-sm: 8px;
-  --apple-space-md: 16px;
-  --apple-space-lg: 24px;
-  --apple-space-xl: 32px;
-  --apple-space-2xl: 48px;
-  --apple-space-3xl: 64px;
+  /* Spacing - Mehr Weißraum */
+  --apple-space-xs: 6px;
+  --apple-space-sm: 12px;
+  --apple-space-md: 20px;
+  --apple-space-lg: 32px;
+  --apple-space-xl: 48px;
+  --apple-space-2xl: 64px;
+  --apple-space-3xl: 96px;
   
-  /* Typography */
+  /* Typography - Klare Hierarchie */
   --apple-font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
   --apple-font-size-xs: 11px;
   --apple-font-size-sm: 13px;
   --apple-font-size-base: 15px;
-  --apple-font-size-lg: 17px;
-  --apple-font-size-xl: 20px;
-  --apple-font-size-2xl: 24px;
-  --apple-font-size-3xl: 30px;
-  --apple-font-size-4xl: 36px;
+  --apple-font-size-lg: 19px;
+  --apple-font-size-xl: 24px;
+  --apple-font-size-2xl: 32px;
+  --apple-font-size-3xl: 40px;
+  --apple-font-size-4xl: 48px;
   
   --apple-font-weight-regular: 400;
   --apple-font-weight-medium: 500;
@@ -110,11 +110,11 @@
   --apple-line-height-normal: 1.5;
   --apple-line-height-relaxed: 1.75;
   
-  /* Transitions */
-  --apple-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --apple-transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --apple-transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
-  --apple-transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Transitions - Sanftere Übergänge */
+  --apple-transition-fast: 200ms cubic-bezier(0.28, 0.11, 0.32, 1);
+  --apple-transition-base: 350ms cubic-bezier(0.28, 0.11, 0.32, 1);
+  --apple-transition-slow: 500ms cubic-bezier(0.28, 0.11, 0.32, 1);
+  --apple-transition-spring: 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
   
   /* Z-Index Scale */
   --apple-z-base: 1;

@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { SparklesIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
-import { useActionHandler } from '@/hooks/useActionHandler'
 
 export type AIActionContext = 
   | 'inbox'

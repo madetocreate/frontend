@@ -1,191 +1,139 @@
 'use client'
 
-import { WidgetCard } from '@/components/ui/WidgetCard'
-import { AkButton } from '@/components/ui/AkButton'
-import { AkListRow } from '@/components/ui/AkListRow'
-import { AkBadge } from '@/components/ui/AkBadge'
-import { AIActions } from '@/components/ui/AIActions'
-import { QuickActions } from '@/components/ui/QuickActions'
-import {
-  XMarkIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  PencilIcon,
-  DocumentTextIcon,
-  CalendarIcon,
+import { AIDetailLayout } from '@/components/ui/AIDetailLayout'
+import type { AIAction } from '@/components/ui/AIDetailLayout'
+import { 
+  ChatBubbleLeftRightIcon, 
+  DocumentTextIcon, 
   CurrencyDollarIcon,
-  EllipsisHorizontalIcon
+  PhoneIcon
 } from '@heroicons/react/24/outline'
 
+// Types (Dummy)
+type Customer = {
+  id: string
+  name: string
+  company: string
+  email: string
+  phone: string
+  status: 'active' | 'lead' | 'churned'
+  tags: string[]
+  lastContact: string
+  ltv: number
+}
+
 type CustomerDetailsDrawerProps = {
-  customerId: string
+  customer: Customer | null
   onClose: () => void
 }
 
-export function CustomerDetailsDrawer({ customerId, onClose }: CustomerDetailsDrawerProps) {
-  // Mock data based on ID
-  const customer = {
-      id: customerId,
-      name: 'Max Mustermann',
-      role: 'CEO',
-      company: 'Acme GmbH',
-      email: 'max@acme.com',
-      phone: '+49 123 456789',
-      stage: 'Verhandlung',
-      value: '12.500 €',
-      tags: ['VIP', 'Entscheider']
-  }
+export function CustomerDetailsDrawer({ customer, onClose }: CustomerDetailsDrawerProps) {
+  if (!customer) return null;
+
+  // Original Content View
+  const OriginalContent = (
+    <div className="space-y-6">
+      {/* Profile Header */}
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+          {customer.name.charAt(0)}
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-[var(--ak-color-text-primary)]">{customer.name}</h3>
+          <p className="text-[var(--ak-color-text-secondary)]">{customer.company}</p>
+          <div className="flex gap-2 mt-2">
+            {customer.tags.map(tag => (
+              <span key={tag} className="px-2 py-0.5 bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-secondary)] text-xs rounded-full border border-[var(--ak-color-border-subtle)]">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="p-4 rounded-xl bg-[var(--ak-color-bg-surface-muted)]/50 border border-[var(--ak-color-border-subtle)]">
+          <p className="text-xs text-[var(--ak-color-text-muted)] uppercase">Status</p>
+          <p className="text-lg font-semibold text-[var(--ak-color-text-primary)] mt-1 capitalize">{customer.status}</p>
+        </div>
+        <div className="p-4 rounded-xl bg-[var(--ak-color-bg-surface-muted)]/50 border border-[var(--ak-color-border-subtle)]">
+          <p className="text-xs text-[var(--ak-color-text-muted)] uppercase">LTV</p>
+          <p className="text-lg font-semibold text-[var(--ak-color-text-primary)] mt-1">
+            {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(customer.ltv)}
+          </p>
+        </div>
+      </div>
+
+      {/* Contact Info */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center gap-3 text-sm">
+          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <DocumentTextIcon className="w-4 h-4" />
+          </div>
+          <span className="text-[var(--ak-color-text-primary)]">{customer.email}</span>
+        </div>
+        <div className="flex items-center gap-3 text-sm">
+          <div className="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center">
+            <PhoneIcon className="w-4 h-4" />
+          </div>
+          <span className="text-[var(--ak-color-text-primary)]">{customer.phone}</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // AI Actions
+  const aiActions: AIAction[] = [
+    { 
+      id: 'draft-mail', 
+      label: 'E-Mail schreiben', 
+      prompt: 'Entwerfe eine E-Mail an diesen Kunden.',
+      icon: <DocumentTextIcon className="w-4 h-4" />
+    },
+    { 
+      id: 'prep-call', 
+      label: 'Call vorbereiten', 
+      prompt: 'Erstelle ein Skript für den nächsten Anruf.',
+      icon: <PhoneIcon className="w-4 h-4" />
+    },
+    { 
+      id: 'analyze', 
+      label: 'Potenzial analysieren', 
+      prompt: 'Analysiere das Upselling-Potenzial.',
+      icon: <CurrencyDollarIcon className="w-4 h-4" />
+    },
+    { 
+      id: 'history', 
+      label: 'Historie zusammenfassen', 
+      prompt: 'Fasse die letzten Interaktionen zusammen.',
+      icon: <ChatBubbleLeftRightIcon className="w-4 h-4" />
+    }
+  ];
+
+  const handleAction = async (action: AIAction) => {
+    return new Promise<string>((resolve) => {
+      setTimeout(() => {
+        if (action.id === 'draft-mail') {
+          resolve(`Betreff: Status Update & Next Steps\n\nHallo ${customer.name},\n\nich wollte mich kurz erkundigen, wie zufrieden Sie mit der aktuellen Lösung sind.\n\nHätten Sie nächste Woche Zeit für ein kurzes Feedback-Gespräch?\n\nBeste Grüße`);
+        } else if (action.id === 'analyze') {
+          resolve(`**Upselling Potenzial: Hoch**\n\nDer Kunde nutzt aktuell Plan Basic, hat aber >20 User. Ein Upgrade auf Pro würde Sinn machen.\n\nEmpfehlung: Features "Advanced Reporting" pitchen.`);
+        } else {
+          resolve(`AI Output für "${action.label}" wird generiert...`);
+        }
+      }, 1500);
+    });
+  };
 
   return (
-    <div className="flex h-full flex-col bg-[var(--ak-color-bg-app)]">
-        {/* Header */}
-        <div className="flex-none p-6 border-b border-[var(--ak-color-border-hairline)] bg-[var(--ak-glass-bg)] backdrop-blur-md">
-            <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-xl font-bold text-blue-600 shadow-sm border border-blue-200">
-                        {customer.name.charAt(0)}
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-bold text-[var(--ak-color-text-primary)]">{customer.name}</h2>
-                        <p className="text-sm text-[var(--ak-color-text-secondary)]">{customer.role} bei {customer.company}</p>
-                        <div className="flex gap-2 mt-2">
-                             {customer.tags.map(tag => <AkBadge key={tag} tone="muted" size="sm">{tag}</AkBadge>)}
-                        </div>
-                    </div>
-                </div>
-                <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
-                    <XMarkIcon className="h-5 w-5" />
-                </button>
-            </div>
-            
-            <div className="flex gap-2 mt-4">
-                <AkButton 
-                  className="flex-1" 
-                  leftIcon={<PhoneIcon className="h-4 w-4"/>}
-                  onClick={() => {
-                    if (customer.phone) {
-                      window.location.href = `tel:${customer.phone}`
-                    }
-                  }}
-                >
-                  Anrufen
-                </AkButton>
-                <AkButton 
-                  className="flex-1" 
-                  variant="secondary" 
-                  leftIcon={<EnvelopeIcon className="h-4 w-4"/>}
-                  onClick={() => {
-                    if (customer.email) {
-                      window.location.href = `mailto:${customer.email}`
-                    }
-                  }}
-                >
-                  Email
-                </AkButton>
-                <AkButton 
-                  className="flex-none w-10 px-0" 
-                  variant="ghost" 
-                  leftIcon={<EllipsisHorizontalIcon className="h-5 w-5 mx-auto"/>}
-                  onClick={() => {
-                    // TODO: Open more actions menu
-                    console.log('More actions for customer:', customerId)
-                  }}
-                />
-            </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            {/* AI Suggestions & Quick Actions - in der Mitte */}
-            <div className="flex flex-col gap-3 px-4 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
-              <AIActions context="customer" />
-              <QuickActions context="customer" />
-            </div>
-            
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-3">
-                 <div className="p-3 bg-green-50 rounded-xl border border-green-100">
-                    <p className="text-xs text-green-600 font-medium mb-1 flex items-center gap-1">
-                        <CurrencyDollarIcon className="h-3 w-3" /> Potential
-                    </p>
-                    <p className="text-lg font-bold text-green-700">{customer.value}</p>
-                 </div>
-                 <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-                    <p className="text-xs text-blue-600 font-medium mb-1 flex items-center gap-1">
-                        <CalendarIcon className="h-3 w-3" /> Nächster Schritt
-                    </p>
-                    <p className="text-sm font-semibold text-blue-700">Meeting Fr. 14:00</p>
-                 </div>
-            </div>
-
-            {/* Kontakt */}
-            <WidgetCard title="Kontakt" padding="none">
-                <div className="divide-y divide-[var(--ak-color-border-hairline)]">
-                    <AkListRow 
-                        title="Email" 
-                        subtitle={customer.email} 
-                        leading={<EnvelopeIcon className="h-4 w-4 text-gray-400"/>} 
-                        trailing={<AkButton variant="ghost" size="sm">Kopieren</AkButton>}
-                    />
-                    <AkListRow 
-                        title="Telefon" 
-                        subtitle={customer.phone} 
-                        leading={<PhoneIcon className="h-4 w-4 text-gray-400"/>} 
-                    />
-                </div>
-            </WidgetCard>
-
-            {/* Pipeline / Deals */}
-            <WidgetCard title="Pipeline" padding="none">
-                 <div className="p-4 bg-[var(--ak-color-bg-surface)]">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Q1 Enterprise Lizenz</span>
-                        <span className="text-sm font-bold text-[var(--ak-color-text-primary)]">12.500 €</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: '75%' }}></div>
-                    </div>
-                    <div className="flex justify-between text-xs text-gray-500">
-                        <span>Discovery</span>
-                        <span className="font-medium text-blue-600">Verhandlung</span>
-                        <span>Closed</span>
-                    </div>
-                 </div>
-            </WidgetCard>
-
-            {/* Notizen */}
-            <WidgetCard title="Notizen" padding="sm" action={<AkButton variant="ghost" size="sm" leftIcon={<PencilIcon className="h-3 w-3"/>}>Neu</AkButton>}>
-                <div className="space-y-4">
-                    <div className="flex gap-3">
-                        <div className="mt-1">
-                            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                                <DocumentTextIcon className="h-4 w-4 text-gray-500" />
-                            </div>
-                        </div>
-                        <div>
-                            <p className="text-sm text-[var(--ak-color-text-primary)]">
-                                Interesse an der AI Shield Integration gezeigt. Budgetfreigabe erwartet bis Ende der Woche.
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">Gestern, 14:30 • Von Dir</p>
-                        </div>
-                    </div>
-                     <div className="flex gap-3">
-                        <div className="mt-1">
-                            <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                                <PhoneIcon className="h-4 w-4 text-gray-500" />
-                            </div>
-                        </div>
-                        <div>
-                            <p className="text-sm text-[var(--ak-color-text-primary)]">
-                                Intro Call war positiv. Technischer Ansprechpartner ist Herr Schmidt.
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">Vor 3 Tagen • Von Anna</p>
-                        </div>
-                    </div>
-                </div>
-            </WidgetCard>
-
-        </div>
-    </div>
+    <AIDetailLayout
+      title="Kundenprofil"
+      subtitle="CRM Übersicht"
+      onClose={onClose}
+      originalContent={OriginalContent}
+      summary={`Langjähriger Kunde (Active) mit hohem LTV. Letzter Kontakt vor ${customer.lastContact}. Zeigt Interesse an neuen Features.`}
+      actions={aiActions}
+      onActionTriggered={handleAction}
+    />
   )
 }

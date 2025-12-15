@@ -306,7 +306,7 @@ const ProductCard = ({ product, onClick, isFavorite, onToggleFavorite }: { produ
     <motion.div
       layoutId={`card-${product.id}`}
       onClick={onClick}
-      className="group relative flex flex-col apple-glass rounded-2xl p-5 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer active:scale-[0.98] border border-gray-200/50"
+      className="group relative flex flex-col apple-glass-enhanced rounded-2xl p-5 shadow-[var(--ak-shadow-soft)] hover:shadow-[var(--ak-shadow-md)] hover:-translate-y-1 transition-all duration-300 cursor-pointer active:scale-[0.98] border border-[var(--ak-color-border-subtle)]"
     >
       <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
         <button
@@ -317,7 +317,7 @@ const ProductCard = ({ product, onClick, isFavorite, onToggleFavorite }: { produ
           aria-label="Favorit"
           className={clsx(
             "p-2 rounded-full shadow-sm transition-all",
-            isFavorite ? "bg-rose-500 text-white shadow-rose-300/50" : "bg-white/80 dark:bg-gray-800/80 text-gray-500 hover:text-rose-500"
+            isFavorite ? "bg-rose-500 text-white shadow-rose-300/50" : "apple-glass-enhanced text-[var(--ak-color-text-secondary)] hover:text-rose-500"
           )}
         >
           <HeartIcon className="w-4 h-4" />
@@ -332,23 +332,23 @@ const ProductCard = ({ product, onClick, isFavorite, onToggleFavorite }: { produ
           <Icon className="w-8 h-8" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 dark:text-white truncate text-base">{product.title}</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{product.developer}</p>
+          <h3 className="font-semibold text-[var(--ak-color-text-primary)] truncate text-base">{product.title}</h3>
+          <p className="text-sm text-[var(--ak-color-text-secondary)] truncate">{product.developer}</p>
           <div className="flex items-center gap-2 mt-1">
             <RatingStars rating={product.rating} />
-            <span className="text-xs text-gray-400 dark:text-gray-500">({product.reviewsCount})</span>
+            <span className="text-xs text-[var(--ak-color-text-muted)]">({product.reviewsCount})</span>
           </div>
         </div>
       </div>
       
-      <p className="mt-4 text-sm text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed h-10">
+      <p className="mt-4 text-sm text-[var(--ak-color-text-secondary)] line-clamp-2 leading-relaxed h-10">
         {product.description}
       </p>
       
       <div className="mt-4 flex items-center justify-between">
         <div className="flex gap-2 flex-wrap">
           {product.tags.slice(0, 2).map((tag) => (
-            <span key={tag} className="px-2 py-0.5 bg-gray-100/80 dark:bg-gray-800/60 text-gray-600 dark:text-gray-400 text-[10px] uppercase font-semibold tracking-wide rounded-md">
+            <span key={tag} className="px-2 py-0.5 bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-secondary)] text-[10px] uppercase font-semibold tracking-wide rounded-md">
               {tag}
             </span>
           ))}
@@ -361,8 +361,8 @@ const ProductCard = ({ product, onClick, isFavorite, onToggleFavorite }: { produ
           className={clsx(
             "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 shadow-sm",
             product.installed
-              ? "bg-gray-100/80 dark:bg-gray-800/60 text-gray-400 dark:text-gray-500 cursor-default"
-              : "bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600 shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30"
+              ? "bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-muted)] cursor-default"
+              : "bg-[var(--ak-color-accent)] text-white hover:bg-[var(--ak-color-accent-strong)] shadow-[var(--ak-shadow-soft)] hover:shadow-[var(--ak-shadow-md)]"
           )}
         >
           {product.installed ? t('marketplace.installed') : product.price === 0 ? t('marketplace.free') : `${product.price}€`}
@@ -415,20 +415,20 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-md p-4"
       onClick={onClose}
     >
       <motion.div
         layoutId={`card-${product.id}`}
-        className="apple-glass w-full max-w-3xl rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh] border border-gray-200/50"
+        className="apple-glass-enhanced w-full max-w-3xl rounded-3xl overflow-hidden shadow-[var(--ak-shadow-strong)] relative flex flex-col max-h-[90vh] border border-[var(--ak-color-border-subtle)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/60 dark:bg-gray-800/60 hover:bg-white/80 dark:hover:bg-gray-800/80 rounded-xl transition-colors backdrop-blur-xl"
+          className="absolute top-4 right-4 z-10 p-2 apple-glass-enhanced hover:shadow-[var(--ak-shadow-soft)] rounded-xl transition-colors"
         >
-          <XMarkIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          <XMarkIcon className="w-5 h-5 text-[var(--ak-color-text-secondary)]" />
         </button>
 
         {/* Header / Banner */}
@@ -438,8 +438,8 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
           <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl" />
           
           <div className="relative z-10 flex gap-6 translate-y-8">
-            <div className="w-32 h-32 bg-white/95 dark:bg-gray-900/95 rounded-2xl shadow-2xl flex items-center justify-center border-4 border-white/50">
-              <Icon className="w-16 h-16 text-gray-900 dark:text-white" />
+            <div className="w-32 h-32 apple-glass-enhanced rounded-2xl shadow-[var(--ak-shadow-strong)] flex items-center justify-center border-4 border-white/50">
+              <Icon className="w-16 h-16 text-[var(--ak-color-text-primary)]" />
             </div>
           </div>
         </div>
@@ -449,12 +449,12 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
           <div className="flex justify-between items-start mb-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{product.title}</h2>
+                <h2 className="text-3xl font-bold text-[var(--ak-color-text-primary)] tracking-tight">{product.title}</h2>
                 {product.bundle && (
                   <AppleBadge variant="blue" size="md">{t('marketplace.bundle')}</AppleBadge>
                 )}
               </div>
-              <p className="text-lg text-gray-500 dark:text-gray-400">{product.developer}</p>
+              <p className="text-lg text-[var(--ak-color-text-secondary)]">{product.developer}</p>
             </div>
             <div className="flex flex-col items-end gap-2">
               <AppleButton
@@ -477,37 +477,37 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
                   </>
                 )}
               </AppleButton>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500">{product.priceType === 'monthly' ? 'Monatliches Abo' : 'Einmalig'}</p>
+              <p className="text-[10px] text-[var(--ak-color-text-muted)]">{product.priceType === 'monthly' ? 'Monatliches Abo' : 'Einmalig'}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-6 mb-8 py-4 border-y border-gray-200/50 dark:border-gray-700/50">
-            <div className="flex flex-col items-center px-4 border-r border-gray-200/50 dark:border-gray-700/50 last:border-0">
-              <div className="text-gray-400 dark:text-gray-500 text-xs font-semibold uppercase mb-1">{t('marketplace.rating')}</div>
-              <div className="flex items-center gap-1 font-bold text-gray-900 dark:text-white text-xl">
+          <div className="flex items-center gap-6 mb-8 py-4 border-y border-[var(--ak-color-border-subtle)]">
+            <div className="flex flex-col items-center px-4 border-r border-[var(--ak-color-border-subtle)] last:border-0">
+              <div className="text-[var(--ak-color-text-muted)] text-xs font-semibold uppercase mb-1">{t('marketplace.rating')}</div>
+              <div className="flex items-center gap-1 font-bold text-[var(--ak-color-text-primary)] text-xl">
                 {product.rating} <StarIconSolid className="w-4 h-4 text-yellow-400" />
               </div>
-              <div className="text-gray-400 dark:text-gray-500 text-xs mt-1">{product.reviewsCount} {t('marketplace.reviews')}</div>
+              <div className="text-[var(--ak-color-text-muted)] text-xs mt-1">{product.reviewsCount} {t('marketplace.reviews')}</div>
             </div>
-            <div className="flex flex-col items-center px-4 border-r border-gray-200/50 dark:border-gray-700/50 last:border-0">
-              <div className="text-gray-400 dark:text-gray-500 text-xs font-semibold uppercase mb-1">{t('marketplace.category')}</div>
-              <div className="font-bold text-gray-900 dark:text-white text-xl capitalize">{product.category || product.type}</div>
-              <div className="text-gray-400 dark:text-gray-500 text-xs mt-1">{product.type}</div>
+            <div className="flex flex-col items-center px-4 border-r border-[var(--ak-color-border-subtle)] last:border-0">
+              <div className="text-[var(--ak-color-text-muted)] text-xs font-semibold uppercase mb-1">{t('marketplace.category')}</div>
+              <div className="font-bold text-[var(--ak-color-text-primary)] text-xl capitalize">{product.category || product.type}</div>
+              <div className="text-[var(--ak-color-text-muted)] text-xs mt-1">{product.type}</div>
             </div>
             <div className="flex flex-col items-center px-4">
-              <div className="text-gray-400 dark:text-gray-500 text-xs font-semibold uppercase mb-1">{t('marketplace.developer')}</div>
-              <div className="font-bold text-gray-900 dark:text-white text-xl truncate max-w-[100px]">{product.developer}</div>
-              <div className="text-gray-400 dark:text-gray-500 text-xs mt-1">{t('marketplace.verified')}</div>
+              <div className="text-[var(--ak-color-text-muted)] text-xs font-semibold uppercase mb-1">{t('marketplace.developer')}</div>
+              <div className="font-bold text-[var(--ak-color-text-primary)] text-xl truncate max-w-[100px]">{product.developer}</div>
+              <div className="text-[var(--ak-color-text-muted)] text-xs mt-1">{t('marketplace.verified')}</div>
             </div>
           </div>
 
           {/* Bundle Items */}
           {product.bundle && product.bundleItems && (
-            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50/80 to-purple-50/80 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl border border-blue-200/50 dark:border-blue-700/50">
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">{t('marketplace.inBundle')}</h4>
+            <div className="mb-6 p-4 apple-glass-enhanced rounded-xl border border-[var(--ak-color-border-subtle)]">
+              <h4 className="text-sm font-semibold text-[var(--ak-color-text-primary)] mb-3">{t('marketplace.inBundle')}</h4>
               <div className="grid grid-cols-2 gap-2">
                 {product.bundleItems.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <div key={idx} className="flex items-center gap-2 text-sm text-[var(--ak-color-text-primary)]">
                     <CheckBadgeIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
                     <span>{item}</span>
                   </div>
@@ -565,31 +565,31 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
           )}
 
           <div className="space-y-4">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Beschreibung</h3>
-            <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-base">
+            <h3 className="text-xl font-bold text-[var(--ak-color-text-primary)]">Beschreibung</h3>
+            <p className="text-[var(--ak-color-text-secondary)] leading-relaxed text-base">
               {product.longDescription}
             </p>
           </div>
 
-          <div className="mt-10 pt-6 border-t border-gray-200/50 dark:border-gray-700/50">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('marketplace.information')}</h3>
+          <div className="mt-10 pt-6 border-t border-[var(--ak-color-border-subtle)]">
+            <h3 className="text-lg font-bold text-[var(--ak-color-text-primary)] mb-4">{t('marketplace.information')}</h3>
             <div className="grid grid-cols-2 gap-y-4 text-sm">
-              <div className="text-gray-500 dark:text-gray-400">{t('marketplace.provider')}</div>
-              <div className="text-gray-900 dark:text-white font-medium text-right">{product.developer}</div>
+              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.provider')}</div>
+              <div className="text-[var(--ak-color-text-primary)] font-medium text-right">{product.developer}</div>
               
-              <div className="text-gray-500 dark:text-gray-400">{t('marketplace.price')}</div>
-              <div className="text-gray-900 dark:text-white font-medium text-right">
+              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.price')}</div>
+              <div className="text-[var(--ak-color-text-primary)] font-medium text-right">
                 {product.price === 0 ? t('marketplace.free') : `${product.price}€ ${product.priceType === 'monthly' ? `/${t('marketplace.monthly')}` : ''}`}
               </div>
               
-              <div className="text-gray-500 dark:text-gray-400">{t('marketplace.category')}</div>
-              <div className="text-gray-900 dark:text-white font-medium text-right capitalize">{product.category || product.type}</div>
+              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.category')}</div>
+              <div className="text-[var(--ak-color-text-primary)] font-medium text-right capitalize">{product.category || product.type}</div>
               
-              <div className="text-gray-500 dark:text-gray-400">{t('marketplace.compatibility')}</div>
-              <div className="text-gray-900 dark:text-white font-medium text-right">AI Shield 2.0+</div>
+              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.compatibility')}</div>
+              <div className="text-[var(--ak-color-text-primary)] font-medium text-right">AI Shield 2.0+</div>
               
-              <div className="text-gray-500 dark:text-gray-400">{t('marketplace.languages')}</div>
-              <div className="text-gray-900 dark:text-white font-medium text-right">DE, EN, ES, FR, IT</div>
+              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.languages')}</div>
+              <div className="text-[var(--ak-color-text-primary)] font-medium text-right">DE, EN, ES, FR, IT</div>
             </div>
           </div>
         </div>
@@ -685,27 +685,27 @@ export default function MarketplaceDashboard() {
   const addonProducts = PRODUCTS.filter(p => p.type === "addon");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 text-gray-900 dark:text-white font-sans pb-20 relative overflow-hidden">
-      {/* Background Effects */}
+    <div className="min-h-screen bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)] font-sans pb-20 relative overflow-hidden">
+      {/* Background Effects - Subtle, Apple-style */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-32 -left-16 w-[420px] h-[420px] bg-blue-300/10 dark:bg-blue-500/5 blur-3xl" />
-        <div className="absolute top-10 right-[-10%] w-[520px] h-[520px] bg-purple-300/10 dark:bg-purple-500/5 blur-3xl" />
-        <div className="absolute bottom-[-20%] left-[20%] w-[480px] h-[480px] bg-amber-200/10 dark:bg-amber-500/5 blur-3xl" />
+        <div className="absolute -top-32 -left-16 w-[420px] h-[420px] bg-[var(--ak-color-accent-soft)] blur-3xl opacity-30" />
+        <div className="absolute top-10 right-[-10%] w-[520px] h-[520px] bg-[var(--ak-color-accent-soft)] blur-3xl opacity-20" />
+        <div className="absolute bottom-[-20%] left-[20%] w-[480px] h-[480px] bg-[var(--ak-color-accent-soft)] blur-3xl opacity-15" />
       </div>
 
       {/* Header */}
-      <div className="sticky top-0 z-20 apple-glass border-b border-gray-200/50 dark:border-gray-700/50 px-6 py-4 shadow-lg">
+      <div className="sticky top-0 z-20 apple-glass-enhanced border-b border-[var(--ak-color-border-subtle)] px-6 py-4 shadow-[var(--ak-shadow-soft)]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">{t('marketplace.title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-[var(--ak-color-text-primary)]">{t('marketplace.title')}</h1>
           <div className="relative w-full md:w-96">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--ak-color-text-muted)]" />
             <input
               type="text"
               placeholder={t('marketplace.searchPlaceholder')}
               ref={searchRef}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full h-10 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-gray-500 dark:placeholder:text-gray-400 text-gray-900 dark:text-white"
+              className="w-full h-10 rounded-xl apple-glass-enhanced border border-[var(--ak-color-border-subtle)] pl-10 pr-4 text-sm focus:ring-2 focus:ring-[var(--ak-color-accent)]/30 focus:border-[var(--ak-color-accent)] transition-all placeholder:text-[var(--ak-color-text-muted)] text-[var(--ak-color-text-primary)]"
             />
           </div>
         </div>
@@ -717,8 +717,8 @@ export default function MarketplaceDashboard() {
         {filter === "all" && !search && (
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('marketplace.premiumDashboards')}</h2>
-              <button className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline">
+              <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">{t('marketplace.premiumDashboards')}</h2>
+              <button className="text-sm text-[var(--ak-color-accent)] font-medium hover:underline">
                 {t('marketplace.showAll')}
               </button>
             </div>
@@ -740,7 +740,7 @@ export default function MarketplaceDashboard() {
         {filter === "all" && !search && (
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('marketplace.popularAddons')}</h2>
+              <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">{t('marketplace.popularAddons')}</h2>
               <button className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline">
                 {t('marketplace.showAll')}
               </button>
@@ -763,8 +763,8 @@ export default function MarketplaceDashboard() {
         {recentProducts.length > 0 && (
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('marketplace.recent')}</h2>
-              <span className="text-sm text-gray-500 dark:text-gray-400">{recentProducts.length} {t('marketplace.items')}</span>
+              <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">{t('marketplace.recent')}</h2>
+              <span className="text-sm text-[var(--ak-color-text-secondary)]">{recentProducts.length} {t('marketplace.items')}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {recentProducts.map((product) => (
@@ -798,19 +798,19 @@ export default function MarketplaceDashboard() {
                 className={clsx(
                   "px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap shadow-sm border",
                   filter === tab.id
-                    ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg border-transparent"
-                    : "apple-glass text-gray-700 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-800/80 shadow border-gray-200/50 dark:border-gray-700/50"
+                    ? "bg-[var(--ak-color-accent)] text-white shadow-[var(--ak-shadow-md)] border-transparent"
+                    : "apple-glass-enhanced text-[var(--ak-color-text-primary)] hover:shadow-[var(--ak-shadow-soft)] border-[var(--ak-color-border-subtle)]"
                 )}
               >
                 {tab.label}
               </button>
             ))}
             <div className="ml-auto flex items-center gap-2">
-              <span className="text-sm text-gray-500 dark:text-gray-400 hidden md:inline">{t('marketplace.sort')}</span>
+              <span className="text-sm text-[var(--ak-color-text-secondary)] hidden md:inline">{t('marketplace.sort')}</span>
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value as SortOption)}
-                className="h-10 rounded-xl bg-white/80 dark:bg-gray-800/60 border border-gray-200/60 dark:border-gray-700/60 text-sm px-3 focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all text-gray-700 dark:text-gray-200"
+                className="h-10 rounded-xl apple-glass-enhanced border border-[var(--ak-color-border-subtle)] text-sm px-3 focus:ring-2 focus:ring-[var(--ak-color-accent)]/30 focus:border-[var(--ak-color-accent)] transition-all text-[var(--ak-color-text-primary)]"
               >
                 <option value="relevance">{t('marketplace.sortRelevance')}</option>
                 <option value="price-asc">{t('marketplace.sortPriceAsc')}</option>
@@ -823,7 +823,7 @@ export default function MarketplaceDashboard() {
 
         {/* Product Grid */}
         <section>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+          <h2 className="text-xl font-bold text-[var(--ak-color-text-primary)] mb-6">
             {search ? "Suchergebnisse" : filter === "all" ? "Alle Produkte" : `${filter.charAt(0).toUpperCase() + filter.slice(1)}s`}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -839,11 +839,11 @@ export default function MarketplaceDashboard() {
           </div>
           {filteredProducts.length === 0 && (
             <div className="text-center py-20">
-              <div className="w-16 h-16 bg-gray-100/80 dark:bg-gray-800/60 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+              <div className="w-16 h-16 bg-[var(--ak-color-bg-surface-muted)] rounded-full flex items-center justify-center mx-auto mb-4 text-[var(--ak-color-text-muted)]">
                 <MagnifyingGlassIcon className="w-8 h-8" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('marketplace.noResults')}</h3>
-              <p className="text-gray-500 dark:text-gray-400">{t('marketplace.noResultsDescription')}</p>
+              <h3 className="text-lg font-semibold text-[var(--ak-color-text-primary)]">{t('marketplace.noResults')}</h3>
+              <p className="text-[var(--ak-color-text-secondary)]">{t('marketplace.noResultsDescription')}</p>
             </div>
           )}
         </section>

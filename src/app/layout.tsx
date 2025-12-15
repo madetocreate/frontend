@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "../styles/apple-design-tokens.css";
 import "../styles/visual-enhancements.css";
+import "../styles/apple-refinements.css";
 import { RealtimeVoiceClientScript } from "../components/RealtimeVoiceClientScript";
 import { I18nProvider } from "../components/I18nProvider";
 import { KeyboardShortcutsProvider } from "../components/KeyboardShortcutsProvider";
