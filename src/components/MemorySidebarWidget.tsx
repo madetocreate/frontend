@@ -15,13 +15,15 @@ import { AkButton } from '@/components/ui/AkButton'
 import { AkListRow } from '@/components/ui/AkListRow'
 import { WidgetCard } from '@/components/ui/WidgetCard'
 
-type MemoryCategory = {
+export type MemoryCategory = {
   id: string
   label: string
   subtitle: string
   count: number
   icon: React.ComponentType<{ className?: string }>
   colorClass: string
+  memoryTypes?: string[]
+  title?: string
 }
 
 const CATEGORIES: MemoryCategory[] = [

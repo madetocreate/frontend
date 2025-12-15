@@ -21,9 +21,16 @@ export const FastActionsChips: FC<Props> = ({ suggestions, onSelect, className }
           key={s.id}
           type="button"
           onClick={() => onSelect(s)}
-          className="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-900 shadow-sm hover:bg-gray-50"
+          className="group flex flex-col items-start gap-1 w-full p-4 rounded-xl border border-gray-200 bg-white text-left shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-200"
         >
+          <span className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
           {s.label}
+          </span>
+          {s.payload?.text && (
+            <span className="text-xs text-gray-500 line-clamp-2">
+              {s.payload.text}
+            </span>
+          )}
         </button>
       ))}
     </div>

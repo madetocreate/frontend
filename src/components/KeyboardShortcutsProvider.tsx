@@ -99,9 +99,13 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
   }, [])
 
   const handleFocusSearch = useCallback(() => {
-    const searchInput = document.querySelector('input[placeholder*="Suchen"], input[placeholder*="suchen"]') as HTMLInputElement
-    if (searchInput) {
-      searchInput.focus()
+    try {
+      const searchInput = document.querySelector('input[placeholder*="Suchen"], input[placeholder*="suchen"]') as HTMLInputElement
+      if (searchInput) {
+        searchInput.focus()
+      }
+    } catch {
+      // Ignore
     }
   }, [])
 

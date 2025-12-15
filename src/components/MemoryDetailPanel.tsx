@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 import { AkSearchField } from '@/components/ui/AkSearchField'
+import { AIActions } from '@/components/ui/AIActions'
 import { LinkIcon, StarIcon } from '@heroicons/react/24/outline'
 import type { MemoryCategory } from './MemorySidebarWidget'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
@@ -123,16 +124,18 @@ export function MemoryDetailPanel({ category }: MemoryDetailPanelProps) {
           .filter((c) => c.selected && c.typeKeys)
           .flatMap((c) => c.typeKeys || [])
 
-        const searchTypes = category.memoryTypes.length > 0
-          ? category.memoryTypes
+        const categoryTypes = category.memoryTypes ?? []
+
+        const searchTypes = categoryTypes.length > 0
+          ? categoryTypes
           : selectedTypes.length > 0
             ? selectedTypes
             : undefined
 
         const query = debouncedQuery.length > 0
           ? debouncedQuery
-          : category.memoryTypes.length > 0
-            ? category.title.toLowerCase()
+          : categoryTypes.length > 0
+            ? (category.title ?? category.label ?? '').toLowerCase()
             : ''
 
         const response = await fetch('/api/memory/search', {
@@ -319,6 +322,9 @@ export function MemoryDetailPanel({ category }: MemoryDetailPanelProps) {
 
   return (
     <div className="flex h-full flex-col gap-3 overflow-y-auto rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/95 p-4 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl">
+      {/* AI Actions */}
+      <AIActions context="memory" />
+      
       <div className="flex items-center justify-between gap-3">
         <h2 className="ak-heading">Wissen & Memory</h2>
         <div className="w-[220px]">

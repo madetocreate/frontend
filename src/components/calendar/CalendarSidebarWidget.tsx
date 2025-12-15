@@ -1,11 +1,14 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import clsx from 'clsx'
+import { useTranslation } from '../../i18n'
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   PlusIcon,
+  SparklesIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline'
 
 type CalendarCell = {
@@ -15,6 +18,7 @@ type CalendarCell = {
   inMonth: boolean
   isToday: boolean
   isSelected: boolean
+  eventCount?: number
 }
 
 type CalendarWeek = CalendarCell[]
@@ -54,7 +58,11 @@ function formatSelectedDate(date: Date | null): string {
 
 const WEEKDAY_LABELS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
-function buildCalendarWeeks(viewDate: Date, selectedDate: Date | null): CalendarWeek[] {
+function buildCalendarWeeks(
+  viewDate: Date, 
+  selectedDate: Date | null,
+  events: Array<{ start_time: string }> = []
+): CalendarWeek[] {
   const firstOfMonth = startOfMonth(viewDate)
   const today = new Date()
 
@@ -67,10 +75,9 @@ function buildCalendarWeeks(viewDate: Date, selectedDate: Date | null): Calendar
   const weeks: CalendarWeek[] = []
   const current = new Date(gridStart)
 
-  // Nur einen Monat zeigen (4-5 Wochen statt 6)
-  const lastDayOfMonth = new Date(year, month + 1, 0);
-  const totalDaysInMonth = lastDayOfMonth.getDate();
-  const weeksNeeded = Math.ceil((firstDayOfWeek + totalDaysInMonth) / 7);
+  const lastDayOfMonth = new Date(year, month + 1, 0)
+  const totalDaysInMonth = lastDayOfMonth.getDate()
+  const weeksNeeded = Math.ceil((firstDayOfWeek + totalDaysInMonth) / 7)
   
   for (let weekIndex = 0; weekIndex < weeksNeeded; weekIndex += 1) {
     const week: CalendarWeek = []
@@ -83,6 +90,10 @@ function buildCalendarWeeks(viewDate: Date, selectedDate: Date | null): Calendar
       const inMonth = cellDate.getMonth() === month
       const isToday = isSameDate(cellDate, today)
       const isSelected = selectedDate ? isSameDate(cellDate, selectedDate) : false
+      
+      // Count events for this day
+      const dateStr = cellDate.toISOString().split('T')[0]
+      const eventCount = events.filter(e => e.start_time.startsWith(dateStr)).length
 
       const id = cellDate.toISOString().slice(0, 10)
 
@@ -93,6 +104,7 @@ function buildCalendarWeeks(viewDate: Date, selectedDate: Date | null): Calendar
         inMonth,
         isToday,
         isSelected,
+        eventCount,
       })
 
       current.setDate(current.getDate() + 1)
@@ -105,19 +117,45 @@ function buildCalendarWeeks(viewDate: Date, selectedDate: Date | null): Calendar
 
 type CalendarSidebarWidgetProps = {
   onOpenDetails?: () => void
+  onNLPSchedule?: () => void
 }
 
-export function CalendarSidebarWidget({ onOpenDetails }: CalendarSidebarWidgetProps) {
+export function CalendarSidebarWidget({ onOpenDetails, onNLPSchedule }: CalendarSidebarWidgetProps) {
+  const { t } = useTranslation()
   const [viewDate, setViewDate] = useState<Date>(() => new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => new Date())
+  const [events] = useState<Array<{ start_time: string }>>([])
+  const [todayEvents, setTodayEvents] = useState<Array<{ title: string; start_time: string; end_time: string; location?: string }>>([])
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        // TODO: Replace with actual API call
+        // const accountId = 'default' // TODO: Get from auth context
+        // const response = await fetch(`/api/v1/calendar/events?account_id=${accountId}&days=60`)
+        // const data = await response.json()
+        // setEvents(data.events || [])
+        
+        // Load today's events
+        const today = new Date().toISOString().split('T')[0]
+        const todayEventsList = events.filter(e => e.start_time.startsWith(today))
+        setTimeout(() => {
+          setTodayEvents(todayEventsList as Array<{ title: string; start_time: string; end_time: string; location?: string }>)
+        }, 0)
+      } catch (error) {
+        console.error('Failed to load events:', error)
+      }
+    }
+    loadEvents()
+  }, [viewDate, events])
 
   const { monthLabel, weeks, selectedDateText } = useMemo(() => {
     return {
       monthLabel: formatMonthLabel(viewDate),
-      weeks: buildCalendarWeeks(viewDate, selectedDate),
+      weeks: buildCalendarWeeks(viewDate, selectedDate, events),
       selectedDateText: formatSelectedDate(selectedDate),
     }
-  }, [viewDate, selectedDate])
+  }, [viewDate, selectedDate, events])
 
   const handlePrevMonth = () => {
     setViewDate((prev) => addMonths(prev, -1))
@@ -137,29 +175,34 @@ export function CalendarSidebarWidget({ onOpenDetails }: CalendarSidebarWidgetPr
     setSelectedDate(cell.date)
     setViewDate(cell.date)
   }
+  
   const handleClickNewEntry = () => {
     if (onOpenDetails) {
       onOpenDetails()
     }
   }
 
+  const formatTime = (isoString: string) => {
+    return new Date(isoString).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+  }
+
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/90 p-3 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl">
+    <div className="flex h-full flex-col rounded-2xl border border-gray-200/50 bg-white/60 backdrop-blur-2xl p-3 shadow-lg">
       <div className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--ak-color-accent)] text-xs font-semibold text-white shadow-sm">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 text-xs font-semibold text-white shadow-lg">
           <span>AK</span>
         </div>
         <div className="flex-1">
-          <p className="ak-caption font-medium uppercase tracking-wide text-[var(--ak-color-text-muted)]">
+          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">
             Kalender
           </p>
-          <p className="ak-body font-semibold text-[var(--ak-color-text-primary)]">{monthLabel}</p>
+          <p className="text-sm font-semibold text-gray-900">{monthLabel}</p>
         </div>
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={handlePrevMonth}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] ak-caption text-[var(--ak-color-text-primary)] shadow-none transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-surface-muted)]"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
             aria-label="Vorheriger Monat"
           >
             <ChevronLeftIcon className="h-4 w-4" />
@@ -167,14 +210,14 @@ export function CalendarSidebarWidget({ onOpenDetails }: CalendarSidebarWidgetPr
           <button
             type="button"
             onClick={handleGotoToday}
-            className="inline-flex h-7 items-center justify-center rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-accent)] px-3 ak-caption font-medium text-white shadow-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-accent)]/90"
+            className="inline-flex h-7 items-center justify-center rounded-full border border-gray-200 bg-blue-600 px-3 text-xs font-medium text-white shadow-sm transition-all hover:bg-blue-700"
           >
-            Heute
+            {t('calendar.today')}
           </button>
           <button
             type="button"
             onClick={handleNextMonth}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] ak-caption text-[var(--ak-color-text-primary)] shadow-none transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-surface-muted)]"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
             aria-label="Nächster Monat"
           >
             <ChevronRightIcon className="h-4 w-4" />
@@ -183,7 +226,7 @@ export function CalendarSidebarWidget({ onOpenDetails }: CalendarSidebarWidgetPr
       </div>
 
       <div className="mt-4 flex-1">
-        <div className="flex justify-between ak-caption text-[var(--ak-color-text-muted)]">
+        <div className="flex justify-between text-[10px] text-gray-500 font-medium">
           {WEEKDAY_LABELS.map((label) => (
             <div key={label} className="flex h-6 w-8 items-center justify-center">
               {label}
@@ -205,21 +248,23 @@ export function CalendarSidebarWidget({ onOpenDetails }: CalendarSidebarWidgetPr
                       type="button"
                       onClick={() => handleSelectDate(cell)}
                       className={clsx(
-                        'inline-flex h-7 w-7 items-center justify-center rounded-full ak-caption transition-colors',
+                        'relative inline-flex h-7 w-7 items-center justify-center rounded-full text-xs transition-all duration-200',
                         isSelected
-                          ? 'bg-[var(--ak-color-accent)] text-white shadow-sm'
+                          ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg'
                           : isToday
-                            ? 'border border-[var(--ak-color-accent)]/30 bg-[var(--ak-color-accent-soft)] text-[var(--ak-color-text-primary)]'
-                            : 'border border-transparent text-[var(--ak-color-text-secondary)] hover:border-[var(--ak-color-border-subtle)] hover:bg-[var(--ak-color-bg-surface-muted)]',
+                            ? 'border-2 border-blue-500 bg-blue-50 text-blue-700 font-semibold'
+                            : 'border border-transparent text-gray-700 hover:border-gray-300 hover:bg-gray-50',
                         isMuted &&
                           !isSelected &&
                           !isToday &&
-                          'text-[var(--ak-color-text-muted)] opacity-50 hover:bg-transparent hover:border-transparent',
+                          'text-gray-400 opacity-50 hover:bg-transparent hover:border-transparent',
                       )}
                     >
                       {cell.label}
+                      {cell.eventCount && cell.eventCount > 0 && (
+                        <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-blue-500" />
+                      )}
                     </button>
-                    <div className="h-1 w-1 rounded-full bg-transparent" />
                   </div>
                 )
               })}
@@ -228,40 +273,35 @@ export function CalendarSidebarWidget({ onOpenDetails }: CalendarSidebarWidgetPr
         </div>
       </div>
 
-      <div className="mt-3 border-t border-[var(--ak-color-border-subtle)] pt-3">
-        {/* Was steht heute an? */}
+      <div className="mt-3 border-t border-gray-200/50 pt-3">
+        {/* Today's Events */}
         <div className="mb-3">
-          <h3 className="ak-subheading mb-2 font-semibold text-[var(--ak-color-text-primary)]">
-            Was steht heute an?
+          <h3 className="text-xs font-semibold text-gray-900 mb-2">
+            {t('calendar.whatsOnToday')}
           </h3>
           <div className="space-y-2">
-            {/* Mock-Termine für heute */}
-            <div className="rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-2">
-              <div className="flex items-start gap-2">
-                <div className="mt-0.5 h-2 w-2 rounded-full bg-blue-500" />
-                <div className="flex-1">
-                  <p className="ak-body font-medium text-[var(--ak-color-text-primary)]">
-                    Team-Meeting
-                  </p>
-                  <p className="ak-caption text-[var(--ak-color-text-secondary)]">
-                    10:00 - 11:30 Uhr
-                  </p>
+            {todayEvents.length === 0 ? (
+              <p className="text-xs text-gray-500">{t('calendar.noEventsToday')}</p>
+            ) : (
+              todayEvents.slice(0, 2).map((event, idx) => (
+                <div key={idx} className="rounded-lg border border-gray-200 bg-white/80 p-2 hover:shadow-sm transition-all">
+                  <div className="flex items-start gap-2">
+                    <div className={`mt-0.5 h-2 w-2 rounded-full ${
+                      idx === 0 ? 'bg-blue-500' : 'bg-green-500'
+                    }`} />
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-gray-900 truncate">
+                        {event.title}
+                      </p>
+                      <p className="text-[10px] text-gray-500 flex items-center gap-1">
+                        <ClockIcon className="h-3 w-3" />
+                        {formatTime(event.start_time)} - {formatTime(event.end_time)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-2">
-              <div className="flex items-start gap-2">
-                <div className="mt-0.5 h-2 w-2 rounded-full bg-green-500" />
-                <div className="flex-1">
-                  <p className="ak-body font-medium text-[var(--ak-color-text-primary)]">
-                    Projekt-Review
-                  </p>
-                  <p className="ak-caption text-[var(--ak-color-text-secondary)]">
-                    14:00 - 15:00 Uhr
-                  </p>
-                </div>
-              </div>
-            </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -270,33 +310,35 @@ export function CalendarSidebarWidget({ onOpenDetails }: CalendarSidebarWidgetPr
             <button
               type="button"
               onClick={handleClickNewEntry}
-              className="inline-flex items-center justify-center rounded-xl bg-[var(--ak-color-accent)] px-3 py-1.5 ak-caption font-medium text-white shadow-sm transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-accent)]/90"
+              className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-all hover:bg-blue-700"
             >
               <PlusIcon className="mr-1.5 h-3 w-3" />
-              Neuer Eintrag
+              {t('calendar.newEntry')}
             </button>
-            <p className="ak-caption text-[var(--ak-color-text-secondary)]">
-              Erstelle einen neuen Termin oder eine Erinnerung.
+            <p className="text-[10px] text-gray-500">
+              {t('calendar.createNewAppointment')}
             </p>
           </div>
           <div className="flex flex-1 flex-col gap-1">
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-accent-soft)] px-3 py-1.5 ak-caption font-medium text-[var(--ak-color-accent)] shadow-none transition-colors duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-accent-strong)]"
+              onClick={onNLPSchedule}
+              className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 px-3 py-1.5 text-xs font-medium text-blue-700 shadow-sm transition-all hover:from-blue-100 hover:to-purple-100"
             >
-              Aklow
+              <SparklesIcon className="mr-1.5 h-3 w-3" />
+              {t('calendar.aiPlan')}
             </button>
-            <p className="ak-caption text-[var(--ak-color-text-secondary)]">
-              Aklow schlägt dir passende Events und Fokusblöcke vor.
+            <p className="text-[10px] text-gray-500">
+              {t('calendar.aklowSuggests')}
             </p>
           </div>
         </div>
-        {selectedDateText ? (
-          <p className="mt-3 ak-caption text-[var(--ak-color-text-muted)]">
-            Ausgewählt:{' '}
-            <span className="font-medium text-[var(--ak-color-text-primary)]">{selectedDateText}</span>
+        {selectedDateText && (
+          <p className="mt-3 text-[10px] text-gray-500">
+            {t('calendar.selected')}:{' '}
+            <span className="font-medium text-gray-900">{selectedDateText}</span>
           </p>
-        ) : null}
+        )}
       </div>
     </div>
   )

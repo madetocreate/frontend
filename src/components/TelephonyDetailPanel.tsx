@@ -11,6 +11,7 @@ import {
   EnvelopeIcon,
 } from '@heroicons/react/24/outline'
 import type { TelephonyItem } from './TelephonySidebarWidget'
+import { AIActions } from '@/components/ui/AIActions'
 
 type TelephonyMessage = {
   id: string
@@ -170,6 +171,11 @@ export function TelephonyDetailPanel({ item }: TelephonyDetailPanelProps) {
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto">
+      {/* AI Actions */}
+      <div className="px-4">
+        <AIActions context="telephony" />
+      </div>
+      
       {/* Status Card */}
       <div className="flex flex-col gap-3 rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/95 p-4 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl">
         {/* Status Badge */}

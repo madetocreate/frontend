@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { sendChatMessage } from '@/lib/chatClient'
 import clsx from 'clsx'
 import { PhotoIcon } from '@heroicons/react/24/outline'
+import { AIActions } from '@/components/ui/AIActions'
 
 type MarketingType = {
   id: string
@@ -250,6 +251,11 @@ const handleSuggestionClick = async (s: MarketingSuggestion) => {
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto">
+      {/* AI Actions */}
+      <div className="px-4">
+        <AIActions context="marketing" />
+      </div>
+      
       <div className="flex flex-col gap-3 rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/95 p-4 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl">
         {/* Header */}
         <div className="flex flex-col gap-1">

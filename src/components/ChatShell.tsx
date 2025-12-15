@@ -2,7 +2,7 @@
 
 import { useState, FormEvent, useRef, useEffect, useCallback } from "react";
 import clsx from "clsx";
-import { RectangleStackIcon, ClipboardDocumentIcon, BookmarkIcon, ArrowPathIcon, SpeakerWaveIcon, PencilSquareIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { RectangleStackIcon, ClipboardDocumentIcon, BookmarkIcon, ArrowPathIcon, SpeakerWaveIcon, PencilSquareIcon, SparklesIcon, HandThumbUpIcon, HandThumbDownIcon, EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
 import { WidgetRenderer } from "./chat/WidgetRenderer";
 import { sendChatMessageStream, ChatResponse } from "../lib/chatClient";
 import { fetchFastActions, type FastActionSuggestion } from "../lib/fastActionsClient";
@@ -41,7 +41,6 @@ export function ChatShell() {
   const [isStepsOpen, setIsStepsOpen] = useState(false);
   const [hoveredTooltip, setHoveredTooltip] = useState<{ messageId: string; icon: string } | null>(null);
   const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const hoverMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hoveredUserMessageId, setHoveredUserMessageId] = useState<string | null>(null);
   const hoverUserMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -50,10 +49,13 @@ export function ChatShell() {
   const [savedMessageId, setSavedMessageId] = useState<string | null>(null);
   const [fastActionsOpenMessageId, setFastActionsOpenMessageId] = useState<string | null>(null);
   const [fastActionsByMessageId, setFastActionsByMessageId] = useState<Record<string, FastActionSuggestion[]>>({});
+  const [feedbackStatus, setFeedbackStatus] = useState<Record<string, "thumbs_up" | "thumbs_down">>({});
+  const [expandedActions, setExpandedActions] = useState<Record<string, boolean>>({});
 
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressRef = useRef(false);
   const currentThreadRef = useRef<string | null>(null);
+  const [activeThreadId, setActiveThreadId] = useState<string>("thread-default");
   const inputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -269,6 +271,7 @@ export function ChatShell() {
       const detail = (e as CustomEvent).detail as { threadId?: string } | undefined;
       if (!detail?.threadId) return;
       currentThreadRef.current = detail.threadId;
+      setActiveThreadId(detail.threadId);
       const loaded = loadMessages(detail.threadId);
       setMessages(loaded);
       setInput("");
@@ -290,6 +293,7 @@ export function ChatShell() {
       };
       const newId = detail?.threadId || generateThreadId();
       currentThreadRef.current = newId;
+      setActiveThreadId(newId);
       const loaded = loadMessages(newId);
       setMessages(loaded);
       setInput("");
@@ -468,598 +472,10 @@ export function ChatShell() {
 
   const showThinking = isSending && (thinkingSteps.length > 0 || !!thinkingNote);
 
-  const renderMessage = (message: ChatMessage) => {
-    const isUser = message.role === "user";
-
-    if (isUser) {
-      const handleUserCopy = async () => {
-        try {
-          await navigator.clipboard.writeText(message.text);
-        } catch (err) {
-          console.error("Failed to copy text:", err);
-        }
-      };
-
-      const handleUserEdit = () => {
-        setEditingMessageId(message.id);
-        setEditingText(message.text);
-      };
-
-      const handleEditSave = () => {
-        if (!editingText.trim()) return;
-        
-        const threadId = currentThreadRef.current || "thread-default";
-        setMessages((prev) => {
-          const updated = prev.map((msg) =>
-            msg.id === message.id ? { ...msg, text: editingText.trim() } : msg
-          );
-          saveMessages(threadId, updated);
-          return updated;
-        });
-        
-        setEditingMessageId(null);
-        setEditingText("");
-        
-        // Send edited message to bot
-        sendMessage(editingText.trim());
-      };
-
-      const handleEditCancel = () => {
-        setEditingMessageId(null);
-        setEditingText("");
-      };
-
-      return (
-        <div
-          key={message.id}
-          className="group flex justify-end"
-          onMouseEnter={() => {
-            if (hoverUserMenuTimeoutRef.current) {
-              clearTimeout(hoverUserMenuTimeoutRef.current);
-            }
-            hoverUserMenuTimeoutRef.current = setTimeout(() => {
-              setHoveredUserMessageId(message.id);
-            }, 500);
-          }}
-          onMouseLeave={() => {
-            if (hoverUserMenuTimeoutRef.current) {
-              clearTimeout(hoverUserMenuTimeoutRef.current);
-              hoverUserMenuTimeoutRef.current = null;
-            }
-            setHoveredUserMessageId(null);
-            if (tooltipTimeoutRef.current) {
-              clearTimeout(tooltipTimeoutRef.current);
-              tooltipTimeoutRef.current = null;
-            }
-            setHoveredTooltip(null);
-          }}
-          style={{ marginLeft: "auto", maxWidth: "60%", marginRight: "3%" }}
-        >
-          <div className="flex flex-col gap-2" style={{ alignItems: "flex-end", width: "100%" }}>
-            {editingMessageId === message.id ? (
-              <div className="flex flex-col gap-2 w-full">
-                <textarea
-                  value={editingText}
-                  onChange={(e) => setEditingText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleEditSave();
-                    } else if (e.key === "Escape") {
-                      handleEditCancel();
-                    }
-                  }}
-                  className="ak-body whitespace-pre-wrap leading-relaxed rounded-xl px-2.5 py-1.5 shadow-sm text-right bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  style={{ color: "var(--ak-color-text-primary)", fontSize: "16px", minHeight: "60px" }}
-                  autoFocus
-                />
-                <div className="flex gap-2 justify-end">
-                  <button
-                    type="button"
-                    onClick={handleEditCancel}
-                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
-                  >
-                    Abbrechen
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleEditSave}
-                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    Senden
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div
-                className="ak-body whitespace-pre-wrap leading-relaxed rounded-xl px-2.5 py-1.5 shadow-sm text-right bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)]"
-                style={{ color: "var(--ak-color-text-primary)", fontSize: "16px" }}
-              >
-                {message.text}
-              </div>
-            )}
-            
-            {/* Hover Menu für Benutzernachrichten */}
-            <div 
-              className={`${hoveredUserMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-1 -mt-3`}
-            >
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={handleUserEdit}
-                  onMouseEnter={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                    }
-                    tooltipTimeoutRef.current = setTimeout(() => {
-                      setHoveredTooltip({ messageId: message.id, icon: 'edit' });
-                    }, 500);
-                  }}
-                  onMouseLeave={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                      tooltipTimeoutRef.current = null;
-                    }
-                    setHoveredTooltip(null);
-                  }}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
-                  aria-label="Nachricht bearbeiten"
-                >
-                  <PencilSquareIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
-                </button>
-                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'edit' && (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
-                    Bearbeiten
-                  </span>
-                )}
-              </div>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={handleUserCopy}
-                  onMouseEnter={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                    }
-                    tooltipTimeoutRef.current = setTimeout(() => {
-                      setHoveredTooltip({ messageId: message.id, icon: 'copy' });
-                    }, 500);
-                  }}
-                  onMouseLeave={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                      tooltipTimeoutRef.current = null;
-                    }
-                    setHoveredTooltip(null);
-                  }}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
-                  aria-label="Nachricht kopieren"
-                >
-                  <ClipboardDocumentIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
-                </button>
-                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'copy' && (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
-                    Kopieren
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    const ttsActive = speakingId === message.id;
-
-    const handleCopy = async () => {
-      try {
-        await navigator.clipboard.writeText(message.text);
-      } catch (err) {
-        console.error("Failed to copy text:", err);
-      }
-    };
-
-    const handleSave = async () => {
-      try {
-        const threadId = currentThreadRef.current || "thread-default";
-        const timestamp = new Date().toISOString();
-        
-        const response = await fetch("/api/memory/save", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            threadId,
-            role: "assistant",
-            content: message.text,
-            timestamp,
-            tenantId,
-          }),
-        });
-
-        if (response.ok) {
-          setSavedMessageId(message.id);
-          setTimeout(() => {
-            setSavedMessageId(null);
-          }, 2000);
-        } else {
-          console.error("Failed to save message:", await response.text());
-        }
-      } catch (err) {
-        console.error("Error saving message:", err);
-      }
-    };
-
-    const handleUpdate = async () => {
-      // Find the user message that came before this assistant message
-      const messageIndex = messages.findIndex((m) => m.id === message.id);
-      if (messageIndex === -1) return;
-      
-      // Find the last user message before this assistant message
-      let lastUserMessage: ChatMessage | null = null;
-      for (let i = messageIndex - 1; i >= 0; i--) {
-        if (messages[i].role === "user") {
-          lastUserMessage = messages[i];
-          break;
-        }
-      }
-      
-      if (!lastUserMessage) return;
-      
-      // Remove this assistant message and regenerate
-      const threadId = currentThreadRef.current || "thread-default";
-      setMessages((prev) => {
-        const updated = prev.filter((m) => m.id !== message.id);
-        saveMessages(threadId, updated);
-        return updated;
-      });
-      
-      // Regenerate the response
-      await sendMessage(lastUserMessage.text);
-    };
-
-    const handleReadAloud = () => {
-      if (ttsActive) {
-        stopTts();
-      } else {
-        toggleTts({ id: message.id, text: message.text, lang: "de-DE" });
-      }
-    };
-
-    const handleQuickActions = async () => {
-      if (fastActionsOpenMessageId === message.id) {
-        setFastActionsOpenMessageId(null);
-        return;
-      }
-
-      const messageIndex = messages.findIndex((m) => m.id === message.id);
-      let lastUserMessage = "";
-      if (messageIndex > 0) {
-        for (let i = messageIndex - 1; i >= 0; i -= 1) {
-          if (messages[i]?.role === "user") {
-            lastUserMessage = messages[i]?.text ?? "";
-            break;
-          }
-        }
-      }
-
-      try {
-        const res = await fetchFastActions({
-          surface: "inline",
-          channel: "web_chat",
-          thread_id: currentThreadRef.current ?? undefined,
-          message_id: message.id,
-          language: "de",
-          last_user_message: lastUserMessage,
-          last_assistant_message: message.text ?? "",
-          conversation_summary: "",
-        });
-
-        setFastActionsByMessageId((prev) => ({
-          ...prev,
-          [message.id]: Array.isArray(res.suggestions) ? res.suggestions : [],
-        }));
-        setFastActionsOpenMessageId(message.id);
-      } catch (err) {
-        console.error(err);
-        setFastActionsByMessageId((prev) => ({ ...prev, [message.id]: [] }));
-        setFastActionsOpenMessageId(message.id);
-      }
-    };
-
-    return (
-      <div
-        key={message.id}
-        className="group flex justify-start"
-        onMouseEnter={() => {
-          if (hoverMenuTimeoutRef.current) {
-            clearTimeout(hoverMenuTimeoutRef.current);
-          }
-          hoverMenuTimeoutRef.current = setTimeout(() => {
-            setHoveredMessageId(message.id);
-          }, 500);
-        }}
-        onMouseLeave={() => {
-          if (hoverMenuTimeoutRef.current) {
-            clearTimeout(hoverMenuTimeoutRef.current);
-            hoverMenuTimeoutRef.current = null;
-          }
-          setHoveredMessageId(null);
-        }}
-        style={{
-          marginLeft: "3%",
-          maxWidth: "85%",
-          opacity: 1,
-        }}
-      >
-        <div className="flex w-full items-start">
-          <div className="flex w-full flex-col gap-3" style={{ alignItems: "flex-start" }}>
-            <div className="flex w-full items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <ChatMarkdown content={message.text} />
-              </div>
-                {thinkingSteps.length > 0 && isLastAssistantMessage(message) ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsStepsOpen(true)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-transparent text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
-                    aria-label="Orchestrator anzeigen"
-                  >
-                    <RectangleStackIcon className="h-5 w-5" aria-hidden="true" />
-                  </button>
-                ) : null}
-            </div>
-
-            {/* Audio Player für Vorlesen-Modus */}
-            {ttsActive && (
-              <div className="mt-2 mb-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 flex items-center gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <div className="w-1 h-4 bg-blue-500 rounded" style={{ animation: "audio-wave 0.6s ease-in-out infinite", animationDelay: "0ms" }} />
-                      <div className="w-1 h-4 bg-blue-500 rounded" style={{ animation: "audio-wave 0.6s ease-in-out infinite", animationDelay: "0.15s" }} />
-                      <div className="w-1 h-4 bg-blue-500 rounded" style={{ animation: "audio-wave 0.6s ease-in-out infinite", animationDelay: "0.3s" }} />
-                    </div>
-                    <span className="text-xs text-gray-600 ml-2">Wird vorgelesen...</span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleReadAloud}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded text-blue-600 hover:bg-blue-50 transition-colors"
-                  aria-label="Vorlesen stoppen"
-                >
-                  <SpeakerWaveIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
-                </button>
-              </div>
-            )}
-
-            {/* Hover Menu - nur bei Hover sichtbar */}
-            <div 
-              className={`${hoveredMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-1 -mt-0.5`}
-              onMouseLeave={() => {
-                if (tooltipTimeoutRef.current) {
-                  clearTimeout(tooltipTimeoutRef.current);
-                  tooltipTimeoutRef.current = null;
-                }
-                setHoveredTooltip(null);
-              }}
-            >
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  onMouseEnter={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                    }
-                    tooltipTimeoutRef.current = setTimeout(() => {
-                      setHoveredTooltip({ messageId: message.id, icon: 'copy' });
-                    }, 500);
-                  }}
-                  onMouseLeave={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                      tooltipTimeoutRef.current = null;
-                    }
-                    setHoveredTooltip(null);
-                  }}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
-                  aria-label="Nachricht kopieren"
-                >
-                  <ClipboardDocumentIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
-                </button>
-                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'copy' && (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
-                    Kopieren
-                  </span>
-                )}
-              </div>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  onMouseEnter={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                    }
-                    tooltipTimeoutRef.current = setTimeout(() => {
-                      setHoveredTooltip({ messageId: message.id, icon: 'save' });
-                    }, 500);
-                  }}
-                  onMouseLeave={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                      tooltipTimeoutRef.current = null;
-                    }
-                    setHoveredTooltip(null);
-                  }}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
-                  aria-label="Nachricht speichern"
-                >
-                  <BookmarkIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
-                </button>
-                {savedMessageId === message.id ? (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-green-600 bg-transparent whitespace-nowrap pointer-events-none z-50">
-                    Gespeichert
-                  </span>
-                ) : hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'save' ? (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
-                    Speichern
-                  </span>
-                ) : null}
-              </div>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={handleUpdate}
-                  onMouseEnter={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                    }
-                    tooltipTimeoutRef.current = setTimeout(() => {
-                      setHoveredTooltip({ messageId: message.id, icon: 'update' });
-                    }, 500);
-                  }}
-                  onMouseLeave={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                      tooltipTimeoutRef.current = null;
-                    }
-                    setHoveredTooltip(null);
-                  }}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
-                  aria-label="Nachricht aktualisieren"
-                >
-                  <ArrowPathIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
-                </button>
-                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'update' && (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
-                    Aktualisieren
-                  </span>
-                )}
-              </div>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={handleReadAloud}
-                  disabled={!ttsSupported || !message.text || message.text.trim().length === 0}
-                  onMouseEnter={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                    }
-                    tooltipTimeoutRef.current = setTimeout(() => {
-                      setHoveredTooltip({ messageId: message.id, icon: 'read' });
-                    }, 500);
-                  }}
-                  onMouseLeave={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                      tooltipTimeoutRef.current = null;
-                    }
-                    setHoveredTooltip(null);
-                  }}
-                  className={clsx(
-                    "inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] disabled:opacity-50",
-                    ttsActive && "text-[var(--ak-color-accent)]"
-                  )}
-                  aria-label={ttsActive ? "Vorlesen stoppen" : "Vorlesen"}
-                >
-                  <SpeakerWaveIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
-                </button>
-                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'read' && (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
-                    {ttsActive ? "Stoppen" : "Vorlesen"}
-                  </span>
-                )}
-              </div>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={handleQuickActions}
-                  onMouseEnter={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                    }
-                    tooltipTimeoutRef.current = setTimeout(() => {
-                      setHoveredTooltip({ messageId: message.id, icon: 'quick-actions' });
-                    }, 500);
-                  }}
-                  onMouseLeave={() => {
-                    if (tooltipTimeoutRef.current) {
-                      clearTimeout(tooltipTimeoutRef.current);
-                      tooltipTimeoutRef.current = null;
-                    }
-                    setHoveredTooltip(null);
-                  }}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded text-black transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
-                  aria-label="Schnellaktionen"
-                >
-                  <SparklesIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
-                </button>
-                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'quick-actions' && (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
-                    Schnellaktionen
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {fastActionsOpenMessageId === message.id &&
-            Array.isArray(fastActionsByMessageId[message.id]) &&
-            fastActionsByMessageId[message.id].length > 0 ? (
-              <div className="mt-2 w-full">
-                <FastActionsChips
-                  suggestions={fastActionsByMessageId[message.id]}
-                  onSelect={(s) => {
-                    const text = s.payload?.text;
-                    if (s.handler === "prefill_prompt" && typeof text === "string" && text.trim().length > 0) {
-                      setInput(text);
-                      setFastActionsOpenMessageId(null);
-                      if (inputRef.current) inputRef.current.focus();
-                    }
-                  }}
-                />
-              </div>
-            ) : null}
-
-            {Array.isArray(message.uiMessages) && message.uiMessages.length > 0 ? (
-              <div className="mt-3 w-full space-y-3">
-                {message.uiMessages.map((uiMessage, index) => (
-                  <WidgetRenderer key={index} message={uiMessage} />
-                ))}
-              </div>
-            ) : null}
-
-            {isLastAssistantMessage(message) && followUpSuggestions.length > 0 && (
-              <div className="mt-4 flex flex-col gap-2 items-start animate-[fadeInUp_0.3s_var(--ak-motion-ease)]">
-                {followUpSuggestions.slice(0, 3).map((suggestion, index) => (
-                  <button
-                    key={`suggestion-${index}`}
-                    type="button"
-                    onClick={() => handleQuickCardClick(suggestion)}
-                    className="ak-body text-left text-[var(--ak-color-accent)] hover:text-[var(--ak-color-accent-strong)] hover:underline transition-colors cursor-pointer"
-                    style={{
-                      animationDelay: `${index * 50}ms`,
-                      animation: "fadeInUp 0.3s var(--ak-motion-ease) forwards",
-                      opacity: 0,
-                    }}
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  async function sendMessage(trimmed: string) {
+  const sendMessage = useCallback(async (trimmed: string) => {
     if (!trimmed || isSending) return;
     const threadId = currentThreadRef.current || "thread-default";
+    setActiveThreadId(threadId);
     stopTts();
 
     const generateId = () => {
@@ -1250,17 +666,624 @@ export function ChatShell() {
       setThinkingNote("Fehler beim Streamen");
       setIsSending(false);
     }
-  }
+  }, [isSending, tenantId, stopTts, saveMessages]);
 
-  async function handleSend(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const trimmed = input.trim();
-    await sendMessage(trimmed);
-  }
-
-  async function handleQuickCardClick(text: string) {
+  const handleQuickCardClick = useCallback(async (text: string) => {
     setFollowUpSuggestions([]);
     await sendMessage(text);
+  }, [sendMessage, setFollowUpSuggestions]);
+
+  const renderMessage = (message: ChatMessage) => {
+    const isUser = message.role === "user";
+
+    if (isUser) {
+      const handleUserCopy = async () => {
+        try {
+          await navigator.clipboard.writeText(message.text);
+        } catch (err) {
+          console.error("Failed to copy text:", err);
+        }
+      };
+
+      const handleUserEdit = () => {
+        setEditingMessageId(message.id);
+        setEditingText(message.text);
+      };
+
+      const handleEditSave = () => {
+        if (!editingText.trim()) return;
+        
+        const threadId = activeThreadId || "thread-default";
+        setMessages((prev) => {
+          const updated = prev.map((msg) =>
+            msg.id === message.id ? { ...msg, text: editingText.trim() } : msg
+          );
+          saveMessages(threadId, updated);
+          return updated;
+        });
+        
+        setEditingMessageId(null);
+        setEditingText("");
+        
+        // Send edited message to bot
+        sendMessage(editingText.trim());
+      };
+
+      const handleEditCancel = () => {
+        setEditingMessageId(null);
+        setEditingText("");
+      };
+
+      return (
+        <div
+          key={message.id}
+          className="group flex justify-end animate-[fadeInUp_0.4s_ease-out]"
+          onMouseEnter={() => {
+            if (hoverUserMenuTimeoutRef.current) {
+              clearTimeout(hoverUserMenuTimeoutRef.current);
+            }
+            hoverUserMenuTimeoutRef.current = setTimeout(() => {
+              setHoveredUserMessageId(message.id);
+            }, 500);
+          }}
+          onMouseLeave={() => {
+            if (hoverUserMenuTimeoutRef.current) {
+              clearTimeout(hoverUserMenuTimeoutRef.current);
+              hoverUserMenuTimeoutRef.current = null;
+            }
+            setHoveredUserMessageId(null);
+            if (tooltipTimeoutRef.current) {
+              clearTimeout(tooltipTimeoutRef.current);
+              tooltipTimeoutRef.current = null;
+            }
+            setHoveredTooltip(null);
+          }}
+          style={{ marginLeft: "auto", maxWidth: "60%", marginRight: "3%" }}
+        >
+          <div className="flex flex-col gap-2" style={{ alignItems: "flex-end", width: "100%" }}>
+            {editingMessageId === message.id ? (
+              <div className="flex flex-col gap-2 w-full">
+                <textarea
+                  value={editingText}
+                  onChange={(e) => setEditingText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleEditSave();
+                    } else if (e.key === "Escape") {
+                      handleEditCancel();
+                    }
+                  }}
+                  className="ak-body whitespace-pre-wrap leading-relaxed rounded-xl px-2.5 py-1.5 shadow-sm text-right bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ color: "var(--ak-color-text-primary)", fontSize: "16px", minHeight: "60px" }}
+                  autoFocus
+                />
+                <div className="flex gap-2 justify-end">
+                  <button
+                    type="button"
+                    onClick={handleEditCancel}
+                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 active:scale-95 transition-transform"
+                  >
+                    Abbrechen
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleEditSave}
+                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 active:scale-95 transition-transform"
+                  >
+                    Senden
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                className="ak-body whitespace-pre-wrap leading-relaxed rounded-xl px-2.5 py-1.5 shadow-sm text-right bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)]"
+                style={{ color: "var(--ak-color-text-primary)", fontSize: "16px" }}
+              >
+                {message.text}
+              </div>
+            )}
+            
+            {/* Action Row (User) */}
+            <div 
+              className={`${hoveredUserMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-0.5 mt-1`}
+            >
+              {/* Edit */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleUserEdit}
+                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'edit' })}
+                  onMouseLeave={() => setHoveredTooltip(null)}
+                  className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-md hover:bg-black/5 active:scale-95"
+                  aria-label="Bearbeiten"
+                >
+                  <PencilSquareIcon className="h-4 w-4" />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'edit' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                    Bearbeiten
+                  </span>
+                )}
+              </div>
+
+              {/* Copy */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleUserCopy}
+                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'copy' })}
+                  onMouseLeave={() => setHoveredTooltip(null)}
+                  className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-md hover:bg-black/5 active:scale-95"
+                  aria-label="Kopieren"
+                >
+                  <ClipboardDocumentIcon className="h-4 w-4" />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'copy' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                    Kopieren
+                  </span>
+                )}
+              </div>
+
+              {/* Retry (Resend) */}
+              <div className="relative">
+                  <button
+                  type="button"
+                  onClick={() => sendMessage(message.text)}
+                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'retry' })}
+                  onMouseLeave={() => setHoveredTooltip(null)}
+                  className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-md hover:bg-black/5 active:scale-95"
+                  aria-label="Erneut senden"
+                >
+                  <ArrowPathIcon className="h-4 w-4" />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'retry' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                    Erneut senden
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const ttsActive = speakingId === message.id;
+
+    const handleCopy = async () => {
+      try {
+        await navigator.clipboard.writeText(message.text);
+      } catch (err) {
+        console.error("Failed to copy text:", err);
+      }
+    };
+
+    const handleSave = async () => {
+      try {
+        const threadId = activeThreadId || "thread-default";
+        const timestamp = new Date().toISOString();
+        
+        const response = await fetch("/api/memory/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            threadId,
+            role: "assistant",
+            content: message.text,
+            timestamp,
+            tenantId,
+          }),
+        });
+
+        if (response.ok) {
+          setSavedMessageId(message.id);
+          setTimeout(() => {
+            setSavedMessageId(null);
+          }, 2000);
+        } else {
+          console.error("Failed to save message:", await response.text());
+        }
+      } catch (err) {
+        console.error("Error saving message:", err);
+      }
+    };
+
+    const handleUpdate = async () => {
+      // Find the user message that came before this assistant message
+      const messageIndex = messages.findIndex((m) => m.id === message.id);
+      if (messageIndex === -1) return;
+      
+      // Find the last user message before this assistant message
+      let lastUserMessage: ChatMessage | null = null;
+      for (let i = messageIndex - 1; i >= 0; i--) {
+        if (messages[i].role === "user") {
+          lastUserMessage = messages[i];
+          break;
+        }
+      }
+      
+      if (!lastUserMessage) return;
+      
+      // Remove this assistant message and regenerate
+      const threadId = activeThreadId || "thread-default";
+      setMessages((prev) => {
+        const updated = prev.filter((m) => m.id !== message.id);
+        saveMessages(threadId, updated);
+        return updated;
+      });
+      
+      // Regenerate the response
+      await sendMessage(lastUserMessage.text);
+    };
+
+    const handleReadAloud = () => {
+      if (ttsActive) {
+        stopTts();
+      } else {
+        toggleTts({ id: message.id, text: message.text, lang: "de-DE" });
+      }
+    };
+
+    const handleFeedback = async (messageId: string, type: "thumbs_up" | "thumbs_down") => {
+      setFeedbackStatus((prev) => ({ ...prev, [messageId]: type }));
+      try {
+        await fetch("/api/feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tenant_id: tenantId,
+            session_id: activeThreadId,
+            message_id: messageId,
+            feedback_type: type,
+          }),
+        });
+      } catch (error) {
+        console.error("Error submitting feedback:", error);
+      }
+    };
+
+    const handleQuickActions = async () => {
+      if (fastActionsOpenMessageId === message.id) {
+        setFastActionsOpenMessageId(null);
+        return;
+      }
+
+      const messageIndex = messages.findIndex((m) => m.id === message.id);
+      let lastUserMessage = "";
+      if (messageIndex > 0) {
+        for (let i = messageIndex - 1; i >= 0; i -= 1) {
+          if (messages[i]?.role === "user") {
+            lastUserMessage = messages[i]?.text ?? "";
+            break;
+          }
+        }
+      }
+
+      try {
+        const res = await fetchFastActions({
+          surface: "inline",
+          channel: "web_chat",
+          thread_id: activeThreadId ?? undefined,
+          message_id: message.id,
+          language: "de",
+          last_user_message: lastUserMessage,
+          last_assistant_message: message.text ?? "",
+          conversation_summary: "",
+        });
+
+        setFastActionsByMessageId((prev) => ({
+          ...prev,
+          [message.id]: Array.isArray(res.suggestions) ? res.suggestions : [],
+        }));
+        setFastActionsOpenMessageId(message.id);
+      } catch (err) {
+        console.error(err);
+        setFastActionsByMessageId((prev) => ({ ...prev, [message.id]: [] }));
+        setFastActionsOpenMessageId(message.id);
+      }
+    };
+
+    return (
+      <div
+        key={message.id}
+        className="group flex justify-start animate-[fadeInUp_0.4s_ease-out]"
+        onMouseEnter={() => {
+          if (hoverMenuTimeoutRef.current) {
+            clearTimeout(hoverMenuTimeoutRef.current);
+          }
+          hoverMenuTimeoutRef.current = setTimeout(() => {
+          }, 500);
+        }}
+        onMouseLeave={() => {
+          if (hoverMenuTimeoutRef.current) {
+            clearTimeout(hoverMenuTimeoutRef.current);
+            hoverMenuTimeoutRef.current = null;
+          }
+        }}
+        style={{
+          marginLeft: "3%",
+          maxWidth: "85%",
+          opacity: 1,
+        }}
+      >
+        <div className="flex w-full items-start">
+          <div className="flex w-full flex-col gap-3" style={{ alignItems: "flex-start" }}>
+            <div className="flex w-full items-start justify-between gap-3">
+              <div className="flex-1 min-w-0 text-black font-medium antialiased">
+                <ChatMarkdown content={message.text} />
+              </div>
+                {thinkingSteps.length > 0 && isLastAssistantMessage(message) ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsStepsOpen(true)}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-transparent text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 active:scale-90"
+                    aria-label="Orchestrator anzeigen"
+                  >
+                    <RectangleStackIcon className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                ) : null}
+            </div>
+
+            {/* Audio Player für Vorlesen-Modus */}
+            {ttsActive && (
+              <div className="mt-2 mb-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 flex items-center gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-1 h-4 bg-blue-500 rounded" style={{ animation: "audio-wave 0.6s ease-in-out infinite", animationDelay: "0ms" }} />
+                      <div className="w-1 h-4 bg-blue-500 rounded" style={{ animation: "audio-wave 0.6s ease-in-out infinite", animationDelay: "0.15s" }} />
+                      <div className="w-1 h-4 bg-blue-500 rounded" style={{ animation: "audio-wave 0.6s ease-in-out infinite", animationDelay: "0.3s" }} />
+                    </div>
+                    <span className="text-xs text-gray-600 ml-2">Wird vorgelesen...</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleReadAloud}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                  aria-label="Vorlesen stoppen"
+                >
+                  <SpeakerWaveIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
+                </button>
+              </div>
+            )}
+
+            {/* Action Row (Inline Expansion) */}
+            <div className="flex items-center gap-0.5 mt-1.5 opacity-100 transition-opacity duration-200 relative">
+              {/* 1. Copy */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'copy' })}
+                  onMouseLeave={() => setHoveredTooltip(null)}
+                  className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-md hover:bg-black/5 active:scale-95"
+                  aria-label="Kopieren"
+                >
+                  <ClipboardDocumentIcon className="h-4 w-4" />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'copy' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                    Kopieren
+                  </span>
+                )}
+              </div>
+
+              {/* 2. Thumb Up */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => handleFeedback(message.id, 'thumbs_up')}
+                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'thumbs_up' })}
+                  onMouseLeave={() => setHoveredTooltip(null)}
+                  className={clsx(
+                    "p-1.5 transition-colors rounded-md hover:bg-black/5 active:scale-95",
+                    feedbackStatus[message.id] === 'thumbs_up' ? "text-green-600" : "text-gray-400 hover:text-gray-900"
+                  )}
+                  aria-label="Gut"
+                >
+                  <HandThumbUpIcon className="h-4 w-4" />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'thumbs_up' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                    Gut
+                  </span>
+                )}
+              </div>
+
+              {/* 3. Thumb Down */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => handleFeedback(message.id, 'thumbs_down')}
+                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'thumbs_down' })}
+                  onMouseLeave={() => setHoveredTooltip(null)}
+                  className={clsx(
+                    "p-1.5 transition-colors rounded-md hover:bg-black/5 active:scale-95",
+                    feedbackStatus[message.id] === 'thumbs_down' ? "text-red-600" : "text-gray-400 hover:text-gray-900"
+                  )}
+                  aria-label="Schlecht"
+                >
+                  <HandThumbDownIcon className="h-4 w-4" />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'thumbs_down' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                    Schlecht
+                  </span>
+                )}
+              </div>
+
+              {/* 4. Quick Actions */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleQuickActions}
+                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'quick' })}
+                  onMouseLeave={() => setHoveredTooltip(null)}
+                  className={clsx(
+                    "p-1.5 transition-colors rounded-md hover:bg-black/5 active:scale-95",
+                    fastActionsOpenMessageId === message.id ? "text-blue-600 bg-blue-50" : "text-gray-400 hover:text-gray-900"
+                  )}
+                  aria-label="Schnellaktionen"
+                >
+                  <SparklesIcon className="h-4 w-4" />
+                </button>
+                {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'quick' && (
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                    Schnellaktionen
+                  </span>
+                )}
+              </div>
+
+              {/* 5. More / Expanded */}
+              {expandedActions[message.id] ? (
+                <>
+                  {/* Regenerate */}
+                  <div className="relative">
+                      <button
+                      type="button"
+                      onClick={handleUpdate}
+                      onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'update' })}
+                      onMouseLeave={() => setHoveredTooltip(null)}
+                      className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-md hover:bg-black/5 active:scale-95"
+                      aria-label="Neu generieren"
+                    >
+                      <ArrowPathIcon className="h-4 w-4" />
+                    </button>
+                    {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'update' && (
+                      <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                        Neu generieren
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Read Aloud */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={handleReadAloud}
+                      disabled={!ttsSupported || !message.text || message.text.trim().length === 0}
+                      onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'read' })}
+                      onMouseLeave={() => setHoveredTooltip(null)}
+                      className={clsx(
+                        "p-1.5 transition-colors rounded-md hover:bg-black/5 disabled:opacity-50 active:scale-95",
+                        ttsActive ? "text-gray-900 bg-black/5" : "text-gray-400 hover:text-gray-900"
+                      )}
+                      aria-label="Vorlesen"
+                    >
+                      <SpeakerWaveIcon className="h-4 w-4" />
+                    </button>
+                    {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'read' && (
+                      <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                        {ttsActive ? "Stoppen" : "Vorlesen"}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Save */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'save' })}
+                      onMouseLeave={() => setHoveredTooltip(null)}
+                      className={clsx(
+                        "p-1.5 transition-colors rounded-md hover:bg-black/5 active:scale-95",
+                        savedMessageId === message.id ? "text-green-600" : "text-gray-400 hover:text-gray-900"
+                      )}
+                      aria-label="Speichern"
+                    >
+                      <BookmarkIcon className="h-4 w-4" />
+                    </button>
+                    {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'save' && (
+                      <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                        {savedMessageId === message.id ? "Gespeichert" : "Speichern"}
+                      </span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedActions(prev => ({ ...prev, [message.id]: true }))}
+                    onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'more' })}
+                    onMouseLeave={() => setHoveredTooltip(null)}
+                    className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-md hover:bg-black/5 active:scale-95"
+                    aria-label="Mehr"
+                  >
+                    <EllipsisHorizontalIcon className="h-4 w-4" />
+                  </button>
+                  {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'more' && (
+                    <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                      Mehr
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {fastActionsOpenMessageId === message.id &&
+            Array.isArray(fastActionsByMessageId[message.id]) &&
+            fastActionsByMessageId[message.id].length > 0 ? (
+              <div className="mt-2 w-full">
+                <FastActionsChips
+                  suggestions={fastActionsByMessageId[message.id]}
+                  onSelect={(s) => {
+                    const text = s.payload?.text;
+                    if (s.handler === "prefill_prompt" && typeof text === "string" && text.trim().length > 0) {
+                      setInput(text);
+                      setFastActionsOpenMessageId(null);
+                      if (inputRef.current) inputRef.current.focus();
+                    }
+                  }}
+                />
+              </div>
+            ) : null}
+
+            {Array.isArray(message.uiMessages) && message.uiMessages.length > 0 ? (
+              <div className="mt-3 w-full space-y-3">
+                {message.uiMessages.map((uiMessage, index) => (
+                  <WidgetRenderer key={index} message={uiMessage} />
+                ))}
+              </div>
+            ) : null}
+
+
+            {isLastAssistantMessage(message) && followUpSuggestions.length > 0 && (
+              <div className="mt-4 flex flex-col gap-2 items-start animate-[fadeInUp_0.3s_var(--ak-motion-ease)]">
+                {followUpSuggestions.slice(0, 3).map((suggestion, index) => (
+                  <button
+                    key={`suggestion-${index}`}
+                    type="button"
+                    onClick={() => handleQuickCardClick(suggestion)}
+                    className="ak-body text-left text-[var(--ak-color-accent)] hover:text-[var(--ak-color-accent-strong)] hover:underline transition-colors cursor-pointer"
+                    style={{
+                      animationDelay: `${index * 50}ms`,
+                      animation: "fadeInUp 0.3s var(--ak-motion-ease) forwards",
+                      opacity: 0,
+                    }}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  async function handleSend(e?: FormEvent<HTMLFormElement>) {
+    e?.preventDefault();
+    const trimmed = input.trim();
+    if (!trimmed) return;
+    await sendMessage(trimmed);
   }
 
   // Keyboard Shortcuts für Chat
@@ -1290,7 +1313,7 @@ export function ChatShell() {
 
   return (
     <div
-      className="flex h-full w-full max-w-full flex-col gap-4 px-4 pt-4 pb-2 relative overflow-x-hidden"
+      className="flex h-full min-h-0 w-full max-w-full flex-col gap-4 px-4 pt-4 pb-2 relative overflow-hidden"
     >
       <style jsx>{`
         @keyframes thinking-dot-blink {
@@ -1330,12 +1353,26 @@ export function ChatShell() {
         note={thinkingNote}
       />
 
-      <div className="flex-1 overflow-y-auto space-y-6 px-4 py-2 pb-20 w-full max-w-full">
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-6 px-4 py-2 w-full max-w-full">
         {messages.length === 0 ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="ak-heading font-medium text-[var(--ak-color-text-primary)]" style={{ fontSize: "2rem" }}>
-              Was kann ich für dich tun?
+          <div className="flex h-full flex-col items-center justify-center gap-6 opacity-0 animate-[fadeIn_0.5s_ease-out_forwards]">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+              <svg 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="1.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className="h-8 w-8 text-gray-900"
+              >
+                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
+                <path d="M12 6v6l4 2" />
+              </svg>
             </div>
+            <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">
+              Was kann ich für dich tun?
+            </h2>
           </div>
         ) : (
           <>
@@ -1379,7 +1416,7 @@ export function ChatShell() {
         )}
       </div>
 
-      <form onSubmit={handleSend} className="w-full max-w-full px-[10%]">
+      <div className="w-full max-w-full px-[10%] flex-none pb-4">
         <div className={clsx(
           "relative flex items-center gap-2 rounded-2xl px-5 py-4 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] shadow-[0_20px_45px_rgba(14,23,38,0.2)] focus-within:scale-[1.01] border outline-none ring-0 focus-within:outline-none focus-within:ring-0",
           isRealtimeActive 
@@ -1497,6 +1534,12 @@ export function ChatShell() {
               if (shouldHideInput) return;
               setInput(e.target.value);
             }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
             placeholder={shouldHideInput ? "" : "Schreibe mit Aklow"}
             ref={inputRef}
             readOnly={shouldHideInput}
@@ -1607,7 +1650,8 @@ export function ChatShell() {
           </button>
 
           <button
-            type="submit"
+            type="button"
+            onClick={handleSend}
             disabled={isSending || !input.trim()}
             className={clsx(
               "inline-flex h-8 w-8 items-center justify-center rounded-full shadow-[var(--ak-shadow-soft)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px] active:scale-95 border",
@@ -1638,7 +1682,7 @@ export function ChatShell() {
             e.target.value = "";
           }}
         />
-      </form>
+      </div>
     </div>
   );
 }

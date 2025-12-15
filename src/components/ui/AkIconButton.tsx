@@ -2,6 +2,7 @@
 
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import clsx from 'clsx'
+import { MagneticButton } from '@/components/ui/MagneticButton'
 
 export type AkIconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
   children: ReactNode
@@ -36,12 +37,13 @@ export function AkIconButton({
     : 'text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]'
 
   return (
-    <button
-      type={type ?? 'button'}
+    <MagneticButton
+      type={type === 'submit' || type === 'reset' ? type : 'button'}
       className={clsx(base, sizeClass, palette, state, 'ak-button-interactive', className)}
+      isActive={selected}
       {...props}
     >
       {children}
-    </button>
+    </MagneticButton>
   )
 }

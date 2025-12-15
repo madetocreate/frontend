@@ -4,6 +4,7 @@ import { sendChatMessage } from '@/lib/chatClient'
 import { useState } from 'react'
 import clsx from 'clsx'
 import { WidgetCard } from '@/components/ui/WidgetCard'
+import { AIActions } from '@/components/ui/AIActions'
 
 type AutomationRun = {
   id: string
@@ -234,6 +235,11 @@ const handleRunSelect = (id: string) => {
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto">
+      {/* AI Actions */}
+      <div className="px-1">
+        <AIActions context="automation" />
+      </div>
+      
       <WidgetCard padding="sm">
         <div className="flex flex-col gap-3">
           <h2 className="ak-heading">KI-Workflow-Designer</h2>
