@@ -12,7 +12,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 // Types (Dummy)
-type Customer = {
+export type CustomerProfile = {
   id: string
   name: string
   company: string
@@ -25,7 +25,7 @@ type Customer = {
 }
 
 type CustomerDetailsDrawerProps = {
-  customer: Customer | null
+  customer: CustomerProfile | null
   onClose: () => void
 }
 

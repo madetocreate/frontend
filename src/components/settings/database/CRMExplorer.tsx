@@ -6,7 +6,6 @@ import {
   ArrowUpTrayIcon, 
   TrashIcon, 
   MagnifyingGlassIcon,
-  FunnelIcon,
   TableCellsIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'

@@ -33,11 +33,17 @@ export function ChatInfoDrawer({ open, onClose }: ChatInfoDrawerProps) {
   ])
 
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsVisible(true)
     } else {
-      const timer = setTimeout(() => setIsVisible(false), 300) // Match transition duration
-      return () => clearTimeout(timer)
+      timer = setTimeout(() => setIsVisible(false), 300)
+    }
+    return () => {
+      if (timer) {
+        clearTimeout(timer)
+      }
     }
   }, [open])
 

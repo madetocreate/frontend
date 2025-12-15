@@ -17,7 +17,7 @@ import {
     ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline'
 import { CustomersView } from './CustomersSidebarWidget'
-import { CustomerDetailsDrawer } from './CustomerDetailsDrawer'
+import { CustomerDetailsDrawer, type CustomerProfile } from './CustomerDetailsDrawer'
 
 // Mock Data
 const OPPORTUNITIES = [
@@ -25,20 +25,38 @@ const OPPORTUNITIES = [
     { id: 'o2', type: 'risk', customer: 'StartUp Inc.', potential: 'High', message: 'Weniger Login-Aktivität in den letzten 7 Tagen. Churn-Risiko.' },
 ]
 
-const CUSTOMERS = [
-    { id: 'c1', name: 'Max Mustermann', company: 'Acme GmbH', status: 'Active', stage: 'Negotiation', value: '€12.500', lastContact: '2h', tags: ['VIP', 'Tech'] },
-    { id: 'c2', name: 'Julia Design', company: 'Creative Studio', status: 'Lead', stage: 'Discovery', value: '€4.200', lastContact: '1d', tags: ['Creative'] },
-    { id: 'c3', name: 'Tech Solutions KG', company: 'Tech Sol', status: 'Active', stage: 'Closed Won', value: '€45.000', lastContact: '3d', tags: ['Enterprise'] },
-    { id: 'c4', name: 'Dr. Müller', company: 'Praxis Müller', status: 'Active', stage: 'Proposal', value: '€8.900', lastContact: '5h', tags: ['Healthcare'] },
-    { id: 'c5', name: 'Global Trade AG', company: 'Global Trade', status: 'Active', stage: 'Renewal', value: '€120.000', lastContact: '1w', tags: ['Enterprise', 'Logistics'] },
+type CustomerStatus = 'active' | 'lead' | 'churned'
+type CustomerStage = 'Negotiation' | 'Closed Won' | 'Proposal' | 'Discovery' | 'Renewal'
+type CustomerRow = {
+  id: string
+  name: string
+  company: string
+  status: CustomerStatus
+  stage: CustomerStage
+  value: string
+  lastContact: string
+  tags: string[]
+}
+
+const CUSTOMERS: CustomerRow[] = [
+    { id: 'c1', name: 'Max Mustermann', company: 'Acme GmbH', status: 'active', stage: 'Negotiation', value: '€12.500', lastContact: '2h', tags: ['VIP', 'Tech'] },
+    { id: 'c2', name: 'Julia Design', company: 'Creative Studio', status: 'lead', stage: 'Discovery', value: '€4.200', lastContact: '1d', tags: ['Creative'] },
+    { id: 'c3', name: 'Tech Solutions KG', company: 'Tech Sol', status: 'active', stage: 'Closed Won', value: '€45.000', lastContact: '3d', tags: ['Enterprise'] },
+    { id: 'c4', name: 'Dr. Müller', company: 'Praxis Müller', status: 'active', stage: 'Proposal', value: '€8.900', lastContact: '5h', tags: ['Healthcare'] },
+    { id: 'c5', name: 'Global Trade AG', company: 'Global Trade', status: 'active', stage: 'Renewal', value: '€120.000', lastContact: '1w', tags: ['Enterprise', 'Logistics'] },
 ]
 
-export function CustomersDashboard({ view }: { view?: CustomersView }) {
+type SelectedCustomer = CustomerProfile & {
+  phone: string
+}
+
+export function CustomersDashboard({ view: _view }: { view?: CustomersView }) {
   const [search, setSearch] = useState('')
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null) // Replace any with type
+  const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null)
+  const viewLabel = _view ? ` (${_view})` : ''
 
   // Mock handler for drawer
-  const handleCustomerClick = (customer: any) => {
+  const handleCustomerClick = (customer: CustomerRow) => {
     // Needs a full customer object with email etc. enriching mock
     setSelectedCustomer({ ...customer, email: 'demo@example.com', phone: '+49 123 4567890', ltv: 12500 })
   }
@@ -47,7 +65,7 @@ export function CustomersDashboard({ view }: { view?: CustomersView }) {
     <div className="h-full w-full overflow-y-auto bg-[var(--ak-color-bg-app)]">
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[var(--ak-color-border-hairline)] bg-[var(--ak-glass-bg)] px-6 backdrop-blur-[var(--ak-glass-blur)]">
             <h1 className="text-xl font-semibold text-[var(--ak-color-text-primary)] tracking-tight">
-                Sales Intelligence
+                Sales Intelligence{viewLabel}
             </h1>
             <div className="flex items-center gap-3">
                 <div className="w-64">
@@ -57,8 +75,8 @@ export function CustomersDashboard({ view }: { view?: CustomersView }) {
                         onChange={setSearch}
                     />
                 </div>
-                <AkButton variant="secondary" leftIcon={<FunnelIcon className="h-4 w-4"/>}>Filter</AkButton>
-                <AkButton variant="primary" leftIcon={<UserPlusIcon className="h-4 w-4"/>}>Neu</AkButton>
+    <AkButton variant="secondary" leftIcon={<FunnelIcon className="h-4 w-4"/>}>Filter</AkButton>
+    <AkButton variant="primary" leftIcon={<UserPlusIcon className="h-4 w-4"/>}>Neu</AkButton>
             </div>
         </header>
         
@@ -162,19 +180,19 @@ export function CustomersDashboard({ view }: { view?: CustomersView }) {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <AkBadge tone={customer.status === 'Active' ? 'success' : customer.status === 'Lead' ? 'warning' : 'muted'}>
+                                        <AkBadge tone={customer.status === 'active' ? 'success' : customer.status === 'lead' ? 'warning' : 'muted'}>
                                             {customer.status}
                                         </AkBadge>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-col gap-1">
                                             <span className="text-[var(--ak-color-text-primary)]">{customer.stage}</span>
-                                            <div className="w-24 h-1 bg-[var(--ak-color-bg-surface-muted)] rounded-full overflow-hidden">
-                                                <div 
-                                                    className="h-full bg-[var(--ak-color-accent)] rounded-full" 
-                                                    style={{ width: customer.stage === 'Closed Won' ? '100%' : customer.stage === 'Negotiation' ? '75%' : '25%' }}
-                                                ></div>
-                                            </div>
+                                                <div className="w-24 h-1 bg-[var(--ak-color-bg-surface-muted)] rounded-full overflow-hidden">
+                                                    <div 
+                                                        className="h-full bg-[var(--ak-color-accent)] rounded-full" 
+                                                        style={{ width: customer.stage === 'Closed Won' ? '100%' : customer.stage === 'Negotiation' ? '75%' : customer.stage === 'Renewal' ? '60%' : '25%' }}
+                                                    ></div>
+                                                </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 font-mono font-medium text-[var(--ak-color-text-primary)]">

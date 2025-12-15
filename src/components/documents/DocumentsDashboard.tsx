@@ -26,15 +26,16 @@ const DOCUMENTS = [
     { id: '6', name: 'Budget 2026.xlsx', type: 'XLSX', size: '45 KB', date: '01.12.2025', tag: 'finanzen' },
 ]
 
-export function DocumentsDashboard({ view }: { view: DocumentsView }) {
+export function DocumentsDashboard({ view: _view }: { view: DocumentsView }) {
   const [layout, setLayout] = useState<'grid' | 'list'>('grid')
   const [search, setSearch] = useState('')
+  const viewLabel = _view ? ` (${_view})` : ''
 
   return (
     <div className="h-full w-full overflow-y-auto bg-[var(--ak-color-bg-app)]">
         <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[var(--ak-color-border-hairline)] bg-[var(--ak-glass-bg)] px-6 backdrop-blur-[var(--ak-glass-blur)]">
             <h1 className="text-xl font-semibold text-[var(--ak-color-text-primary)] tracking-tight">
-                Smart Documents
+                Smart Documents{viewLabel}
             </h1>
             <div className="flex items-center gap-3">
                 <div className="w-64">
@@ -79,7 +80,7 @@ export function DocumentsDashboard({ view }: { view: DocumentsView }) {
                              </div>
                              <div>
                                  <h3 className="text-sm font-semibold text-[var(--ak-color-text-primary)]">Vertrag läuft ab</h3>
-                                 <p className="text-xs text-[var(--ak-color-text-secondary)]">Der "Mietvertrag Büro" läuft in 30 Tagen aus. Erinnerung setzen?</p>
+                                 <p className="text-xs text-[var(--ak-color-text-secondary)]">Der &quot;Mietvertrag Büro&quot; läuft in 30 Tagen aus. Erinnerung setzen?</p>
                              </div>
                          </div>
                          <div className="flex items-start gap-3 p-3 rounded-xl bg-white/60 border border-[var(--ak-color-border-subtle)] hover:bg-white transition-colors cursor-pointer">
@@ -88,7 +89,7 @@ export function DocumentsDashboard({ view }: { view: DocumentsView }) {
                              </div>
                              <div>
                                  <h3 className="text-sm font-semibold text-[var(--ak-color-text-primary)]">Rechnung erkannt</h3>
-                                 <p className="text-xs text-[var(--ak-color-text-secondary)]">"Rechnung_1023.pdf" wurde automatisch kategorisiert. Betrag: 1.200€</p>
+                                 <p className="text-xs text-[var(--ak-color-text-secondary)]">&quot;Rechnung_1023.pdf&quot; wurde automatisch kategorisiert. Betrag: 1.200€</p>
                              </div>
                          </div>
                     </div>
