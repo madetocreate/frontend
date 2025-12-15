@@ -11,6 +11,7 @@ import { useDictation } from "../hooks/useDictation";
 import { useRealtimeVoice } from "../hooks/useRealtimeVoice";
 import { useSpeechSynthesis } from "../hooks/useSpeechSynthesis";
 import { ThinkingStepsDrawer } from "./chat/ThinkingStepsDrawer";
+import { ChatInfoDrawer } from "./chat/ChatInfoDrawer";
 import { ChatMarkdown } from "./chat/markdown/ChatMarkdown";
 import { FastActionsChips } from "./chat/FastActionsChips";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
@@ -39,6 +40,7 @@ export function ChatShell() {
   const [thinkingNote, setThinkingNote] = useState<string | null>(null);
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
   const [isStepsOpen, setIsStepsOpen] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [hoveredTooltip, setHoveredTooltip] = useState<{ messageId: string; icon: string } | null>(null);
   const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hoverMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -305,8 +307,14 @@ export function ChatShell() {
       inputRef.current?.focus();
     };
 
+    const handleToggleInfo = () => {
+      console.log("ChatShell: toggling info drawer");
+      setIsInfoOpen(prev => !prev);
+    };
+
     window.addEventListener("aklow-select-thread", handleSelect as EventListener);
     window.addEventListener("aklow-new-chat", handleNew as EventListener);
+    window.addEventListener("aklow-toggle-chat-info", handleToggleInfo as EventListener);
 
     // Command Palette Event Handlers
     const handleToggleDictation = () => {
@@ -424,6 +432,7 @@ export function ChatShell() {
     return () => {
       window.removeEventListener("aklow-select-thread", handleSelect as EventListener);
       window.removeEventListener("aklow-new-chat", handleNew as EventListener);
+      window.removeEventListener("aklow-toggle-chat-info", handleToggleInfo as EventListener);
       window.removeEventListener("aklow-toggle-dictation", handleToggleDictation as EventListener);
       window.removeEventListener("aklow-toggle-realtime", handleToggleRealtime as EventListener);
       window.removeEventListener("aklow-stop-tts", handleStopTts as EventListener);
@@ -1353,6 +1362,11 @@ export function ChatShell() {
         note={thinkingNote}
       />
 
+      <ChatInfoDrawer
+        open={isInfoOpen}
+        onClose={() => setIsInfoOpen(false)}
+      />
+
       <div className="flex-1 min-h-0 overflow-y-auto space-y-6 px-4 py-2 w-full max-w-full">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-6 opacity-0 animate-[fadeIn_0.5s_ease-out_forwards]">
@@ -1651,7 +1665,7 @@ export function ChatShell() {
 
           <button
             type="button"
-            onClick={handleSend}
+            onClick={() => handleSend()}
             disabled={isSending || !input.trim()}
             className={clsx(
               "inline-flex h-8 w-8 items-center justify-center rounded-full shadow-[var(--ak-shadow-soft)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px] active:scale-95 border",

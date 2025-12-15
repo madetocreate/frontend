@@ -8,7 +8,8 @@ import {
   PencilSquareIcon, 
   TrashIcon, 
   ChatBubbleLeftIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline'
 import { ensureSeedChatThread, useChatThreads, writeChatThreads, type ChatThread } from '@/lib/chatThreadsStore'
 
@@ -132,125 +133,153 @@ export function ChatSidebarContent() {
       setOpenKebabId(null)
   }
 
+  const handleToggleInfo = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('aklow-toggle-chat-info'))
+    }
+  }
+
   return (
     <div className="flex h-full flex-col bg-transparent">
       {/* Header Area */}
-      <div className="px-3 pt-4 pb-2">
-        <button
-            onClick={handleNewChat}
-            className="flex w-full items-center justify-between rounded-lg bg-white/50 px-3 py-2 text-sm font-medium text-gray-700 shadow-sm border border-gray-200/60 hover:bg-white hover:shadow-md transition-all duration-200 backdrop-blur-sm active:scale-[0.98]"
-        >
-            <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-black/5 text-black">
-                    <ChatBubbleLeftIcon className="h-3.5 w-3.5" />
+      <div className="px-3 pt-4 pb-2 space-y-3">
+        <div className="flex gap-2">
+            <button
+                onClick={handleNewChat}
+                className="flex-1 flex items-center justify-between rounded-lg bg-white/50 px-3 py-2 text-sm font-medium text-gray-700 shadow-sm border border-gray-200/60 hover:bg-white hover:shadow-md transition-all duration-200 backdrop-blur-sm active:scale-[0.98]"
+            >
+                <div className="flex items-center gap-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-black/5 text-black">
+                        <ChatBubbleLeftIcon className="h-3.5 w-3.5" />
+                    </div>
+                    <span>Neuer Chat</span>
                 </div>
-                <span>Neuer Chat</span>
-            </div>
-            <PencilSquareIcon className="h-4 w-4 text-gray-400" />
-        </button>
+                <div className="flex h-5 w-5 items-center justify-center rounded bg-white/50 text-xs text-gray-400">
+                    +
+                </div>
+            </button>
+            <button
+                onClick={handleToggleInfo}
+                className="flex h-[42px] w-[42px] items-center justify-center rounded-lg bg-white/50 text-gray-600 shadow-sm border border-gray-200/60 hover:bg-white hover:shadow-md transition-all duration-200 backdrop-blur-sm active:scale-[0.98]"
+                title="Chat Informationen"
+            >
+                <InformationCircleIcon className="h-5 w-5" />
+            </button>
+        </div>
 
-        <div className="mt-3 relative">
-            <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input 
+        {/* Search */}
+        <div className="relative group">
+            <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+            <input
+                type="text"
+                placeholder="Suche..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Suchen..."
-                className="w-full h-8 rounded-lg bg-black/5 pl-8 pr-3 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--ak-color-accent)]/20 transition-all"
+                className="w-full rounded-lg border border-gray-200/60 bg-white/40 py-2 pl-9 pr-3 text-sm placeholder-gray-400 focus:bg-white focus:border-indigo-500/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-sm"
             />
         </div>
       </div>
 
-      {/* Grouped Threads List */}
-      <div className="flex-1 overflow-y-auto px-2 pb-3 pt-2 ak-scrollbar">
-          {Object.entries(groupedThreads).map(([label, group]) => {
-              if (group.length === 0) return null
-              return (
-                  <div key={label} className="mb-4">
-                      <h3 className="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">{label}</h3>
-                      <div className="flex flex-col gap-0.5">
-                          {group.map(thread => (
-                              <div
-                                key={thread.id}
-                                className={clsx(
-                                    "group relative flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all duration-200",
-                                    effectiveActiveThreadId === thread.id 
-                                        ? "bg-gray-200/60 text-black font-medium" 
-                                        : "text-gray-600 hover:bg-gray-100/50 hover:text-gray-900 active:scale-[0.98] cursor-pointer"
-                                )}
-                                onClick={() => handleThreadSelect(thread.id)}
-                              >
-                                <div className="flex-1 text-left truncate pr-6 select-none">
-                                    <span className="truncate">{thread.title || 'Neuer Chat'}</span>
-                                </div>
+      {/* Threads List */}
+      <div className="flex-1 overflow-y-auto px-2 pb-4 scrollbar-thin scrollbar-thumb-gray-200/50 hover:scrollbar-thumb-gray-300/50">
+        <div className="space-y-6 pt-2">
+          {Object.entries(groupedThreads).map(([label, groupThreads]) => {
+            if (groupThreads.length === 0) return null
+            return (
+              <div key={label}>
+                <div className="sticky top-0 z-10 bg-gradient-to-b from-[#F3F5F7] via-[#F3F5F7] to-transparent px-2 pb-2 pt-1">
+                    <h3 className="text-[11px] font-semibold uppercase tracking-wider text-gray-400/90">{label}</h3>
+                </div>
+                <div className="space-y-0.5">
+                  {groupThreads.map((thread) => (
+                    <div
+                      key={thread.id}
+                      className="group relative flex items-center gap-3 rounded-lg px-2 py-2 transition-all hover:bg-black/5"
+                    >
+                        {/* Selection Indicator */}
+                        {thread.id === effectiveActiveThreadId && (
+                            <div className="absolute left-0 h-4 w-1 rounded-r-full bg-black/80" />
+                        )}
 
-                                {/* Kebab Menu - Only visible on hover or active */}
-                                <div className={clsx(
-                                    "absolute right-2 opacity-0 transition-opacity",
-                                    (effectiveActiveThreadId === thread.id || openKebabId === thread.id) ? "opacity-100" : "group-hover:opacity-100"
-                                )}>
+                        <button
+                            className="flex-1 overflow-hidden text-left"
+                            onClick={() => handleThreadSelect(thread.id)}
+                        >
+                            <span className={clsx(
+                                "block truncate text-sm font-medium transition-colors",
+                                thread.id === effectiveActiveThreadId ? "text-black" : "text-gray-600 group-hover:text-gray-900"
+                            )}>
+                                {thread.title}
+                            </span>
+                        </button>
+
+                        <div className="relative">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    setOpenKebabId(openKebabId === thread.id ? null : thread.id)
+                                }}
+                                className={clsx(
+                                    "flex h-6 w-6 items-center justify-center rounded transition-colors hover:bg-black/10",
+                                    openKebabId === thread.id ? "opacity-100 bg-black/10" : "opacity-0 group-hover:opacity-100"
+                                )}
+                            >
+                                <EllipsisHorizontalIcon className="h-4 w-4 text-gray-500" />
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {openKebabId === thread.id && (
+                                <>
+                                    <div 
+                                        className="fixed inset-0 z-20" 
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setOpenKebabId(null)
+                                        }} 
+                                    />
+                                    <div className="absolute right-0 top-full z-30 mt-1 w-32 origin-top-right rounded-lg border border-gray-200 bg-white p-1 shadow-lg ring-1 ring-black/5 focus:outline-none animate-in fade-in zoom-in-95 duration-100">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation()
-                                                setOpenKebabId(openKebabId === thread.id ? null : thread.id)
+                                                handleRenameThread(thread.id)
                                             }}
-                                            className="rounded p-1 hover:bg-black/10 text-gray-500 transition-colors active:scale-90"
-                                        >
-                                            <EllipsisHorizontalIcon className="h-4 w-4" />
-                                        </button>
-                                </div>
-
-                                {/* Menu Dropdown */}
-                                {openKebabId === thread.id && (
-                                    <div className="absolute right-0 top-full z-50 mt-1 w-40 origin-top-right rounded-lg bg-white/90 p-1 shadow-lg ring-1 ring-black/5 backdrop-blur-md focus:outline-none animate-in fade-in zoom-in-95 duration-100">
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleRenameThread(thread.id) }}
-                                            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
                                         >
                                             <PencilSquareIcon className="h-3.5 w-3.5" />
                                             Umbenennen
                                         </button>
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); handleArchiveThread(thread.id) }}
-                                            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                handleArchiveThread(thread.id)
+                                            }}
+                                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
                                         >
                                             <ArchiveBoxIcon className="h-3.5 w-3.5" />
-                                            {thread.archived ? 'Wiederherstellen' : 'Archivieren'}
+                                            Archivieren
                                         </button>
                                         <div className="my-1 h-px bg-gray-100" />
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); handleDeleteThread(thread.id) }}
-                                            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs text-red-600 hover:bg-red-50"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                handleDeleteThread(thread.id)
+                                            }}
+                                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs text-red-600 hover:bg-red-50"
                                         >
                                             <TrashIcon className="h-3.5 w-3.5" />
                                             Löschen
                                         </button>
                                     </div>
-                                )}
-                              </div>
-                          ))}
-                      </div>
-                  </div>
-              )
-          })}
-          
-          {filtered.length === 0 && (
-              <div className="p-4 text-center text-sm text-gray-400">
-                  Keine Chats gefunden.
+                                </>
+                            )}
+                        </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-          )}
-      </div>
-      
-      {/* Profile / Settings Footer (Optional, like ChatGPT) */}
-      <div className="p-3 border-t border-[var(--ak-color-border-hairline)] mt-auto">
-         <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-black/5 cursor-pointer transition-colors">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center text-xs font-bold">
-                JD
-            </div>
-            <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-medium text-gray-800 truncate">John Doe</p>
-                <p className="text-[10px] text-gray-500 truncate">Pro Plan</p>
-            </div>
-         </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

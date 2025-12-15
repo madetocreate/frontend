@@ -21,40 +21,69 @@ type Campaign = {
 }
 
 type GrowthDetailsDrawerProps = {
-  item: Campaign | null // Generic 'item' prop for consistency or specific type
+  item: Campaign | null
   onClose: () => void
 }
 
 export function GrowthDetailsDrawer({ item, onClose }: GrowthDetailsDrawerProps) {
   if (!item) return null;
 
-  // Original Content View
+  // Original Content View - Verbessertes Design mit Progress Bars
   const OriginalContent = (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header Info */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-[var(--ak-color-text-primary)]">{item.name}</h3>
-        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide
-          ${item.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+        <div className="space-y-1">
+          <h3 className="text-2xl font-bold text-[var(--ak-color-text-primary)] tracking-tight">{item.name}</h3>
+          <p className="text-[var(--ak-color-text-secondary)] text-sm">{item.type} • {item.audience}</p>
+        </div>
+        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border
+          ${item.status === 'active' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' : 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'}`}>
           {item.status}
         </span>
       </div>
 
+      {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="p-4 apple-card-enhanced">
-          <p className="text-xs text-[var(--ak-color-text-muted)] uppercase mb-1">Typ</p>
-          <p className="font-medium">{item.type}</p>
+        <div className="p-5 apple-card-enhanced rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] shadow-sm">
+          <p className="text-xs font-semibold text-[var(--ak-color-text-muted)] uppercase tracking-wider mb-2">Budget</p>
+          <div className="flex items-end justify-between">
+            <p className="text-2xl font-bold text-[var(--ak-color-text-primary)]">{item.budget}€</p>
+            <p className="text-xs text-green-600 font-medium mb-1">+12%</p>
+          </div>
+          <div className="w-full bg-[var(--ak-color-bg-surface-muted)] h-1.5 rounded-full mt-3 overflow-hidden">
+            <div className="bg-[var(--ak-color-accent)] h-1.5 rounded-full" style={{ width: '65%' }}></div>
+          </div>
         </div>
-        <div className="p-4 apple-card-enhanced">
-          <p className="text-xs text-[var(--ak-color-text-muted)] uppercase mb-1">Zielgruppe</p>
-          <p className="font-medium">{item.audience}</p>
+        
+        <div className="p-5 apple-card-enhanced rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] shadow-sm">
+          <p className="text-xs font-semibold text-[var(--ak-color-text-muted)] uppercase tracking-wider mb-2">Conversion</p>
+          <div className="flex items-end justify-between">
+            <p className="text-2xl font-bold text-[var(--ak-color-text-primary)]">{item.conversion}%</p>
+            <p className="text-xs text-green-600 font-medium mb-1">+0.5%</p>
+          </div>
+          <div className="w-full bg-[var(--ak-color-bg-surface-muted)] h-1.5 rounded-full mt-3 overflow-hidden">
+            <div className="bg-green-500 h-1.5 rounded-full" style={{ width: `${Math.min(item.conversion * 10, 100)}%` }}></div>
+          </div>
         </div>
-        <div className="p-4 apple-card-enhanced">
-          <p className="text-xs text-[var(--ak-color-text-muted)] uppercase mb-1">Budget</p>
-          <p className="font-medium">{item.budget}€</p>
-        </div>
-        <div className="p-4 apple-card-enhanced">
-          <p className="text-xs text-[var(--ak-color-text-muted)] uppercase mb-1">Conversion</p>
-          <p className="font-medium text-green-600">{item.conversion}%</p>
+      </div>
+
+      {/* Campaign Details List */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-[var(--ak-color-text-primary)] uppercase tracking-wider">Metriken</h4>
+        <div className="space-y-3">
+          <div className="flex justify-between items-center p-3 rounded-lg hover:bg-[var(--ak-color-bg-hover)] transition-colors">
+            <span className="text-[var(--ak-color-text-secondary)] text-sm">Impressions</span>
+            <span className="font-mono text-sm font-medium">12,450</span>
+          </div>
+          <div className="flex justify-between items-center p-3 rounded-lg hover:bg-[var(--ak-color-bg-hover)] transition-colors">
+            <span className="text-[var(--ak-color-text-secondary)] text-sm">Clicks</span>
+            <span className="font-mono text-sm font-medium">843</span>
+          </div>
+          <div className="flex justify-between items-center p-3 rounded-lg hover:bg-[var(--ak-color-bg-hover)] transition-colors">
+            <span className="text-[var(--ak-color-text-secondary)] text-sm">CPC</span>
+            <span className="font-mono text-sm font-medium">0.45€</span>
+          </div>
         </div>
       </div>
     </div>
