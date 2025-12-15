@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface User {
@@ -22,31 +22,38 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  // Auth temporarily disabled - use mock user
+  const [user, setUser] = useState<User | null>({
+    id: 'dev-user',
+    email: 'dev@example.com',
+    name: 'Dev User',
+    provider: 'email'
+  })
+  const [loading] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    // Check for stored auth
-    const token = localStorage.getItem('auth_token')
-    const userData = localStorage.getItem('user')
+  // Auth check disabled for development
+  // useEffect(() => {
+  //   // Check for stored auth
+  //   const token = localStorage.getItem('auth_token')
+  //   const userData = localStorage.getItem('user')
 
-    if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData)
-        setTimeout(() => setUser(parsedUser), 0)
+  //   if (token && userData) {
+  //     try {
+  //       const parsedUser = JSON.parse(userData)
+  //       setTimeout(() => setUser(parsedUser), 0)
         
-        // Verify token is still valid (optional: call /auth/me)
-        // For now, we'll trust the stored token
-      } catch {
-        // Invalid user data, clear storage
-        localStorage.removeItem('auth_token')
-        localStorage.removeItem('user')
-      }
-    }
+  //       // Verify token is still valid (optional: call /auth/me)
+  //       // For now, we'll trust the stored token
+  //     } catch {
+  //       // Invalid user data, clear storage
+  //       localStorage.removeItem('auth_token')
+  //       localStorage.removeItem('user')
+  //     }
+  //   }
     
-    setTimeout(() => setLoading(false), 0)
-  }, [])
+  //   setTimeout(() => setLoading(false), 0)
+  // }, [])
 
   const login = (token: string, userData: User, refreshToken?: string) => {
     localStorage.setItem('auth_token', token)

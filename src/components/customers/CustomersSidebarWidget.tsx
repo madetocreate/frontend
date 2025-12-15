@@ -82,7 +82,7 @@ export function CustomersSidebarWidget({
                     <AkListRow
                         title="VIP Kunden"
                         leading={<StarIcon className="h-4 w-4 text-yellow-500" />}
-                        trailing={<AkBadge tone="neutral" size="sm">12</AkBadge>}
+                        trailing={<AkBadge tone="muted" size="sm">12</AkBadge>}
                         onClick={() => {}}
                     />
                 </li>
@@ -90,7 +90,7 @@ export function CustomersSidebarWidget({
                     <AkListRow
                         title="Neu (30 Tage)"
                         leading={<ClockIcon className="h-4 w-4 text-blue-500" />}
-                        trailing={<AkBadge tone="neutral" size="sm">5</AkBadge>}
+                        trailing={<AkBadge tone="muted" size="sm">5</AkBadge>}
                         onClick={() => {}}
                     />
                 </li>
@@ -98,7 +98,7 @@ export function CustomersSidebarWidget({
                     <AkListRow
                         title="Risiko"
                         leading={<ExclamationCircleIcon className="h-4 w-4 text-red-500" />}
-                        trailing={<AkBadge tone="neutral" size="sm">3</AkBadge>}
+                        trailing={<AkBadge tone="muted" size="sm">3</AkBadge>}
                         onClick={() => {}}
                     />
                 </li>

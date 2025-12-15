@@ -27,7 +27,7 @@ export function GrowthAutomation() {
 
        <div className="grid grid-cols-1 gap-4">
             {WORKFLOWS.map((wf) => (
-                <WidgetCard key={wf.id} padding="md" className="group hover:border-[var(--ak-color-accent-growth)] transition-colors cursor-pointer">
+                <WidgetCard key={wf.id} padding="md" className="group apple-glass-enhanced hover:border-[var(--ak-color-accent-growth)] transition-colors cursor-pointer">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="h-10 w-10 rounded-lg bg-[var(--ak-color-bg-surface-muted)] flex items-center justify-center">
@@ -36,7 +36,7 @@ export function GrowthAutomation() {
                             <div>
                                 <h3 className="font-medium text-[var(--ak-color-text-primary)]">{wf.name}</h3>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-mono">Trigger: {wf.trigger}</span>
+                                    <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-secondary)] font-mono">Trigger: {wf.trigger}</span>
                                     <span className="text-xs text-[var(--ak-color-text-secondary)]">• {wf.runs} Ausführungen</span>
                                 </div>
                             </div>
@@ -44,7 +44,7 @@ export function GrowthAutomation() {
                         <div className="flex items-center gap-3">
                              {wf.status === 'active' && <AkBadge tone="success">Aktiv</AkBadge>}
                              {wf.status === 'paused' && <AkBadge tone="warning">Pausiert</AkBadge>}
-                             {wf.status === 'draft' && <AkBadge tone="neutral">Entwurf</AkBadge>}
+                             {wf.status === 'draft' && <AkBadge tone="muted">Entwurf</AkBadge>}
                              
                              <AkButton variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
                                 Bearbeiten

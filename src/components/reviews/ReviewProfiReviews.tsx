@@ -2,9 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { 
-  StarIcon,
   MagnifyingGlassIcon,
-  FunnelIcon,
   ChatBubbleLeftRightIcon,
   CheckCircleIcon,
   ClockIcon,

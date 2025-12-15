@@ -175,20 +175,20 @@ export function RealEstateProperties() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Immobilien</h2>
-          <p className="text-gray-600 mt-1">{properties.length} Immobilien gesamt</p>
+          <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">Immobilien</h2>
+          <p className="text-[var(--ak-color-text-secondary)] mt-1">{properties.length} Immobilien gesamt</p>
         </div>
         <div className="flex gap-2">
           <button 
             onClick={() => setShowExposeGenerator(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200"
+            className="flex items-center gap-2 px-4 py-2 apple-glass-enhanced border border-[var(--ak-color-border-subtle)] rounded-lg hover:shadow-[var(--ak-shadow-md)] transition-all duration-200"
             aria-label="Exposé generieren"
           >
             <SparklesIcon className="h-5 w-5" />
             AI Exposé
           </button>
           <button 
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200"
+            className="flex items-center gap-2 px-4 py-2 apple-glass-enhanced border border-[var(--ak-color-border-subtle)] rounded-lg hover:shadow-[var(--ak-shadow-md)] transition-all duration-200"
             aria-label="Neue Immobilie erstellen"
           >
             <PlusIcon className="h-5 w-5" />
@@ -200,13 +200,13 @@ export function RealEstateProperties() {
       {/* Search & Filters */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" aria-hidden="true" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--ak-color-text-muted)]" aria-hidden="true" />
           <input
             type="text"
             placeholder="Immobilien suchen..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+            className="w-full pl-10 pr-4 py-2 border border-[var(--ak-color-border-subtle)] rounded-lg focus:ring-2 focus:ring-[var(--ak-color-accent)] focus:border-[var(--ak-color-accent)] transition-all duration-200"
             aria-label="Immobilien durchsuchen"
           />
         </div>
@@ -218,7 +218,7 @@ export function RealEstateProperties() {
               className={`px-4 py-2 rounded-lg transition-all duration-200 ${
                 filter === f
                   ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  : 'apple-glass-enhanced border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-primary)] hover:shadow-[var(--ak-shadow-md)]'
               }`}
               aria-pressed={filter === f}
             >
@@ -230,10 +230,10 @@ export function RealEstateProperties() {
 
       {/* Properties List */}
       {filteredProperties.length === 0 ? (
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-100 shadow-lg p-12 text-center">
-          <BuildingOfficeIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Keine Immobilien gefunden</h3>
-          <p className="text-gray-600">
+        <div className="apple-glass-enhanced rounded-2xl p-12 text-center">
+          <BuildingOfficeIcon className="h-12 w-12 text-[var(--ak-color-text-muted)] mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-[var(--ak-color-text-primary)] mb-2">Keine Immobilien gefunden</h3>
+          <p className="text-[var(--ak-color-text-secondary)]">
             {searchQuery ? 'Versuchen Sie eine andere Suche.' : 'Fügen Sie Ihre erste Immobilie hinzu.'}
           </p>
         </div>
@@ -245,14 +245,14 @@ export function RealEstateProperties() {
             return (
               <div
                 key={property.id}
-                className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer group"
+                className="apple-glass-enhanced rounded-xl hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer group"
                 onClick={() => setSelectedProperty(property)}
                 role="button"
                 tabIndex={0}
                 aria-label={`Immobilie ${property.title} öffnen`}
               >
                 {/* Photo */}
-                <div className="relative h-48 bg-gray-200 overflow-hidden">
+                <div className="relative h-48 bg-[var(--ak-color-bg-surface-muted)] overflow-hidden">
                   {primaryPhoto ? (
                     <img
                       src={primaryPhoto.thumbnail || primaryPhoto.url}
@@ -261,7 +261,7 @@ export function RealEstateProperties() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <PhotoIcon className="h-12 w-12 text-gray-400" />
+                      <PhotoIcon className="h-12 w-12 text-[var(--ak-color-text-muted)]" />
                     </div>
                   )}
                   <div className="absolute top-3 right-3 flex gap-2">
@@ -283,13 +283,13 @@ export function RealEstateProperties() {
 
                 {/* Content */}
                 <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1">{property.title}</h3>
-                  <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
+                  <h3 className="font-semibold text-[var(--ak-color-text-primary)] mb-2 line-clamp-1">{property.title}</h3>
+                  <div className="flex items-center gap-1 text-sm text-[var(--ak-color-text-secondary)] mb-3">
                     <MapPinIcon className="h-4 w-4" />
                     <span>{property.address}, {property.city}</span>
                   </div>
                   
-                  <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                  <div className="flex items-center gap-4 text-sm text-[var(--ak-color-text-secondary)] mb-3">
                     {property.rooms && (
                       <div className="flex items-center gap-1">
                         <Squares2X2Icon className="h-4 w-4" />
@@ -302,16 +302,16 @@ export function RealEstateProperties() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                  <div className="flex items-center justify-between pt-3 border-t border-[var(--ak-color-border-subtle)]">
                     <div>
-                      <div className="text-lg font-bold text-gray-900">
+                      <div className="text-lg font-bold text-[var(--ak-color-text-primary)]">
                         {new Intl.NumberFormat('de-DE', { 
                           style: 'currency', 
                           currency: 'EUR',
                           maximumFractionDigits: 0 
                         }).format(property.price)}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-[var(--ak-color-text-secondary)]">
                         {property.priceType === 'Kauf' ? 'Kaufpreis' : 'Kaltmiete'}
                       </div>
                     </div>
@@ -322,22 +322,22 @@ export function RealEstateProperties() {
                           setSelectedProperty(property)
                           setShowCustomerMatching(true)
                         }}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 hover:bg-[var(--ak-color-bg-hover)] rounded-lg transition-colors"
                         aria-label="Kunden-Matching"
                         title="Passende Kunden finden"
                       >
-                        <UserGroupIcon className="h-5 w-5 text-gray-600" />
+                        <UserGroupIcon className="h-5 w-5 text-[var(--ak-color-text-secondary)]" />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           // TODO: Open expose
                         }}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 hover:bg-[var(--ak-color-bg-hover)] rounded-lg transition-colors"
                         aria-label="Exposé anzeigen"
                         title="Exposé anzeigen"
                       >
-                        <DocumentTextIcon className="h-5 w-5 text-gray-600" />
+                        <DocumentTextIcon className="h-5 w-5 text-[var(--ak-color-text-secondary)]" />
                       </button>
                     </div>
                   </div>

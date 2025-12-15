@@ -131,14 +131,14 @@ export function SettingsAgents({ mode }: { mode: SettingsMode }) {
             title="Aktive Agenten"
             subtitle="Anzahl der laufenden Agenten"
             leading={<CheckCircleIcon className="h-5 w-5 text-green-500" />}
-            trailing={<span className="text-sm text-gray-600">12</span>}
+            trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">12</span>}
             mode={mode}
           />
           <SettingsRow
             title="Verfügbare Tools"
             subtitle="Anzahl der konfigurierten Tools"
             leading={<WrenchScrewdriverIcon className="h-5 w-5" />}
-            trailing={<span className="text-sm text-gray-600">24</span>}
+            trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">24</span>}
             mode={mode}
           />
         </SettingsSection>

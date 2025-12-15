@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { UserGroupIcon, ClockIcon } from '@heroicons/react/24/outline'
+import { ClockIcon } from '@heroicons/react/24/outline'
 
 export function GastronomieStaff() {
   const [staff] = useState([

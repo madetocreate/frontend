@@ -12,11 +12,10 @@ import {
   ClockIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline'
-import { WidgetCard } from '@/components/ui/WidgetCard'
-import { AkListRow } from '@/components/ui/AkListRow'
 import { AkButton } from '@/components/ui/AkButton'
 import { AkBadge } from '@/components/ui/AkBadge'
 import { AIActions } from '@/components/ui/AIActions'
+import { QuickActions } from '@/components/ui/QuickActions'
 
 type ViewState = 'ready' | 'loading' | 'error'
 
@@ -73,68 +72,139 @@ export function DocumentDetailsDrawer({ documentId, onClose }: DocumentDetailsDr
   }
 
   return (
-    <div className="flex h-full flex-col gap-6 p-1">
-      {/* AI Actions */}
-      <AIActions context="document" />
-      
-      {/* Header / Preview */}
-      <div className="flex flex-col items-center gap-4 py-6 border-b border-[var(--ak-color-border-hairline)]">
-        <div className="h-24 w-24 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400">
-            <DocumentIcon className="h-12 w-12" />
+    <div className="flex h-full flex-col gap-6 p-6 overflow-y-auto">
+      {/* Header / Preview - Apple Style */}
+      <div className="apple-card flex flex-col items-center gap-5 rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-8 shadow-[var(--ak-shadow-sm)]">
+        <div className="h-28 w-28 rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center border-2 border-white shadow-lg">
+            <DocumentIcon className="h-16 w-16 text-blue-600" />
         </div>
         <div className="text-center">
-            <h3 className="font-medium text-lg text-[var(--ak-color-text-primary)]">{doc.name}</h3>
-            <p className="text-sm text-[var(--ak-color-text-secondary)]">{doc.size} • {doc.type}</p>
+            <h3 className="ak-heading text-xl mb-2 text-[var(--ak-color-text-primary)]">{doc.name}</h3>
+            <p className="ak-body text-sm text-[var(--ak-color-text-secondary)]">{doc.size} • {doc.type}</p>
         </div>
-        <div className="flex gap-2">
-            <AkButton size="sm" variant="secondary" leftIcon={<ArrowDownTrayIcon className="h-4 w-4"/>}>Download</AkButton>
-            <AkButton size="sm" variant="secondary" leftIcon={<ShareIcon className="h-4 w-4"/>}>Teilen</AkButton>
+        <div className="flex gap-3">
+            <AkButton size="sm" variant="primary" leftIcon={<ArrowDownTrayIcon className="h-4 w-4"/>} className="apple-button-primary">Download</AkButton>
+            <AkButton size="sm" variant="secondary" leftIcon={<ShareIcon className="h-4 w-4"/>} className="apple-button-secondary">Teilen</AkButton>
+        </div>
+      </div>
+      
+      {/* AI Suggestions & Quick Actions - in der Mitte */}
+      <div className="flex flex-col gap-3 px-4 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
+        <AIActions context="document" />
+        <QuickActions context="document" />
+      </div>
+      
+      {/* Quick Stats Widget */}
+      <div className="grid grid-cols-3 gap-3">
+          <div className="apple-card rounded-xl border border-[var(--ak-color-border-subtle)] bg-gradient-to-br from-blue-50 to-blue-100/50 p-4">
+              <p className="ak-caption text-blue-600 mb-1 font-semibold">Größe</p>
+              <p className="ak-body text-sm font-semibold text-blue-900">{doc.size}</p>
+          </div>
+          <div className="apple-card rounded-xl border border-[var(--ak-color-border-subtle)] bg-gradient-to-br from-purple-50 to-purple-100/50 p-4">
+              <p className="ak-caption text-purple-600 mb-1 font-semibold">Typ</p>
+              <p className="ak-body text-sm font-semibold text-purple-900">{doc.type}</p>
+          </div>
+          <div className="apple-card rounded-xl border border-[var(--ak-color-border-subtle)] bg-gradient-to-br from-green-50 to-green-100/50 p-4">
+              <p className="ak-caption text-green-600 mb-1 font-semibold">Tags</p>
+              <p className="ak-body text-sm font-semibold text-green-900">{doc.tags.length}</p>
+          </div>
+      </div>
+
+      {/* Metadata - Apple Style */}
+      <div className="apple-section rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-5">
+        <h4 className="ak-heading text-base mb-4 text-[var(--ak-color-text-primary)] flex items-center gap-2">
+          <InformationCircleIcon className="h-5 w-5 text-[var(--ak-color-text-secondary)]" />
+          Informationen
+        </h4>
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <ClockIcon className="h-5 w-5 text-[var(--ak-color-text-secondary)]"/>
+                    <p className="ak-body text-sm text-[var(--ak-color-text-secondary)]">Erstellt am</p>
+                </div>
+                <p className="ak-body text-sm font-medium text-[var(--ak-color-text-primary)]">{doc.created}</p>
+            </div>
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <InformationCircleIcon className="h-5 w-5 text-[var(--ak-color-text-secondary)]"/>
+                    <p className="ak-body text-sm text-[var(--ak-color-text-secondary)]">Klassifizierung</p>
+                </div>
+                <AkBadge tone="warning">Confidential</AkBadge>
+            </div>
+            <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                    <TagIcon className="h-5 w-5 text-[var(--ak-color-text-secondary)]"/>
+                    <p className="ak-body text-sm text-[var(--ak-color-text-secondary)]">Tags</p>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-end">
+                    {doc.tags.map(tag => (
+                        <span key={tag} className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 px-3 py-1 text-xs font-medium text-blue-700">
+                            #{tag}
+                        </span>
+                    ))}
+                </div>
+            </div>
         </div>
       </div>
 
-      {/* Metadata */}
-      <WidgetCard title="Informationen" padding="none">
-        <div className="divide-y divide-[var(--ak-color-border-hairline)]">
-            <AkListRow 
-                title="Erstellt am" 
-                subtitle={doc.created} 
-                leading={<ClockIcon className="h-5 w-5 text-gray-400"/>} 
-            />
-            <AkListRow 
-                title="Klassifizierung" 
-                subtitle={doc.classification} 
-                leading={<InformationCircleIcon className="h-5 w-5 text-gray-400"/>} 
-                trailing={<AkBadge tone="warning">Confidential</AkBadge>}
-            />
-             <AkListRow 
-                title="Tags" 
-                leading={<TagIcon className="h-5 w-5 text-gray-400"/>} 
-                trailing={
-                    <div className="flex gap-1">
-                        {doc.tags.map(tag => (
-                            <AkBadge key={tag} tone="neutral" size="sm">#{tag}</AkBadge>
-                        ))}
-                    </div>
-                }
-            />
-        </div>
-      </WidgetCard>
-
-      {/* Summary */}
-      <WidgetCard title="Zusammenfassung" padding="md">
-        <div className="flex gap-3">
-            <SparklesIcon className="h-5 w-5 text-[var(--ak-color-accent)] shrink-0 mt-0.5" />
-            <p className="text-sm text-[var(--ak-color-text-secondary)] leading-relaxed">
+      {/* Summary - Apple Style */}
+      <div className="apple-section rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-5">
+        <h4 className="ak-heading text-base mb-4 text-[var(--ak-color-text-primary)] flex items-center gap-2">
+          <SparklesIcon className="h-5 w-5 text-purple-600" />
+          KI-Zusammenfassung
+        </h4>
+        <div className="rounded-xl bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-100 p-4">
+            <p className="ak-body text-sm leading-relaxed text-[var(--ak-color-text-primary)]">
                 {doc.summary}
             </p>
         </div>
-      </WidgetCard>
+      </div>
+      
+      {/* Related Documents Widget */}
+      <div className="apple-section rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-5">
+        <h4 className="ak-heading text-base mb-4 text-[var(--ak-color-text-primary)]">Ähnliche Dokumente</h4>
+        <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+                <button
+                    key={i}
+                    type="button"
+                    className="w-full text-left apple-card rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-3 hover:shadow-md transition-all active:scale-[0.98]"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                            <DocumentIcon className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="ak-body text-sm font-medium text-[var(--ak-color-text-primary)] truncate">Ähnliches Dokument {i}.pdf</p>
+                            <p className="ak-caption text-xs text-[var(--ak-color-text-secondary)]">Vor 2 Tagen</p>
+                        </div>
+                    </div>
+                </button>
+            ))}
+        </div>
+      </div>
 
-      {/* Actions */}
+      {/* Actions - Apple Style */}
       <div className="mt-auto border-t border-[var(--ak-color-border-hairline)] pt-4">
-        <AkButton variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50" leftIcon={<TrashIcon className="h-4 w-4"/>}>
+        <button
+            type="button"
+            onClick={() => {
+              if (confirm('Dokument wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+                console.log('Delete document:', documentId)
+                // TODO: API call to delete
+                window.dispatchEvent(
+                  new CustomEvent('aklow-notification', {
+                    detail: { type: 'success', message: 'Dokument gelöscht' }
+                  })
+                )
+                onClose?.()
+              }
+            }}
+            className="apple-button-secondary w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-red-600 border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-300 transition-all active:scale-[0.98]"
+        >
+            <TrashIcon className="h-4 w-4" />
             Dokument löschen
-        </AkButton>
+        </button>
       </div>
 
     </div>

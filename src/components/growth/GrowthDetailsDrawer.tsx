@@ -18,6 +18,7 @@ import { AkListRow } from '@/components/ui/AkListRow'
 import { AkButton } from '@/components/ui/AkButton'
 import { AkBadge } from '@/components/ui/AkBadge'
 import { AIActions } from '@/components/ui/AIActions'
+import { QuickActions } from '@/components/ui/QuickActions'
 
 type ViewState = 'ready' | 'loading' | 'error' | 'empty'
 
@@ -247,13 +248,16 @@ export function GrowthDetailsDrawer({ growthItemId, onClose }: GrowthDetailsDraw
   }
 
   return (
-    <div className="flex h-full flex-col gap-6 p-1">
+    <div className="flex h-full flex-col gap-6 p-1 overflow-y-auto">
       <form onSubmit={handleFormSubmit} className="space-y-6">
-        {/* AI Actions */}
-        <AIActions context="growth" />
-        
         {/* Überblick */}
-        <WidgetCard title="Überblick" padding="sm" className="bg-white/50">
+        <WidgetCard title="Überblick" padding="sm" className="apple-glass-enhanced">
+          {/* AI Suggestions & Quick Actions - in der Mitte */}
+          <div className="mb-4 flex flex-col gap-3 px-2 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
+            <AIActions context="growth" />
+            <QuickActions context="growth" />
+          </div>
+          
            <div className="space-y-4">
                <div className="flex items-center justify-between">
                    <div className="flex flex-col">
@@ -305,7 +309,7 @@ export function GrowthDetailsDrawer({ growthItemId, onClose }: GrowthDetailsDraw
         </WidgetCard>
 
         {/* Planung */}
-        <WidgetCard title="Planung" padding="sm" className="bg-white/50">
+        <WidgetCard title="Planung" padding="sm" className="apple-glass-enhanced">
             <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
@@ -350,8 +354,8 @@ export function GrowthDetailsDrawer({ growthItemId, onClose }: GrowthDetailsDraw
         {/* Assets */}
         <WidgetCard 
             title="Assets" 
-            padding="none" 
-            className="bg-white/50 overflow-hidden"
+            padding="sm" 
+            className="apple-glass-enhanced overflow-hidden"
             action={
                 <AkButton size="sm" variant="ghost" onClick={handleCopyBundle}>
                     <Square3Stack3DIcon className="h-4 w-4" />
@@ -383,7 +387,7 @@ export function GrowthDetailsDrawer({ growthItemId, onClose }: GrowthDetailsDraw
         </WidgetCard>
 
         {/* Connections */}
-        <WidgetCard title="Verbindungen" padding="none" className="bg-white/50 overflow-hidden">
+        <WidgetCard title="Verbindungen" padding="sm" className="apple-glass-enhanced overflow-hidden">
             <div className="divide-y divide-[var(--ak-color-border-hairline)]">
                 {connections.map((connection) => {
                     const IconComponent = connection.type === 'email' ? EnvelopeIcon : DevicePhoneMobileIcon

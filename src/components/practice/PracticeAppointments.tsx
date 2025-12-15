@@ -121,9 +121,9 @@ export function PracticeAppointments() {
       'confirmed': 'bg-emerald-100 text-emerald-700 border-emerald-200',
       'pending': 'bg-amber-100 text-amber-700 border-amber-200',
       'cancelled': 'bg-red-100 text-red-700 border-red-200',
-      'completed': 'bg-gray-100 text-gray-700 border-gray-200'
+      'completed': 'bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-primary)] border-[var(--ak-color-border-subtle)]'
     }
-    return colors[status] || 'bg-gray-100 text-gray-700'
+    return colors[status] || 'bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-primary)]'
   }
 
   const getStatusLabel = (status: Appointment['status']) => {
@@ -141,13 +141,13 @@ export function PracticeAppointments() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Termine</h2>
-          <p className="text-gray-600 mt-1">Terminverwaltung und Kalender</p>
+          <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">Termine</h2>
+          <p className="text-[var(--ak-color-text-secondary)] mt-1">Terminverwaltung und Kalender</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setView(view === 'list' ? 'calendar' : 'list')}
-            className="px-4 py-2 bg-white/60 backdrop-blur-xl border border-gray-200/50 rounded-xl hover:bg-gray-50/80 transition-all duration-200"
+            className="px-4 py-2 apple-glass-enhanced border border-[var(--ak-color-border-subtle)] rounded-xl hover:shadow-[var(--ak-shadow-md)] transition-all duration-200"
           >
             {view === 'list' ? 'Kalender' : 'Liste'}
           </button>
@@ -160,48 +160,48 @@ export function PracticeAppointments() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white/60 backdrop-blur-2xl rounded-2xl border border-gray-200/50 shadow-sm p-4">
-          <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-          <div className="text-sm text-gray-600">Gesamt</div>
+        <div className="apple-glass-enhanced rounded-2xl p-4 hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
+          <div className="text-2xl font-bold text-[var(--ak-color-text-primary)]">{stats.total}</div>
+          <div className="text-sm text-[var(--ak-color-text-secondary)]">Gesamt</div>
         </div>
-        <div className="bg-white/60 backdrop-blur-2xl rounded-2xl border border-gray-200/50 shadow-sm p-4">
+        <div className="apple-glass-enhanced rounded-2xl p-4 hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
           <div className="text-2xl font-bold text-emerald-600">{stats.confirmed}</div>
-          <div className="text-sm text-gray-600">Bestätigt</div>
+          <div className="text-sm text-[var(--ak-color-text-secondary)]">Bestätigt</div>
         </div>
-        <div className="bg-white/60 backdrop-blur-2xl rounded-2xl border border-gray-200/50 shadow-sm p-4">
+        <div className="apple-glass-enhanced rounded-2xl p-4 hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
           <div className="text-2xl font-bold text-amber-600">{stats.pending}</div>
-          <div className="text-sm text-gray-600">Ausstehend</div>
+          <div className="text-sm text-[var(--ak-color-text-secondary)]">Ausstehend</div>
         </div>
-        <div className="bg-white/60 backdrop-blur-2xl rounded-2xl border border-gray-200/50 shadow-sm p-4">
+        <div className="apple-glass-enhanced rounded-2xl p-4 hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
           <div className="text-2xl font-bold text-red-600">{stats.cancelled}</div>
-          <div className="text-sm text-gray-600">Abgesagt</div>
+          <div className="text-sm text-[var(--ak-color-text-secondary)]">Abgesagt</div>
         </div>
-        <div className="bg-white/60 backdrop-blur-2xl rounded-2xl border border-gray-200/50 shadow-sm p-4">
+        <div className="apple-glass-enhanced rounded-2xl p-4 hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
           <div className="text-2xl font-bold text-blue-600">{stats.today}</div>
-          <div className="text-sm text-gray-600">Heute</div>
+          <div className="text-sm text-[var(--ak-color-text-secondary)]">Heute</div>
         </div>
       </div>
 
       {/* Date Selector */}
-      <div className="bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-lg p-6">
+      <div className="apple-glass-enhanced rounded-3xl p-6">
         <div className="flex items-center gap-4 mb-6">
           <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg">
             <CalendarIcon className="h-6 w-6 text-white" />
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Datum auswählen</label>
+            <label className="block text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2">Datum auswählen</label>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              className="px-4 py-2 border border-[var(--ak-color-border-subtle)] rounded-xl focus:ring-2 focus:ring-[var(--ak-color-accent)] focus:border-[var(--ak-color-accent)] transition-all"
             />
           </div>
         </div>
 
         {/* Appointments List */}
         <div>
-          <h3 className="text-lg font-bold text-gray-900 mb-4">
+          <h3 className="text-lg font-bold text-[var(--ak-color-text-primary)] mb-4">
             Termine am {new Date(selectedDate).toLocaleDateString('de-DE', { 
               weekday: 'long', 
               year: 'numeric', 
@@ -211,16 +211,16 @@ export function PracticeAppointments() {
           </h3>
           {todayAppointments.length === 0 ? (
             <div className="text-center py-12">
-              <CalendarIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-              <p className="text-gray-500 font-medium">Keine Termine an diesem Tag</p>
-              <p className="text-sm text-gray-400 mt-1">Erstellen Sie einen neuen Termin</p>
+              <CalendarIcon className="h-16 w-16 mx-auto mb-4 text-[var(--ak-color-text-muted)]" />
+              <p className="text-[var(--ak-color-text-secondary)] font-medium">Keine Termine an diesem Tag</p>
+              <p className="text-sm text-[var(--ak-color-text-muted)] mt-1">Erstellen Sie einen neuen Termin</p>
             </div>
           ) : (
             <div className="space-y-3">
               {todayAppointments.map((apt) => (
                 <div
                   key={apt.id}
-                  className="group relative p-5 bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 hover:border-blue-300/50 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                  className="group relative p-5 apple-glass-enhanced rounded-2xl border border-[var(--ak-color-border-subtle)] hover:border-[var(--ak-color-accent)] hover:shadow-lg transition-all duration-300 cursor-pointer"
                   onClick={() => setSelectedAppointment(apt)}
                 >
                   <div className="flex items-center justify-between">
@@ -232,12 +232,12 @@ export function PracticeAppointments() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-gray-900 text-lg">{apt.patient}</h3>
+                          <h3 className="font-semibold text-[var(--ak-color-text-primary)] text-lg">{apt.patient}</h3>
                           <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusColor(apt.status)}`}>
                             {getStatusLabel(apt.status)}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm text-gray-600 mb-2">
+                        <div className="flex items-center gap-3 text-sm text-[var(--ak-color-text-secondary)] mb-2">
                           <span className="flex items-center gap-1">
                             <DocumentTextIcon className="h-4 w-4" />
                             {apt.reason}
@@ -247,7 +247,7 @@ export function PracticeAppointments() {
                           </span>
                         </div>
                         {apt.notes && (
-                          <div className="text-xs text-gray-500 italic mt-1">
+                          <div className="text-xs text-[var(--ak-color-text-secondary)] italic mt-1">
                             📝 {apt.notes}
                           </div>
                         )}
@@ -271,16 +271,16 @@ export function PracticeAppointments() {
           onClick={() => setSelectedAppointment(null)}
         >
           <div 
-            className="bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto"
+            className="apple-glass-enhanced rounded-3xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-gray-900">Termin-Details</h3>
+              <h3 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">Termin-Details</h3>
               <button
                 onClick={() => setSelectedAppointment(null)}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                className="p-2 hover:bg-[var(--ak-color-bg-hover)] rounded-xl transition-colors"
               >
-                <XCircleIcon className="h-5 w-5 text-gray-500" />
+                <XCircleIcon className="h-5 w-5 text-[var(--ak-color-text-muted)]" />
               </button>
             </div>
             
@@ -291,11 +291,11 @@ export function PracticeAppointments() {
                     <ClockIcon className="h-8 w-8" />
                   </div>
                   <div>
-                    <div className="text-sm text-gray-600">Terminzeit</div>
-                    <div className="text-2xl font-bold text-gray-900">
+                    <div className="text-sm text-[var(--ak-color-text-secondary)]">Terminzeit</div>
+                    <div className="text-2xl font-bold text-[var(--ak-color-text-primary)]">
                       {selectedAppointment.time} ({selectedAppointment.duration} Min)
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">
+                    <div className="text-sm text-[var(--ak-color-text-secondary)] mt-1">
                       {new Date(selectedAppointment.date).toLocaleDateString('de-DE', { 
                         weekday: 'long', 
                         year: 'numeric', 
@@ -308,11 +308,11 @@ export function PracticeAppointments() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Patient</label>
-                <div className="p-4 bg-gray-50 rounded-xl">
-                  <div className="text-lg font-semibold text-gray-900">{selectedAppointment.patient}</div>
+                <label className="text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2 block">Patient</label>
+                <div className="p-4 bg-[var(--ak-color-bg-surface-muted)] rounded-xl">
+                  <div className="text-lg font-semibold text-[var(--ak-color-text-primary)]">{selectedAppointment.patient}</div>
                   {selectedAppointment.contact && (
-                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-4 mt-2 text-sm text-[var(--ak-color-text-secondary)]">
                       <div className="flex items-center gap-1">
                         <PhoneIcon className="h-4 w-4" />
                         <span>{selectedAppointment.contact.phone}</span>
@@ -330,15 +330,15 @@ export function PracticeAppointments() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">Grund</label>
-                  <div className="p-4 bg-gray-50 rounded-xl">
-                    <div className="font-medium text-gray-900">{selectedAppointment.reason}</div>
-                    <div className="text-sm text-gray-600 mt-1">{selectedAppointment.type}</div>
+                  <label className="text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2 block">Grund</label>
+                  <div className="p-4 bg-[var(--ak-color-bg-surface-muted)] rounded-xl">
+                    <div className="font-medium text-[var(--ak-color-text-primary)]">{selectedAppointment.reason}</div>
+                    <div className="text-sm text-[var(--ak-color-text-secondary)] mt-1">{selectedAppointment.type}</div>
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">Status</label>
-                  <div className="p-4 bg-gray-50 rounded-xl">
+                  <label className="text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2 block">Status</label>
+                  <div className="p-4 bg-[var(--ak-color-bg-surface-muted)] rounded-xl">
                     <span className={`px-3 py-1.5 rounded-lg text-sm font-semibold ${getStatusColor(selectedAppointment.status)}`}>
                       {getStatusLabel(selectedAppointment.status)}
                     </span>
@@ -348,18 +348,18 @@ export function PracticeAppointments() {
 
               {selectedAppointment.notes && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">Notizen</label>
+                  <label className="text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2 block">Notizen</label>
                   <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                    <p className="text-gray-900">{selectedAppointment.notes}</p>
+                    <p className="text-[var(--ak-color-text-primary)]">{selectedAppointment.notes}</p>
                   </div>
                 </div>
               )}
 
-              <div className="pt-4 border-t border-gray-200 flex gap-3">
+              <div className="pt-4 border-t border-[var(--ak-color-border-subtle)] flex gap-3">
                 <button className="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-medium shadow-lg shadow-emerald-500/30">
                   Bestätigen
                 </button>
-                <button className="px-4 py-3 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
+                <button className="px-4 py-3 apple-glass-enhanced border border-[var(--ak-color-border-subtle)] rounded-xl hover:shadow-[var(--ak-shadow-md)] transition-colors">
                   Erinnerung senden
                 </button>
                 <button className="px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors">

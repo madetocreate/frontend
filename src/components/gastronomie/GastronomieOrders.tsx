@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ShoppingCartIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
+import { } from '@heroicons/react/24/outline'
 
 export function GastronomieOrders() {
   const [orders] = useState([
@@ -14,22 +14,22 @@ export function GastronomieOrders() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Bestellungen</h2>
-          <p className="text-gray-600 mt-1">Aktive und abgeschlossene Bestellungen</p>
+          <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">Bestellungen</h2>
+          <p className="text-[var(--ak-color-text-secondary)] mt-1">Aktive und abgeschlossene Bestellungen</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {orders.map((order) => (
-          <div key={order.id} className="bg-white/60 backdrop-blur-2xl rounded-2xl border border-gray-200/50 p-6 hover:shadow-xl transition-all">
+          <div key={order.id} className="apple-glass-enhanced rounded-2xl p-6 hover:shadow-xl transition-all">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center text-white font-bold">
                   {order.table}
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">{order.items} Items</div>
-                  <div className="text-sm text-gray-600">{order.time}</div>
+                  <div className="font-semibold text-[var(--ak-color-text-primary)]">{order.items} Items</div>
+                  <div className="text-sm text-[var(--ak-color-text-secondary)]">{order.time}</div>
                 </div>
               </div>
               <span className={`px-3 py-1 rounded-lg text-xs font-semibold ${

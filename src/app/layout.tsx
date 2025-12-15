@@ -3,13 +3,13 @@ import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import "../styles/apple-design-tokens.css";
-import "../i18n/config";
+import "../styles/visual-enhancements.css";
 import { RealtimeVoiceClientScript } from "../components/RealtimeVoiceClientScript";
+import { I18nProvider } from "../components/I18nProvider";
 import { KeyboardShortcutsProvider } from "../components/KeyboardShortcutsProvider";
 import { QueryProvider } from "../lib/queryClient";
 import { PWARegister } from "../components/PWARegister";
 import { AuthProvider } from "../contexts/AuthContext";
-import { AuthTokenRefresh } from "../components/AuthTokenRefresh";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -39,12 +39,14 @@ export default function RootLayout({
       <body className="bg-transparent text-[var(--ak-color-text-primary)] antialiased font-sans">
         <QueryProvider>
           <AuthProvider>
-            <AuthTokenRefresh />
-            <PWARegister />
-            <RealtimeVoiceClientScript />
-            <KeyboardShortcutsProvider>
-              {children}
-            </KeyboardShortcutsProvider>
+            <I18nProvider>
+              {/* AuthTokenRefresh temporarily disabled */}
+              <PWARegister />
+              <RealtimeVoiceClientScript />
+              <KeyboardShortcutsProvider>
+                {children}
+              </KeyboardShortcutsProvider>
+            </I18nProvider>
           </AuthProvider>
         </QueryProvider>
       </body>

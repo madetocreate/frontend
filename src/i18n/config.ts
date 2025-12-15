@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * i18n Configuration
  * Setup for react-i18next

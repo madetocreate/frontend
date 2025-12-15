@@ -57,8 +57,8 @@ export function SettingsSecurity({ mode }: { mode: SettingsMode }) {
               leading={<FingerPrintIcon className="h-5 w-5" />}
               trailing={
                 <div className="flex gap-1">
-                  <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">langfuse</span>
-                  <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">ai_shield</span>
+                  <span className="px-2 py-1 bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-primary)] text-xs rounded">langfuse</span>
+                  <span className="px-2 py-1 bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-primary)] text-xs rounded">ai_shield</span>
                 </div>
               }
               mode={mode}
@@ -163,14 +163,14 @@ export function SettingsSecurity({ mode }: { mode: SettingsMode }) {
               title="Burst Limit"
               subtitle="Maximale Anfragen in kurzer Zeit"
               leading={<ClockIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-600">30 req/10s</span>}
+              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">30 req/10s</span>}
               mode={mode}
             />
             <SettingsRow
               title="Rate Limit Strategy"
               subtitle="Limiting-Strategie"
               leading={<ClockIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-600">Token Bucket</span>}
+              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">Token Bucket</span>}
               mode={mode}
             />
           </>
@@ -188,21 +188,21 @@ export function SettingsSecurity({ mode }: { mode: SettingsMode }) {
             title="API Key Rotation"
             subtitle="Automatische Rotation von API-Schlüsseln"
             leading={<KeyIcon className="h-5 w-5" />}
-            trailing={<span className="text-sm text-gray-400">Nicht aktiviert</span>}
+            trailing={<span className="text-sm text-[var(--ak-color-text-muted)]">Nicht aktiviert</span>}
             mode={mode}
           />
           <SettingsRow
             title="Session Timeout"
             subtitle="Timeout für Benutzer-Sessions"
             leading={<ClockIcon className="h-5 w-5" />}
-            trailing={<span className="text-sm text-gray-600">24 Stunden</span>}
+            trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">24 Stunden</span>}
             mode={mode}
           />
           <SettingsRow
             title="2FA Required"
             subtitle="Zwei-Faktor-Authentifizierung erforderlich"
             leading={<LockClosedIcon className="h-5 w-5" />}
-            trailing={<span className="text-sm text-gray-400">Optional</span>}
+            trailing={<span className="text-sm text-[var(--ak-color-text-muted)]">Optional</span>}
             mode={mode}
           />
         </SettingsSection>

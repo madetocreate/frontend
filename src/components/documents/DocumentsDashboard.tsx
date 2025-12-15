@@ -57,7 +57,7 @@ export function DocumentsDashboard({ view }: { view: DocumentsView }) {
             {layout === 'grid' ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     {DOCUMENTS.map((doc) => (
-                        <div key={doc.id} className="group relative flex flex-col items-center p-4 rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] hover:bg-[var(--ak-color-bg-hover)] hover:shadow-md transition-all cursor-pointer">
+                        <div key={doc.id} className="group relative flex flex-col items-center p-4 rounded-2xl apple-glass-enhanced hover:shadow-[var(--ak-shadow-md)] transition-all cursor-pointer">
                             <div className="h-16 w-16 mb-3 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 group-hover:text-[var(--ak-color-accent)] group-hover:bg-indigo-50 transition-colors">
                                 <DocumentIcon className="h-8 w-8" />
                             </div>
@@ -65,7 +65,7 @@ export function DocumentsDashboard({ view }: { view: DocumentsView }) {
                             <p className="text-xs text-[var(--ak-color-text-secondary)] mt-1">{doc.size} • {doc.date}</p>
                             {doc.tag && (
                                 <span className="absolute top-2 right-2">
-                                    <AkBadge tone="neutral" size="sm">{doc.tag}</AkBadge>
+                                    <AkBadge tone="muted" size="sm">{doc.tag}</AkBadge>
                                 </span>
                             )}
                         </div>

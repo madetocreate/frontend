@@ -5,6 +5,7 @@ import { useState } from 'react'
 import clsx from 'clsx'
 import { WidgetCard } from '@/components/ui/WidgetCard'
 import { AIActions } from '@/components/ui/AIActions'
+import { QuickActions } from '@/components/ui/QuickActions'
 
 type AutomationRun = {
   id: string
@@ -173,27 +174,95 @@ export function AutomationDetailPanel({ workflowId }: AutomationDetailPanelProps
   const [isSendingSuggestion, setIsSendingSuggestion] = useState(false)
   const suggestions = getSuggestionsForWorkflow(workflowId ?? null)
 
-  const handleGenerate = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleGenerate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     const prompt = formData.get('ai.prompt') as string
     setAiPrompt(prompt)
-    // Simulate AI generation
-    setPreview({
-      hasPreview: true,
-      adoptEnabled: true,
-      trigger: `Wenn ${prompt}`,
-      steps: ['Schritt 1', 'Schritt 2', 'Schritt 3'],
-      goals: ['Ziel 1', 'Ziel 2'],
-    })
+    
+    try {
+      // Send to AI for workflow generation
+      await sendChatMessage({
+        tenantId: 'demo-tenant',
+        sessionId: 'automation-panel',
+        channel: 'web_chat',
+        message: `Erstelle einen Workflow: ${prompt}`,
+        metadata: {
+          source: 'automation_panel',
+          action: 'generate-workflow',
+          workflowId,
+        },
+      })
+      
+      // Simulate AI generation (will be replaced with actual API response)
+      setPreview({
+        hasPreview: true,
+        adoptEnabled: true,
+        trigger: `Wenn ${prompt}`,
+        steps: ['Schritt 1', 'Schritt 2', 'Schritt 3'],
+        goals: ['Ziel 1', 'Ziel 2'],
+      })
+    } catch (error) {
+      console.error('Error generating workflow:', error)
+    }
   }
 
-  const handleExtend = () => {
-    console.log('Extend workflow')
+  const handleExtend = async () => {
+    try {
+      await sendChatMessage({
+        tenantId: 'demo-tenant',
+        sessionId: 'automation-panel',
+        channel: 'web_chat',
+        message: `Erweitere Workflow ${workflowId} mit zusätzlichen Schritten`,
+        metadata: {
+          source: 'automation_panel',
+          action: 'extend-workflow',
+          workflowId,
+        },
+      })
+      window.dispatchEvent(
+        new CustomEvent('aklow-notification', {
+          detail: { type: 'info', message: 'Workflow-Erweiterung wird generiert...' }
+        })
+      )
+    } catch (error) {
+      console.error('Error extending workflow:', error)
+    }
   }
 
-  const handleAdopt = () => {
-    console.log('Adopt preview to builder')
+  const handleAdopt = async () => {
+    try {
+      // Trigger workflow creation/update
+      const response = await fetch('/api/automation/workflows', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'trigger',
+          workflow_id: workflowId,
+          tenant_id: 'default-tenant',
+          inputs: {
+            trigger: preview.trigger,
+            steps: preview.steps,
+            goals: preview.goals,
+          },
+        }),
+      })
+      
+      if (response.ok) {
+        window.dispatchEvent(
+          new CustomEvent('aklow-notification', {
+            detail: { type: 'success', message: 'Workflow übernommen' }
+          })
+        )
+      }
+    } catch (error) {
+      console.error('Error adopting workflow:', error)
+      window.dispatchEvent(
+        new CustomEvent('aklow-notification', {
+          detail: { type: 'error', message: 'Fehler beim Übernehmen' }
+        })
+      )
+    }
   }
 
   const handleSuggestionClick = async (s: AutomationSuggestion) => {
@@ -235,14 +304,15 @@ const handleRunSelect = (id: string) => {
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto">
-      {/* AI Actions */}
-      <div className="px-1">
-        <AIActions context="automation" />
-      </div>
-      
       <WidgetCard padding="sm">
         <div className="flex flex-col gap-3">
           <h2 className="ak-heading">KI-Workflow-Designer</h2>
+          
+          {/* AI Suggestions & Quick Actions - in der Mitte */}
+          <div className="mb-4 flex flex-col gap-3 px-3 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
+            <AIActions context="automation" />
+            <QuickActions context="automation" />
+          </div>
 
 
 {suggestions.length > 0 && (

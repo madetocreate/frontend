@@ -5,6 +5,7 @@ import { AkButton } from '@/components/ui/AkButton'
 import { AkListRow } from '@/components/ui/AkListRow'
 import { AkBadge } from '@/components/ui/AkBadge'
 import { AIActions } from '@/components/ui/AIActions'
+import { QuickActions } from '@/components/ui/QuickActions'
 import {
   XMarkIcon,
   PhoneIcon,
@@ -48,7 +49,7 @@ export function CustomerDetailsDrawer({ customerId, onClose }: CustomerDetailsDr
                         <h2 className="text-xl font-bold text-[var(--ak-color-text-primary)]">{customer.name}</h2>
                         <p className="text-sm text-[var(--ak-color-text-secondary)]">{customer.role} bei {customer.company}</p>
                         <div className="flex gap-2 mt-2">
-                             {customer.tags.map(tag => <AkBadge key={tag} tone="neutral" size="sm">{tag}</AkBadge>)}
+                             {customer.tags.map(tag => <AkBadge key={tag} tone="muted" size="sm">{tag}</AkBadge>)}
                         </div>
                     </div>
                 </div>
@@ -58,16 +59,48 @@ export function CustomerDetailsDrawer({ customerId, onClose }: CustomerDetailsDr
             </div>
             
             <div className="flex gap-2 mt-4">
-                <AkButton className="flex-1" leftIcon={<PhoneIcon className="h-4 w-4"/>}>Anrufen</AkButton>
-                <AkButton className="flex-1" variant="secondary" leftIcon={<EnvelopeIcon className="h-4 w-4"/>}>Email</AkButton>
-                <AkButton className="flex-none w-10 px-0" variant="ghost" leftIcon={<EllipsisHorizontalIcon className="h-5 w-5 mx-auto"/>} />
+                <AkButton 
+                  className="flex-1" 
+                  leftIcon={<PhoneIcon className="h-4 w-4"/>}
+                  onClick={() => {
+                    if (customer.phone) {
+                      window.location.href = `tel:${customer.phone}`
+                    }
+                  }}
+                >
+                  Anrufen
+                </AkButton>
+                <AkButton 
+                  className="flex-1" 
+                  variant="secondary" 
+                  leftIcon={<EnvelopeIcon className="h-4 w-4"/>}
+                  onClick={() => {
+                    if (customer.email) {
+                      window.location.href = `mailto:${customer.email}`
+                    }
+                  }}
+                >
+                  Email
+                </AkButton>
+                <AkButton 
+                  className="flex-none w-10 px-0" 
+                  variant="ghost" 
+                  leftIcon={<EllipsisHorizontalIcon className="h-5 w-5 mx-auto"/>}
+                  onClick={() => {
+                    // TODO: Open more actions menu
+                    console.log('More actions for customer:', customerId)
+                  }}
+                />
             </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            {/* AI Actions */}
-            <AIActions context="customer" />
+            {/* AI Suggestions & Quick Actions - in der Mitte */}
+            <div className="flex flex-col gap-3 px-4 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
+              <AIActions context="customer" />
+              <QuickActions context="customer" />
+            </div>
             
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-3">

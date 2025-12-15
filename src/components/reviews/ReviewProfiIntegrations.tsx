@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { 
-  PuzzlePieceIcon,
   CheckCircleIcon,
-  XCircleIcon,
   ArrowPathIcon,
   SparklesIcon
 } from '@heroicons/react/24/outline'

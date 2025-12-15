@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { SparklesIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
+import { useActionHandler } from '@/hooks/useActionHandler'
 
 export type AIActionContext = 
   | 'inbox'
@@ -166,6 +167,7 @@ export function AIActions({
 }: AIActionsProps) {
   const [showMore, setShowMore] = useState(false)
   const allActions = initialActions || DEFAULT_ACTIONS[context] || []
+  // Immer mindestens 3 Actions anzeigen
   const visibleActions = showMore ? allActions : allActions.slice(0, 3)
   const hasMore = allActions.length > 3
 
@@ -189,30 +191,28 @@ export function AIActions({
     return null
   }
 
+  // Stelle sicher, dass immer mindestens 3 Actions angezeigt werden
+  const displayActions = visibleActions.length >= 3 ? visibleActions : allActions.slice(0, 3)
+
   return (
-    <div className={clsx('flex flex-col gap-2', className)}>
-      <div className="flex items-center gap-2 px-1 mb-1">
-        <SparklesIcon className="h-4 w-4 text-purple-500" />
-        <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+    <div className={clsx('flex flex-col gap-1.5 w-full', className)}>
+      <div className="flex items-center gap-1.5 px-0.5 mb-0.5">
+        <SparklesIcon className="h-3 w-3 text-purple-500" />
+        <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-wide">
           KI Vorschläge
         </span>
       </div>
       
-      <div className="flex flex-wrap gap-2">
-        {visibleActions.map((action) => (
+      <div className="flex flex-wrap gap-1.5">
+        {displayActions.map((action) => (
           <button
             key={action.id}
             type="button"
             onClick={() => handleActionClick(action)}
-            className="group relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100 hover:border-purple-200 hover:from-purple-100 hover:to-blue-100 transition-all duration-200 text-xs font-medium text-gray-900 hover:shadow-sm active:scale-95"
+            className="group relative inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100/80 hover:border-blue-200 hover:from-blue-100 hover:to-indigo-100 transition-all duration-150 text-[11px] font-medium text-gray-800 hover:shadow-sm active:scale-[0.98]"
             title={action.description}
           >
-            <span>{action.label}</span>
-            {action.description && (
-              <span className="hidden group-hover:inline text-[10px] text-gray-500 ml-1">
-                {action.description}
-              </span>
-            )}
+            <span className="truncate max-w-[120px]">{action.label}</span>
           </button>
         ))}
         
@@ -220,7 +220,7 @@ export function AIActions({
           <button
             type="button"
             onClick={() => setShowMore(true)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+            className="inline-flex items-center gap-0.5 px-2 py-1 rounded-md bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors text-[11px] font-medium text-gray-600 hover:text-gray-900"
           >
             Mehr
             <ChevronDownIcon className="h-3 w-3" />
@@ -231,7 +231,7 @@ export function AIActions({
           <button
             type="button"
             onClick={() => setShowMore(false)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors text-xs font-medium text-gray-600 hover:text-gray-900"
+            className="inline-flex items-center gap-0.5 px-2 py-1 rounded-md bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors text-[11px] font-medium text-gray-600 hover:text-gray-900"
           >
             Weniger
             <ChevronDownIcon className="h-3 w-3 rotate-180" />

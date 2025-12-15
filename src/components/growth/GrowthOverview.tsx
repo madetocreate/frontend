@@ -5,26 +5,26 @@ import { WidgetCard } from '@/components/ui/WidgetCard'
 export function GrowthOverview() {
   return (
     <div className="p-6 space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <WidgetCard title="Neue Leads (7d)" padding="lg">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <WidgetCard title="Neue Leads (7d)" padding="lg" className="apple-glass-enhanced hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
             <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-3xl font-semibold text-[var(--ak-color-text-primary)]">84</span>
                 <span className="text-sm text-green-600">+12%</span>
             </div>
         </WidgetCard>
-        <WidgetCard title="Conversion Rate" padding="lg">
+        <WidgetCard title="Conversion Rate" padding="lg" className="apple-glass-enhanced hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
             <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-3xl font-semibold text-[var(--ak-color-text-primary)]">3.2%</span>
                 <span className="text-sm text-green-600">+0.5%</span>
             </div>
         </WidgetCard>
-        <WidgetCard title="Aktive Kampagnen" padding="lg">
+        <WidgetCard title="Aktive Kampagnen" padding="lg" className="apple-glass-enhanced hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
             <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-3xl font-semibold text-[var(--ak-color-text-primary)]">5</span>
                 <span className="text-sm text-[var(--ak-color-text-secondary)]">2 Pausiert</span>
             </div>
         </WidgetCard>
-        <WidgetCard title="Ad Spend" padding="lg">
+        <WidgetCard title="Ad Spend" padding="lg" className="apple-glass-enhanced hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
             <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-3xl font-semibold text-[var(--ak-color-text-primary)]">1.2k €</span>
                 <span className="text-sm text-[var(--ak-color-text-secondary)]">On Track</span>
@@ -33,13 +33,13 @@ export function GrowthOverview() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <WidgetCard title="Performance" className="lg:col-span-2 min-h-[300px]">
+        <WidgetCard title="Performance" className="lg:col-span-2 min-h-[300px] apple-glass-enhanced">
             <div className="flex items-center justify-center h-full text-[var(--ak-color-text-muted)]">
                 <p>Chart: Leads vs. Kosten über Zeit</p>
             </div>
         </WidgetCard>
 
-        <WidgetCard title="Top Kanäle" className="min-h-[300px]">
+        <WidgetCard title="Top Kanäle" className="min-h-[300px] apple-glass-enhanced">
             <div className="space-y-4 pt-2">
                 {[
                     { name: 'Instagram Ads', share: 45, trend: 'up' },

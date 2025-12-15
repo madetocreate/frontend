@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   MagnifyingGlassIcon,
   StarIcon,
-  ChevronRightIcon,
   CheckBadgeIcon,
   XMarkIcon,
   SparklesIcon,
@@ -15,7 +14,6 @@ import {
   BuildingOfficeIcon,
   HeartIcon,
   HomeIcon,
-  Squares2X2Icon,
   ChatBubbleLeftRightIcon,
   MegaphoneIcon,
   CakeIcon,
@@ -25,7 +23,8 @@ import {
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import type { ComponentType } from "react";
-import { AppleCard, AppleButton, AppleBadge } from "../ui/AppleDesignSystem";
+import { AppleButton, AppleBadge } from "../ui/AppleDesignSystem";
+import Image from "next/image";
 import { useTranslation } from "../../i18n";
 
 // --- Types ---
@@ -53,6 +52,10 @@ interface Product {
   bundleItems?: string[];
   category?: string;
 }
+
+// --- Screenshots Data ---
+// Placeholder for screenshot URLs - can be populated later with actual image URLs
+const SCREENSHOTS: Record<string, string[]> = {};
 
 // --- Products Data ---
 
@@ -537,10 +540,12 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
                   >
                     {isUrl ? (
                       <>
-                        <img 
+                        <Image 
                           src={screenshot} 
                           alt={`${product.title} Screenshot ${i + 1}`}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          fill
+                          unoptimized
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
@@ -629,18 +634,26 @@ export default function MarketplaceDashboard() {
   const toggleFavorite = (id: string) => {
     setFavorites(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
 
-  // Zuletzt angesehen
+  // Zuletzt angesehen - verwende useLayoutEffect für synchrones Update
   useEffect(() => {
     if (!selectedProduct) return;
-    setRecent(prev => {
-      const filtered = prev.filter(p => p !== selectedProduct.id);
-      return [selectedProduct.id, ...filtered].slice(0, 6);
-    });
+    // Verwende setTimeout um setState außerhalb des synchronen Effekts aufzurufen
+    const timeoutId = setTimeout(() => {
+      setRecent(prev => {
+        const filtered = prev.filter(p => p !== selectedProduct.id);
+        return [selectedProduct.id, ...filtered].slice(0, 6);
+      });
+    }, 0);
+    return () => clearTimeout(timeoutId);
   }, [selectedProduct]);
 
   const filteredProducts = useMemo(() => {

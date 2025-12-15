@@ -10,8 +10,9 @@ import {
   GlobeAltIcon,
   EnvelopeIcon,
 } from '@heroicons/react/24/outline'
-import type { TelephonyItem } from './TelephonySidebarWidget'
+import type { TelephonyItem } from './telephony/TelephonySidebarWidget'
 import { AIActions } from '@/components/ui/AIActions'
+import { QuickActions } from '@/components/ui/QuickActions'
 
 type TelephonyMessage = {
   id: string
@@ -165,17 +166,12 @@ export function TelephonyDetailPanel({ item }: TelephonyDetailPanelProps) {
     )
   }
 
-  const mode = item.mode || 'support'
+  const mode = (item.mode || 'support') as keyof typeof MODE_COLORS
   const modeColor = MODE_COLORS[mode]
   const modeLabel = MODE_LABELS[mode]
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto">
-      {/* AI Actions */}
-      <div className="px-4">
-        <AIActions context="telephony" />
-      </div>
-      
       {/* Status Card */}
       <div className="flex flex-col gap-3 rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/95 p-4 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl">
         {/* Status Badge */}
@@ -215,6 +211,32 @@ export function TelephonyDetailPanel({ item }: TelephonyDetailPanelProps) {
             <button
               type="button"
               disabled={isReplay}
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/telephony/calls', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      action: 'takeover',
+                      call_id: item.id,
+                      tenant_id: 'default-tenant',
+                    }),
+                  })
+                  if (response.ok) {
+                    window.dispatchEvent(
+                      new CustomEvent('aklow-notification', {
+                        detail: { type: 'success', message: 'Gespräch übernommen' }
+                      })
+                    )
+                  }
+                } catch (error) {
+                  window.dispatchEvent(
+                    new CustomEvent('aklow-notification', {
+                      detail: { type: 'error', message: 'Fehler beim Übernehmen' }
+                    })
+                  )
+                }
+              }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-1.5 text-[12px] font-medium text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)] hover:shadow-[var(--ak-shadow-card)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <PhoneIcon className="h-3.5 w-3.5" />
@@ -223,6 +245,32 @@ export function TelephonyDetailPanel({ item }: TelephonyDetailPanelProps) {
             <button
               type="button"
               disabled={isReplay}
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/telephony/calls', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      action: 'pause-bot',
+                      call_id: item.id,
+                      tenant_id: 'default-tenant',
+                    }),
+                  })
+                  if (response.ok) {
+                    window.dispatchEvent(
+                      new CustomEvent('aklow-notification', {
+                        detail: { type: 'success', message: 'Bot pausiert' }
+                      })
+                    )
+                  }
+                } catch (error) {
+                  window.dispatchEvent(
+                    new CustomEvent('aklow-notification', {
+                      detail: { type: 'error', message: 'Fehler beim Pausieren' }
+                    })
+                  )
+                }
+              }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-1.5 text-[12px] font-medium text-yellow-700 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-yellow-300 hover:bg-yellow-100 hover:shadow-[var(--ak-shadow-card)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <PauseIcon className="h-3.5 w-3.5" />
@@ -231,6 +279,34 @@ export function TelephonyDetailPanel({ item }: TelephonyDetailPanelProps) {
             <button
               type="button"
               disabled={isReplay}
+              onClick={async () => {
+                if (confirm('Anruf wirklich beenden?')) {
+                  try {
+                    const response = await fetch('/api/telephony/calls', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        action: 'end-call',
+                        call_id: item.id,
+                        tenant_id: 'default-tenant',
+                      }),
+                    })
+                    if (response.ok) {
+                      window.dispatchEvent(
+                        new CustomEvent('aklow-notification', {
+                          detail: { type: 'success', message: 'Anruf beendet' }
+                        })
+                      )
+                    }
+                  } catch (error) {
+                    window.dispatchEvent(
+                      new CustomEvent('aklow-notification', {
+                        detail: { type: 'error', message: 'Fehler beim Beenden' }
+                      })
+                    )
+                  }
+                }
+              }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] font-medium text-red-700 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-red-300 hover:bg-red-100 hover:shadow-[var(--ak-shadow-card)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CheckCircleIcon className="h-3.5 w-3.5" />
@@ -240,6 +316,12 @@ export function TelephonyDetailPanel({ item }: TelephonyDetailPanelProps) {
         </div>
 
         <div className="h-px bg-[var(--ak-color-border-subtle)]" />
+
+        {/* AI Suggestions & Quick Actions - in der Mitte */}
+        <div className="flex flex-col gap-3 px-3 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
+          <AIActions context="telephony" />
+          <QuickActions context="telephony" />
+        </div>
 
         {/* Messages */}
         <div className="max-h-[320px] overflow-y-auto rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] p-2">
@@ -345,6 +427,11 @@ export function TelephonyDetailPanel({ item }: TelephonyDetailPanelProps) {
             <button
               key={hist.id}
               type="button"
+              onClick={() => {
+                // Load call details
+                console.log('Load call history:', hist.id)
+                // TODO: Load call details and show in detail panel
+              }}
               className="group flex w-full items-center gap-3 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 p-3 text-left transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)] hover:shadow-[var(--ak-shadow-card)]"
             >
               <div className="w-[140px]">

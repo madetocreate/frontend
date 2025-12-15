@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react'
 import { 
   CurrencyEuroIcon,
   ShoppingCartIcon,
-  UserGroupIcon,
   ClockIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
@@ -50,7 +49,7 @@ export function GastronomieOverview() {
       { time: '20:00', guests: 6, name: 'Weber', table: 'Tisch 12' },
       { time: '20:30', guests: 3, name: 'Fischer', table: 'Tisch 3' },
     ]
-  }), [selectedPeriod])
+  }), [])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount)
@@ -61,8 +60,8 @@ export function GastronomieOverview() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gastronomie Übersicht</h2>
-          <p className="text-gray-600 mt-1">Ihr Restaurant & Bar Dashboard</p>
+          <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">Gastronomie Übersicht</h2>
+          <p className="text-[var(--ak-color-text-secondary)] mt-1">Ihr Restaurant & Bar Dashboard</p>
         </div>
         <div className="flex gap-2">
           {(['today', 'week', 'month'] as const).map((period) => (
@@ -72,7 +71,7 @@ export function GastronomieOverview() {
               className={`px-4 py-2 rounded-xl transition-all duration-200 font-medium ${
                 selectedPeriod === period
                   ? 'bg-orange-600 text-white shadow-lg shadow-orange-500/30'
-                  : 'bg-white/60 backdrop-blur-xl border border-gray-200/50 text-gray-700 hover:bg-gray-50/80'
+                  : 'apple-glass-enhanced border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-primary)] hover:shadow-[var(--ak-shadow-md)]'
               }`}
             >
               {period === 'today' ? 'Heute' : period === 'week' ? 'Woche' : 'Monat'}
@@ -83,7 +82,7 @@ export function GastronomieOverview() {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="group relative bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-sm p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+        <div className="group relative apple-glass-enhanced rounded-3xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg">
               <CurrencyEuroIcon className="h-6 w-6 text-white" />
@@ -94,58 +93,58 @@ export function GastronomieOverview() {
               <ArrowTrendingDownIcon className="h-5 w-5 text-red-500" />
             )}
           </div>
-          <div className="text-3xl font-bold text-gray-900 mb-1">
+          <div className="text-3xl font-bold text-[var(--ak-color-text-primary)] mb-1">
             {formatCurrency(stats.todayRevenue)}
           </div>
-          <div className="text-sm font-medium text-gray-600 mb-2">Umsatz heute</div>
+          <div className="text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2">Umsatz heute</div>
           <div className={`text-xs font-semibold ${stats.revenueChange > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
             {stats.revenueChange > 0 ? '+' : ''}{stats.revenueChange}% vs. gestern
           </div>
         </div>
 
-        <div className="group relative bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-sm p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+        <div className="group relative apple-glass-enhanced rounded-3xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg">
               <ShoppingCartIcon className="h-6 w-6 text-white" />
             </div>
             <ArrowTrendingUpIcon className="h-5 w-5 text-emerald-500" />
           </div>
-          <div className="text-3xl font-bold text-gray-900 mb-1">
+          <div className="text-3xl font-bold text-[var(--ak-color-text-primary)] mb-1">
             {stats.todayOrders}
           </div>
-          <div className="text-sm font-medium text-gray-600 mb-2">Bestellungen heute</div>
+          <div className="text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2">Bestellungen heute</div>
           <div className="text-xs font-semibold text-emerald-600">
             +{stats.ordersChange}% vs. gestern
           </div>
         </div>
 
-        <div className="group relative bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-sm p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+        <div className="group relative apple-glass-enhanced rounded-3xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-lg">
               <TableCellsIcon className="h-6 w-6 text-white" />
             </div>
             <ArrowTrendingUpIcon className="h-5 w-5 text-emerald-500" />
           </div>
-          <div className="text-3xl font-bold text-gray-900 mb-1">
+          <div className="text-3xl font-bold text-[var(--ak-color-text-primary)] mb-1">
             {stats.activeTables}
           </div>
-          <div className="text-sm font-medium text-gray-600 mb-2">Aktive Tische</div>
+          <div className="text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2">Aktive Tische</div>
           <div className="text-xs font-semibold text-emerald-600">
             {stats.totalReservations} Reservierungen
           </div>
         </div>
 
-        <div className="group relative bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-sm p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+        <div className="group relative apple-glass-enhanced rounded-3xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg">
               <ChartBarIcon className="h-6 w-6 text-white" />
             </div>
             <ArrowTrendingUpIcon className="h-5 w-5 text-emerald-500" />
           </div>
-          <div className="text-3xl font-bold text-gray-900 mb-1">
+          <div className="text-3xl font-bold text-[var(--ak-color-text-primary)] mb-1">
             {formatCurrency(stats.avgOrderValue)}
           </div>
-          <div className="text-sm font-medium text-gray-600 mb-2">Ø Bestellwert</div>
+          <div className="text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2">Ø Bestellwert</div>
           <div className="text-xs font-semibold text-emerald-600">
             +5.2% vs. Vorwoche
           </div>
@@ -155,8 +154,8 @@ export function GastronomieOverview() {
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Selling Items */}
-        <div className="bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-lg p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <div className="apple-glass-enhanced rounded-3xl p-6">
+          <h3 className="text-lg font-bold text-[var(--ak-color-text-primary)] mb-6 flex items-center gap-2">
             <SparklesIcon className="h-6 w-6 text-orange-600" />
             Bestseller heute
           </h3>
@@ -164,19 +163,19 @@ export function GastronomieOverview() {
             {stats.topSellingItems.map((item, index) => (
               <div
                 key={index}
-                className="p-4 bg-gradient-to-r from-gray-50/80 to-white/80 rounded-2xl border border-gray-200/50 hover:border-orange-300/50 hover:shadow-md transition-all duration-300"
+                className="p-4 apple-glass-enhanced rounded-2xl border border-[var(--ak-color-border-subtle)] hover:border-orange-300/50 hover:shadow-md transition-all duration-300"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                       {index + 1}
                     </div>
-                    <span className="font-semibold text-gray-900">{item.name}</span>
+                    <span className="font-semibold text-[var(--ak-color-text-primary)]">{item.name}</span>
                   </div>
-                  <span className="text-sm font-semibold text-gray-700">{item.count}x</span>
+                  <span className="text-sm font-semibold text-[var(--ak-color-text-primary)]">{item.count}x</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-600">Umsatz</span>
+                  <span className="text-xs text-[var(--ak-color-text-secondary)]">Umsatz</span>
                   <span className="text-sm font-bold text-orange-600">{formatCurrency(item.revenue)}</span>
                 </div>
               </div>
@@ -185,8 +184,8 @@ export function GastronomieOverview() {
         </div>
 
         {/* Upcoming Reservations */}
-        <div className="bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-lg p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <div className="apple-glass-enhanced rounded-3xl p-6">
+          <h3 className="text-lg font-bold text-[var(--ak-color-text-primary)] mb-6 flex items-center gap-2">
             <ClockIcon className="h-6 w-6 text-blue-600" />
             Kommende Reservierungen
           </h3>
@@ -194,7 +193,7 @@ export function GastronomieOverview() {
             {stats.upcomingReservations.map((reservation, index) => (
               <div
                 key={index}
-                className="p-4 bg-gradient-to-r from-blue-50/80 to-white/80 rounded-2xl border border-blue-200/50 hover:border-blue-300/50 hover:shadow-md transition-all duration-300"
+                className="p-4 apple-glass-enhanced rounded-2xl border border-blue-200/50 hover:border-blue-300/50 hover:shadow-md transition-all duration-300"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
@@ -202,8 +201,8 @@ export function GastronomieOverview() {
                       {reservation.time}
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900">{reservation.name}</div>
-                      <div className="text-xs text-gray-600">{reservation.guests} Personen</div>
+                      <div className="font-semibold text-[var(--ak-color-text-primary)]">{reservation.name}</div>
+                      <div className="text-xs text-[var(--ak-color-text-secondary)]">{reservation.guests} Personen</div>
                     </div>
                   </div>
                   <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm font-semibold">
@@ -217,8 +216,8 @@ export function GastronomieOverview() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-lg p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+      <div className="apple-glass-enhanced rounded-3xl p-6">
+        <h3 className="text-lg font-bold text-[var(--ak-color-text-primary)] mb-6 flex items-center gap-2">
           <BeakerIcon className="h-6 w-6 text-purple-600" />
           Schnellaktionen
         </h3>

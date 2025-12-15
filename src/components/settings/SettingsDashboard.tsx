@@ -36,14 +36,14 @@ export function SettingsDashboard({ view }: { view: SettingsView }) {
         </h1>
         
         {/* Mode Switcher - Apple Style */}
-        <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+        <div className="flex items-center gap-2 bg-[var(--ak-color-bg-surface-muted)] rounded-lg p-1">
           <button
             onClick={() => setMode('simple')}
             className={clsx(
               'px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200',
               mode === 'simple'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'apple-glass-enhanced text-[var(--ak-color-text-primary)] shadow-sm'
+                : 'text-[var(--ak-color-text-secondary)] hover:text-[var(--ak-color-text-primary)]'
             )}
           >
             Einfach
@@ -53,8 +53,8 @@ export function SettingsDashboard({ view }: { view: SettingsView }) {
             className={clsx(
               'px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200',
               mode === 'expert'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'apple-glass-enhanced text-[var(--ak-color-text-primary)] shadow-sm'
+                : 'text-[var(--ak-color-text-secondary)] hover:text-[var(--ak-color-text-primary)]'
             )}
           >
             Experte

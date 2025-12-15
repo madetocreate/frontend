@@ -84,7 +84,7 @@ export function PracticeOverview() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Patients Today */}
-        <div className="group relative bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-sm p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
+        <div className="group relative apple-glass-enhanced rounded-3xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
@@ -103,7 +103,7 @@ export function PracticeOverview() {
         </div>
 
         {/* Appointments Today */}
-        <div className="group relative bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-sm p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
+        <div className="group relative apple-glass-enhanced rounded-3xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
@@ -122,7 +122,7 @@ export function PracticeOverview() {
         </div>
 
         {/* Pending Documents */}
-        <div className="group relative bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-sm p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
+        <div className="group relative apple-glass-enhanced rounded-3xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-amber-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
@@ -147,7 +147,7 @@ export function PracticeOverview() {
         </div>
 
         {/* Revenue Today */}
-        <div className="group relative bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-sm p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
+        <div className="group relative apple-glass-enhanced rounded-3xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="relative">
             <div className="flex items-center justify-between mb-4">

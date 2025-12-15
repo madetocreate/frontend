@@ -73,7 +73,7 @@ export function ShieldRegistry() {
                     </div>
                 ) : (
                     servers.map((server) => (
-                         <WidgetCard key={server.server_id || Math.random()} padding="sm" className="hover:border-[var(--ak-color-border-strong)] transition-colors cursor-pointer">
+                         <WidgetCard key={server.server_id || Math.random()} padding="sm" className="apple-glass-enhanced hover:border-[var(--ak-color-border-strong)] transition-colors cursor-pointer">
                             <AkListRow
                                 title={<span className="text-sm font-medium text-[var(--ak-color-text-primary)]">{server.server_id || 'Unknown ID'}</span>}
                                 subtitle={<span className="text-xs text-[var(--ak-color-text-secondary)] truncate block">{server.url || 'No URL'}</span>}

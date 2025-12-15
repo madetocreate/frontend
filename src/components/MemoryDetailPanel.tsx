@@ -4,7 +4,16 @@ import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 import { AkSearchField } from '@/components/ui/AkSearchField'
 import { AIActions } from '@/components/ui/AIActions'
-import { LinkIcon, StarIcon } from '@heroicons/react/24/outline'
+import { QuickActions } from '@/components/ui/QuickActions'
+import { 
+  LinkIcon, 
+  StarIcon, 
+  LightBulbIcon,
+  ArchiveBoxIcon,
+  TrashIcon,
+  ChevronRightIcon,
+  InformationCircleIcon
+} from '@heroicons/react/24/outline'
 import type { MemoryCategory } from './MemorySidebarWidget'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 
@@ -322,9 +331,7 @@ export function MemoryDetailPanel({ category }: MemoryDetailPanelProps) {
 
   return (
     <div className="flex h-full flex-col gap-3 overflow-y-auto rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/95 p-4 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl">
-      {/* AI Actions */}
-      <AIActions context="memory" />
-      
+      {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <h2 className="ak-heading">Wissen & Memory</h2>
         <div className="w-[220px]">
@@ -335,6 +342,12 @@ export function MemoryDetailPanel({ category }: MemoryDetailPanelProps) {
             size="sm"
           />
         </div>
+      </div>
+      
+      {/* AI Actions & Quick Actions - direkt unter Header */}
+      <div className="px-1 space-y-2">
+        <AIActions context="memory" />
+        <QuickActions context="memory" />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -428,6 +441,7 @@ export function MemoryDetailPanel({ category }: MemoryDetailPanelProps) {
 
       <div className="h-px bg-[var(--ak-color-border-subtle)]" />
 
+      {/* Details Section */}
       <div className="flex flex-1 gap-4 overflow-hidden">
         <div className="flex w-[360px] flex-col gap-2 overflow-y-auto">
           {loading && (
@@ -479,102 +493,188 @@ export function MemoryDetailPanel({ category }: MemoryDetailPanelProps) {
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto">
           {!selected ? (
-            <div className="flex items-center justify-center py-8">
-              <p className="ak-body text-[var(--ak-color-text-muted)]">Wähle einen Eintrag aus der Liste aus</p>
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                <LightBulbIcon className="h-8 w-8 text-blue-600" />
+              </div>
+              <div className="text-center">
+                <p className="ak-heading text-[var(--ak-color-text-primary)] mb-1">Wähle einen Eintrag aus</p>
+                <p className="ak-body text-sm text-[var(--ak-color-text-secondary)]">Klicke auf einen Memory-Eintrag in der Liste, um Details zu sehen</p>
+              </div>
             </div>
           ) : (
             <>
-              <div className="rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <h3 className="ak-heading">{selected.title}</h3>
-                  <span className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-2 py-0.5 text-[11px] font-medium text-[var(--ak-color-text-secondary)]">
-                    {selected.typeLabel}
-                  </span>
-                </div>
-                <pre className="whitespace-pre-wrap font-sans text-sm text-[var(--ak-color-text-primary)]">{selected.body}</pre>
+              {/* AI Suggestions & Quick Actions - in der Mitte */}
+              <div className="flex flex-col gap-3 px-2 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
+                <AIActions context="memory" />
+                <QuickActions context="memory" />
               </div>
-
-              <div className="rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] p-3">
-                <p className="ak-caption mb-2 font-medium text-[var(--ak-color-text-primary)]">Metadaten</p>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <p className="ak-body text-[var(--ak-color-text-secondary)]">Typ</p>
-                    <p className="ak-body text-[var(--ak-color-text-primary)]">{selected.typeLabel}</p>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="ak-body text-[var(--ak-color-text-secondary)]">Status</p>
-                    <p className="ak-body text-[var(--ak-color-text-primary)]">{selected.statusLabel}</p>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="ak-body text-[var(--ak-color-text-secondary)]">Mandant</p>
-                    <p className="ak-body text-[var(--ak-color-text-primary)]">{selected.tenant}</p>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="ak-body text-[var(--ak-color-text-secondary)]">Konversation</p>
-                    <p className="ak-body text-[var(--ak-color-text-primary)]">{selected.conversationId || '—'}</p>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="ak-body text-[var(--ak-color-text-secondary)]">Quelle</p>
-                    <p className="ak-body text-[var(--ak-color-text-primary)]">{selected.source}</p>
-                  </div>
-                  <div className="flex items-start justify-between">
-                    <p className="ak-body text-[var(--ak-color-text-secondary)]">Tags</p>
-                    <div className="flex flex-wrap items-center gap-1">
-                      {selected.tags.map((tag, idx) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--ak-color-text-primary)]"
-                        >
-                          {tag}
+              {/* Memory Content Card - Apple Style */}
+              <div className="apple-card rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-6 shadow-[var(--ak-shadow-sm)]">
+                <div className="mb-4 flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="ak-heading text-xl mb-2 text-[var(--ak-color-text-primary)]">{selected.title}</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 border border-blue-100">
+                        {selected.typeLabel}
+                      </span>
+                      {selected.status === 'active' && (
+                        <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 border border-green-100">
+                          ✓ Aktiv
                         </span>
-                      ))}
+                      )}
+                      {selected.status === 'archived' && (
+                        <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600 border border-gray-200">
+                          📦 Archiviert
+                        </span>
+                      )}
                     </div>
+                  </div>
+                </div>
+                
+                <div className="rounded-xl bg-[var(--ak-color-bg-surface)] p-4 border border-[var(--ak-color-border-subtle)]">
+                  <p className="ak-body text-[15px] leading-relaxed text-[var(--ak-color-text-primary)] whitespace-pre-wrap">
+                    {selected.body}
+                  </p>
+                </div>
+              </div>
+
+              {/* Quick Stats Widget */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="apple-card rounded-xl border border-[var(--ak-color-border-subtle)] bg-gradient-to-br from-blue-50 to-blue-100/50 p-4">
+                  <p className="ak-caption text-blue-600 mb-1 font-semibold">Typ</p>
+                  <p className="ak-body text-sm font-semibold text-blue-900">{selected.typeLabel}</p>
+                </div>
+                <div className="apple-card rounded-xl border border-[var(--ak-color-border-subtle)] bg-gradient-to-br from-purple-50 to-purple-100/50 p-4">
+                  <p className="ak-caption text-purple-600 mb-1 font-semibold">Status</p>
+                  <p className="ak-body text-sm font-semibold text-purple-900">{selected.statusLabel}</p>
+                </div>
+                <div className="apple-card rounded-xl border border-[var(--ak-color-border-subtle)] bg-gradient-to-br from-green-50 to-green-100/50 p-4">
+                  <p className="ak-caption text-green-600 mb-1 font-semibold">Tags</p>
+                  <p className="ak-body text-sm font-semibold text-green-900">{selected.tags.length} Tags</p>
+                </div>
+              </div>
+
+              {/* Metadata Card - Apple Style */}
+              <div className="apple-section rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-5">
+                <h4 className="ak-heading text-base mb-4 text-[var(--ak-color-text-primary)] flex items-center gap-2">
+                  <InformationCircleIcon className="h-5 w-5 text-[var(--ak-color-text-secondary)]" />
+                  Informationen
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="ak-caption text-[var(--ak-color-text-secondary)]">Mandant</p>
+                    <p className="ak-body text-sm font-medium text-[var(--ak-color-text-primary)]">{selected.tenant}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="ak-caption text-[var(--ak-color-text-secondary)]">Konversation</p>
+                    <p className="ak-body text-sm font-medium text-[var(--ak-color-text-primary)]">{selected.conversationId || '—'}</p>
+                  </div>
+                  <div className="space-y-1 col-span-2">
+                    <p className="ak-caption text-[var(--ak-color-text-secondary)]">Quelle</p>
+                    <p className="ak-body text-sm font-medium text-[var(--ak-color-text-primary)]">{selected.source}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-3">
-                <p className="ak-caption mb-2 font-medium text-[var(--ak-color-text-primary)]">Verknüpfungen</p>
-                <div className="flex flex-col gap-2">
-                  {selected.links.map((link) => (
-                    <div key={link.id} className="flex items-center gap-2">
-                      <LinkIcon className="h-4 w-4 text-[var(--ak-color-text-muted)]" />
-                      <p className="ak-body text-[var(--ak-color-text-primary)]">{link.text}</p>
-                    </div>
+              {/* Tags Widget */}
+              {selected.tags.length > 0 && (
+                <div className="apple-section rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-5">
+                  <h4 className="ak-heading text-base mb-3 text-[var(--ak-color-text-primary)]">Tags</h4>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {selected.tags.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700 hover:from-blue-100 hover:to-purple-100 transition-colors cursor-pointer"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                    <button
+                      type="button"
+                      className="inline-flex items-center rounded-full border border-dashed border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-1.5 text-xs font-medium text-[var(--ak-color-text-secondary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-hover)] transition-colors"
+                    >
+                      + Tag hinzufügen
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Links Widget */}
+              {selected.links.length > 0 && (
+                <div className="apple-section rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-5">
+                  <h4 className="ak-heading text-base mb-3 text-[var(--ak-color-text-primary)] flex items-center gap-2">
+                    <LinkIcon className="h-5 w-5 text-[var(--ak-color-text-secondary)]" />
+                    Verknüpfungen
+                  </h4>
+                  <div className="flex flex-col gap-2">
+                    {selected.links.map((link) => (
+                      <a
+                        key={link.id}
+                        href="#"
+                        className="group flex items-center gap-3 rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-3 hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-hover)] transition-all"
+                      >
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
+                          <LinkIcon className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <p className="ak-body flex-1 text-sm text-[var(--ak-color-text-primary)]">{link.text}</p>
+                        <ChevronRightIcon className="h-4 w-4 text-[var(--ak-color-text-muted)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Related Memories Widget */}
+              <div className="apple-section rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-5">
+                <h4 className="ak-heading text-base mb-3 text-[var(--ak-color-text-primary)]">Ähnliche Memories</h4>
+                <div className="space-y-2">
+                  {items.slice(0, 3).filter(item => item.id !== selected.id).map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => loadItemDetail(item.id)}
+                      className="w-full text-left rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-3 hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-hover)] transition-all"
+                    >
+                      <p className="ak-body text-sm font-medium text-[var(--ak-color-text-primary)] mb-1">{item.title}</p>
+                      <p className="ak-caption text-[var(--ak-color-text-secondary)] line-clamp-1">{item.preview}</p>
+                    </button>
                   ))}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Action Buttons - Apple Style */}
+              <div className="flex items-center gap-3 pt-2 border-t border-[var(--ak-color-border-subtle)]">
                 <button
                   type="button"
                   onClick={() => selected && handleArchive(selected.id)}
                   disabled={selected?.status === 'archived'}
                   className={clsx(
-                    'inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
+                    'apple-button-secondary flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all',
                     selected?.status === 'archived'
-                      ? 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-muted)] cursor-not-allowed'
-                      : 'border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]'
+                      ? 'opacity-50 cursor-not-allowed'
+                      : 'hover:shadow-md active:scale-[0.98]'
                   )}
                 >
+                  <ArchiveBoxIcon className="h-4 w-4" />
                   {selected?.status === 'archived' ? 'Archiviert' : 'Archivieren'}
                 </button>
                 <button
                   type="button"
                   onClick={() => selected && handleDelete(selected.id)}
-                  className="inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-red-300 hover:bg-red-100"
+                  className="apple-button-secondary inline-flex items-center justify-center gap-2 rounded-xl border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 hover:bg-red-100 hover:border-red-300 transition-all active:scale-[0.98]"
                 >
+                  <TrashIcon className="h-4 w-4" />
                   Löschen
                 </button>
-                <div className="flex-1" />
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-4 py-2 text-sm font-medium text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]"
+                  className="apple-button-primary inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
                 >
                   <StarIcon className="h-4 w-4" />
-                  Als wichtig markieren
+                  Wichtig
                 </button>
               </div>
             </>

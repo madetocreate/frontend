@@ -2,6 +2,8 @@
 
 import Image from 'next/image'
 import clsx from 'clsx'
+import { AIActions } from '@/components/ui/AIActions'
+import { QuickActions } from '@/components/ui/QuickActions'
 
 type NewsStory = {
   id: string
@@ -38,7 +40,7 @@ export function NewsDetailPanel({ story }: NewsDetailPanelProps) {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 px-3 py-3">
+    <div className="flex h-full flex-col gap-4 px-3 py-3 overflow-y-auto">
       {/* Header mit Bild */}
       <div className="flex flex-col gap-3">
         <div className="relative h-48 w-full overflow-hidden rounded-lg">
@@ -69,6 +71,12 @@ export function NewsDetailPanel({ story }: NewsDetailPanelProps) {
       <h1 className="ak-heading font-semibold text-[var(--ak-color-text-primary)]">
         {story.title}
       </h1>
+
+      {/* AI Suggestions & Quick Actions - in der Mitte */}
+      <div className="flex flex-col gap-3 px-3 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
+        <AIActions context="news" />
+        <QuickActions context="news" />
+      </div>
 
       {/* Vollständiger Artikel-Text */}
       <div className="flex-1 overflow-y-auto">

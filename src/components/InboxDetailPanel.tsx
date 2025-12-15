@@ -1,6 +1,8 @@
 'use client'
 
 import type { InboxItem } from '@/components/InboxDrawerWidget'
+import { AIActions } from '@/components/ui/AIActions'
+import { QuickActions } from '@/components/ui/QuickActions'
 
 type InboxDetailPanelProps = {
   item: InboxItem | null
@@ -21,7 +23,7 @@ export function InboxDetailPanel({ item }: InboxDetailPanelProps) {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex h-full flex-col gap-4 overflow-y-auto">
       <div className="ak-section">
         <p className="ak-caption uppercase tracking-wide text-[var(--ak-color-text-muted)]">{item.channel}</p>
         <h2 className="ak-heading mt-1 text-base">{item.title}</h2>
@@ -34,7 +36,7 @@ export function InboxDetailPanel({ item }: InboxDetailPanelProps) {
           </div>
           <div>
             <p className="ak-caption text-[var(--ak-color-text-muted)]">Status</p>
-            <p className="ak-body">{item.status}</p>
+            <p className="ak-body">{item.status || 'Offen'}</p>
           </div>
         </div>
       </div>
@@ -51,6 +53,12 @@ export function InboxDetailPanel({ item }: InboxDetailPanelProps) {
             <span className="ak-row-value">{item.important ? 'Ja' : 'Nein'}</span>
           </div>
         </div>
+      </div>
+      
+      {/* AI Suggestions & Quick Actions - in der Mitte */}
+      <div className="flex flex-col gap-3 px-4 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
+        <AIActions context="inbox" />
+        <QuickActions context="inbox" />
       </div>
     </div>
   )

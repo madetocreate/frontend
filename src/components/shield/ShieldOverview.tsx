@@ -1,8 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import clsx from 'clsx'
 import { WidgetCard } from '@/components/ui/WidgetCard'
-import { ShieldCheckIcon, ServerStackIcon } from '@heroicons/react/24/outline'
+import { AkSearchField } from '@/components/ui/AkSearchField'
+import { ShieldCheckIcon, ServerStackIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { RechartsGatewayChart } from '@/components/ui/RechartsGatewayChart'
 
 interface HealthData {
     status: string;
@@ -15,9 +19,29 @@ interface RegistryData {
     [key: string]: unknown;
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.3 }
+  }
+}
+
 export function ShieldOverview() {
     const [health, setHealth] = useState<HealthData | null>(null)
     const [registry, setRegistry] = useState<RegistryData | null>(null)
+    const [searchQuery, setSearchQuery] = useState('')
 
     useEffect(() => {
         const fetchHealth = async () => {
@@ -63,65 +87,146 @@ export function ShieldOverview() {
     }, [])
 
     const serverCount = registry?.servers ? Object.keys(registry.servers).length : 0
+    const isHealthy = health?.status === 'ok'
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <WidgetCard title="System Status" padding="lg">
-                    <div className="flex flex-col gap-2 mt-2">
-                        <div className="flex items-center gap-3">
-                            <div className={`h-3 w-3 rounded-full ${health?.status === 'ok' ? 'bg-[var(--ak-color-success)]' : 'bg-[var(--ak-color-bg-danger-soft)]'}`} />
-                            <span className="text-[var(--ak-color-text-primary)] font-medium text-lg">
-                                {health?.status === 'ok' ? 'Operational' : 'Systemfehler'}
-                            </span>
-                        </div>
-                        <p className="text-[var(--ak-color-text-secondary)] text-sm">
-                            Control Plane ist {health?.status === 'ok' ? 'aktiv' : 'offline'}.
-                        </p>
-                    </div>
-                </WidgetCard>
-                
-                <WidgetCard title="MCP Server" padding="lg">
-                     <div className="flex flex-col gap-2 mt-2">
-                         <div className="flex items-center gap-3">
-                            <ServerStackIcon className="h-6 w-6 text-[var(--ak-color-accent)]" />
-                            <span className="text-3xl font-semibold text-[var(--ak-color-text-primary)]">
-                                {serverCount}
-                            </span>
-                         </div>
-                         <p className="text-[var(--ak-color-text-secondary)] text-sm">
-                            Registrierte Tool-Provider
-                         </p>
-                     </div>
-                </WidgetCard>
-                
-                 <WidgetCard title="Aktive Policies" padding="lg">
-                     <div className="flex flex-col gap-2 mt-2">
-                         <div className="flex items-center gap-3">
-                            <ShieldCheckIcon className="h-6 w-6 text-[var(--ak-color-warning)] text-orange-500" />
-                            <span className="text-3xl font-semibold text-[var(--ak-color-text-primary)]">
-                                Active
-                            </span>
-                         </div>
-                         <p className="text-[var(--ak-color-text-secondary)] text-sm">
-                            Gateway Protection enabled
-                         </p>
-                     </div>
-                </WidgetCard>
+        <motion.div 
+          className="h-full flex flex-col overflow-hidden"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {/* Header - Apple Style */}
+          <div className="shrink-0 px-6 pt-6 pb-4 border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-app)]">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <h1 className="ak-heading text-2xl font-bold text-[var(--ak-color-text-primary)] mb-1">Systemübersicht</h1>
+                <p className="ak-body text-sm text-[var(--ak-color-text-secondary)]">
+                  Status und Metriken des AI Shield Systems
+                </p>
+              </div>
             </div>
+            <AkSearchField 
+              placeholder="System durchsuchen..." 
+              value={searchQuery}
+              onChange={setSearchQuery}
+            />
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <WidgetCard title="Gateway Metriken" className="min-h-[300px]">
-                    <div className="flex items-center justify-center h-full text-[var(--ak-color-text-muted)]">
-                        <p>Lade Grafana Dashboards...</p>
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            <motion.div className="space-y-6" variants={itemVariants}>
+              {/* Quick Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <motion.div variants={itemVariants}>
+                  <WidgetCard title="System Status" padding="lg" className="apple-glass-enhanced hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
+                    <div className="flex flex-col gap-3 mt-2">
+                      <div className="flex items-center gap-3">
+                        <motion.div 
+                          className={clsx(
+                            'h-3 w-3 rounded-full',
+                            isHealthy ? 'bg-green-500' : 'bg-red-500'
+                          )}
+                          animate={{ 
+                            scale: isHealthy ? [1, 1.2, 1] : 1,
+                            opacity: isHealthy ? [1, 0.7, 1] : 1
+                          }}
+                          transition={{ 
+                            duration: 2,
+                            repeat: isHealthy ? Infinity : 0
+                          }}
+                        />
+                        <span className="text-lg font-semibold text-[var(--ak-color-text-primary)]">
+                          {isHealthy ? 'Operational' : 'Systemfehler'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-[var(--ak-color-text-secondary)]">
+                        Control Plane ist {isHealthy ? 'aktiv' : 'offline'}.
+                      </p>
                     </div>
-                 </WidgetCard>
-                 <WidgetCard title="Letzte Aktivitäten" className="min-h-[300px]">
-                    <div className="flex items-center justify-center h-full text-[var(--ak-color-text-muted)]">
-                        <p>Keine Logs verfügbar</p>
+                  </WidgetCard>
+                </motion.div>
+                
+                <motion.div variants={itemVariants}>
+                  <WidgetCard title="MCP Server" padding="lg" className="apple-glass-enhanced hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
+                    <div className="flex flex-col gap-2 mt-2">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                          <ServerStackIcon className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <span className="text-3xl font-bold text-[var(--ak-color-text-primary)]">
+                          {serverCount}
+                        </span>
+                      </div>
+                      <p className="text-sm text-[var(--ak-color-text-secondary)]">
+                        Registrierte Tool-Provider
+                      </p>
                     </div>
-                 </WidgetCard>
-            </div>
-        </div>
+                  </WidgetCard>
+                </motion.div>
+                
+                <motion.div variants={itemVariants}>
+                  <WidgetCard title="Aktive Policies" padding="lg" className="apple-glass-enhanced hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
+                    <div className="flex flex-col gap-2 mt-2">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
+                          <ShieldCheckIcon className="h-5 w-5 text-orange-600" />
+                        </div>
+                        <span className="text-3xl font-bold text-[var(--ak-color-text-primary)]">
+                          Active
+                        </span>
+                      </div>
+                      <p className="text-sm text-[var(--ak-color-text-secondary)]">
+                        Gateway Protection enabled
+                      </p>
+                    </div>
+                  </WidgetCard>
+                </motion.div>
+              </div>
+
+              {/* Main Content Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <motion.div variants={itemVariants}>
+                  <WidgetCard title="Gateway Metriken" subtitle="Live Monitoring - Letzte 24h" className="apple-glass-enhanced">
+                    <div className="pt-4">
+                      <RechartsGatewayChart hours={24} height={250} metric="requests" />
+                    </div>
+                  </WidgetCard>
+                </motion.div>
+
+                <motion.div variants={itemVariants}>
+                  <WidgetCard title="Letzte Aktivitäten" subtitle="Recent Events" className="apple-glass-enhanced">
+                    <div className="space-y-3 pt-2">
+                      {[
+                        { time: '10:42', action: 'Policy updated', status: 'success' },
+                        { time: '10:38', action: 'Server registered', status: 'success' },
+                        { time: '10:31', action: 'Security check', status: 'warning' },
+                        { time: '10:15', action: 'System backup', status: 'success' },
+                      ].map((log, i) => (
+                        <motion.div 
+                          key={i}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.1 }}
+                          className="flex items-start gap-3 p-3 rounded-xl border border-[var(--ak-color-border-subtle)] apple-glass-enhanced hover:shadow-[var(--ak-shadow-md)] transition-all duration-200"
+                        >
+                          <span className="font-mono text-xs text-[var(--ak-color-text-secondary)] min-w-[50px]">{log.time}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-[var(--ak-color-text-primary)]">{log.action}</p>
+                          </div>
+                          {log.status === 'success' ? (
+                            <CheckCircleIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
+                          ) : (
+                            <ExclamationTriangleIcon className="h-5 w-5 text-orange-500 flex-shrink-0" />
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </WidgetCard>
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
     )
 }

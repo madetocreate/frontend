@@ -29,7 +29,7 @@ export function RealEstateOverview() {
     <div className="p-6 space-y-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all duration-200">
+        <div className="apple-glass-enhanced rounded-2xl p-6 hover:shadow-md transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
             <div className="p-2 bg-blue-50 rounded-lg">
               <BuildingOfficeIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
@@ -39,7 +39,7 @@ export function RealEstateOverview() {
           <div className="text-sm text-gray-600">Immobilien gesamt</div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all duration-200">
+        <div className="apple-glass-enhanced rounded-2xl p-6 hover:shadow-md transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
             <div className="p-2 bg-green-50 rounded-lg">
               <UserGroupIcon className="h-6 w-6 text-green-600" aria-hidden="true" />
@@ -49,7 +49,7 @@ export function RealEstateOverview() {
           <div className="text-sm text-gray-600">Aktive Leads</div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all duration-200">
+        <div className="apple-glass-enhanced rounded-2xl p-6 hover:shadow-md transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
             <div className="p-2 bg-orange-50 rounded-lg">
               <CalendarIcon className="h-6 w-6 text-orange-600" aria-hidden="true" />
@@ -59,7 +59,7 @@ export function RealEstateOverview() {
           <div className="text-sm text-gray-600">Besichtigungen heute</div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-all duration-200">
+        <div className="apple-glass-enhanced rounded-2xl p-6 hover:shadow-md transition-all duration-200">
           <div className="flex items-center justify-between mb-2">
             <div className="p-2 bg-purple-50 rounded-lg">
               <DocumentTextIcon className="h-6 w-6 text-purple-600" aria-hidden="true" />
@@ -71,7 +71,7 @@ export function RealEstateOverview() {
       </div>
 
       {/* Recent Properties */}
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-100 shadow-lg p-6">
+      <div className="apple-glass-enhanced rounded-2xl p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Neueste Immobilien</h2>
         {stats.recentProperties.length === 0 ? (
           <div className="text-center py-8 text-gray-500">

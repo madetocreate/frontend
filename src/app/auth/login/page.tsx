@@ -10,6 +10,7 @@ import {
   ArrowRightIcon
 } from '@heroicons/react/24/outline'
 import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_CONTROL_PLANE_URL || 'http://localhost:4051'
 

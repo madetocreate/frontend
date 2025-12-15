@@ -30,12 +30,12 @@ export function SettingsSection({
   return (
     <div className={clsx('mb-8', className)}>
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">{title}</h2>
+        <h2 className="text-lg font-semibold text-[var(--ak-color-text-primary)] mb-1">{title}</h2>
         {description && (
-          <p className="text-sm text-gray-500">{description}</p>
+          <p className="text-sm text-[var(--ak-color-text-secondary)]">{description}</p>
         )}
       </div>
-      <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-200">
+      <div className="apple-glass-enhanced rounded-xl divide-y divide-[var(--ak-color-border-subtle)]">
         {children}
       </div>
     </div>
@@ -69,18 +69,18 @@ export function SettingsRow({
   const content = (
     <div className={clsx(
       'flex items-center justify-between px-4 py-3',
-      isInteractive && 'cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors'
+      isInteractive && 'cursor-pointer hover:bg-[var(--ak-color-bg-hover)] active:bg-[var(--ak-color-bg-selected)] transition-colors'
     )}>
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {leading && (
-          <div className="flex-shrink-0 text-gray-400">
+          <div className="flex-shrink-0 text-[var(--ak-color-text-muted)]">
             {leading}
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium text-gray-900">{title}</div>
+          <div className="text-sm font-medium text-[var(--ak-color-text-primary)]">{title}</div>
           {subtitle && (
-            <div className="text-xs text-gray-500 mt-0.5">{subtitle}</div>
+            <div className="text-xs text-[var(--ak-color-text-secondary)] mt-0.5">{subtitle}</div>
           )}
         </div>
       </div>
@@ -88,7 +88,7 @@ export function SettingsRow({
         <div className="flex items-center gap-2 flex-shrink-0 ml-3">
           {trailing}
           {isInteractive && (
-            <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+            <ChevronRightIcon className="h-4 w-4 text-[var(--ak-color-text-muted)]" />
           )}
         </div>
       )}
@@ -189,7 +189,7 @@ export function SettingsSelect({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="bg-transparent border-none text-sm text-gray-900 font-medium focus:outline-none focus:ring-0 cursor-pointer appearance-none pr-6"
+          className="bg-transparent border-none text-sm text-[var(--ak-color-text-primary)] font-medium focus:outline-none focus:ring-0 cursor-pointer appearance-none pr-6"
         >
           {options.map((option) => (
             <option key={option.value} value={option.value}>
@@ -241,7 +241,7 @@ export function SettingsInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="bg-transparent border-none text-sm text-gray-900 text-right focus:outline-none focus:ring-0 w-48 text-right"
+          className="bg-transparent border-none text-sm text-[var(--ak-color-text-primary)] text-right focus:outline-none focus:ring-0 w-48 text-right"
         />
       }
     />

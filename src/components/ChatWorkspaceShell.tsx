@@ -72,13 +72,12 @@ import { RealEstateDashboard } from '@/components/realestate/RealEstateDashboard
 import { HotelSidebarWidget, type HotelView } from '@/components/hotel/HotelSidebarWidget'
 import { HotelDashboard } from '@/components/hotel/HotelDashboard'
 import { HotelKeyboardShortcuts } from '@/components/hotel/HotelKeyboardShortcuts'
-import { ReviewProfiSidebarWidget, type ReviewProfiView } from '@/components/reviews/ReviewProfiSidebarWidget'
+import { ReviewProfiSidebarWidget } from '@/components/reviews/ReviewProfiSidebarWidget'
 import { ReviewProfiDashboard } from '@/components/reviews/ReviewProfiDashboard'
-import { GastronomieSidebarWidget, type GastronomieView } from '@/components/gastronomie/GastronomieSidebarWidget'
+import { GastronomieSidebarWidget } from '@/components/gastronomie/GastronomieSidebarWidget'
 import { GastronomieDashboard } from '@/components/gastronomie/GastronomieDashboard'
 import { AIActionWizard } from '@/components/ui/AIActionWizard'
 import type { AIAction, AIActionContext } from '@/components/ui/AIActions'
-import { UserMenu } from '@/components/UserMenu'
 
 
 
@@ -1126,33 +1125,28 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
               )}
             </div>
 
-            {/* User Menu */}
-            <div className="flex justify-center w-full mb-2">
-              <UserMenu />
-            </div>
-
             {/* Settings bottom-pinned */}
-            <div className="relative group flex justify-center w-full">
-            <button
-            type="button"
-            onClick={() => handleModuleClick('settings')}
-            className={clsx(
-                'flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 ease-out focus-visible:outline-none active:scale-[0.96]',
-                activeModuleToken === 'settings' && leftDrawerOpen
-                ? 'bg-white text-gray-900 shadow-sm ring-1 ring-black/5'
-                : 'text-gray-500 hover:bg-black/5 hover:text-gray-900'
-            )}
-            aria-label="Einstellungen"
-            >
-            <Cog6ToothIcon className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
-            </button>
-            
-            <span className={tooltipClasses}>
+            <div suppressHydrationWarning className="relative group flex justify-center w-full">
+              <button
+                type="button"
+                onClick={() => handleModuleClick('settings')}
+                className={clsx(
+                  'flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 ease-out focus-visible:outline-none active:scale-[0.96]',
+                  activeModuleToken === 'settings' && leftDrawerOpen
+                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-black/5'
+                    : 'text-gray-500 hover:bg-black/5 hover:text-gray-900'
+                )}
+                aria-label="Einstellungen"
+              >
+                <Cog6ToothIcon className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
+              </button>
+              
+              <span className={tooltipClasses}>
                 Einstellungen
                 <svg className="absolute right-full top-1/2 -translate-y-1/2 translate-x-[1px] text-gray-900 h-2 w-2" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M24 0l-24 12 24 12z" />
+                  <path d="M24 0l-24 12 24 12z" />
                 </svg>
-            </span>
+              </span>
             </div>
         </div>
       </aside>

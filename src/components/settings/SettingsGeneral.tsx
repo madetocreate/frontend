@@ -40,7 +40,7 @@ export function SettingsGeneral({ mode }: { mode: SettingsMode }) {
           title="Version"
           subtitle="Build 2025.12.14"
           leading={<EyeIcon className="h-5 w-5" />}
-          trailing={<span className="text-sm text-gray-600">v2.4.0-beta</span>}
+          trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">v2.4.0-beta</span>}
           mode={mode}
         />
         {mode === 'expert' && (
@@ -48,7 +48,7 @@ export function SettingsGeneral({ mode }: { mode: SettingsMode }) {
             title="Service Name"
             subtitle="SERVICE_NAME"
             leading={<GlobeAltIcon className="h-5 w-5" />}
-            trailing={<span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">backend</span>}
+            trailing={<span className="text-sm font-mono bg-[var(--ak-color-bg-surface-muted)] px-2 py-1 rounded">backend</span>}
             mode={mode}
           />
         )}
@@ -95,14 +95,14 @@ export function SettingsGeneral({ mode }: { mode: SettingsMode }) {
               title="Datumsformat"
               subtitle="Format für Datumsanzeige"
               leading={<ClockIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-600">DD.MM.YYYY</span>}
+              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">DD.MM.YYYY</span>}
               mode={mode}
             />
             <SettingsRow
               title="Zahlenformat"
               subtitle="Dezimaltrennzeichen und Tausenderzeichen"
               leading={<ClockIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-600">1.234,56</span>}
+              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">1.234,56</span>}
               mode={mode}
             />
           </>

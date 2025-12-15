@@ -75,14 +75,14 @@ export function HotelReservations() {
       'expedia': { label: 'Expedia', color: 'bg-purple-100 text-purple-800' },
       'hrs': { label: 'HRS', color: 'bg-orange-100 text-orange-800' }
     }
-    return badges[source] || { label: source, color: 'bg-gray-100 text-gray-800' }
+    return badges[source] || { label: source, color: 'bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-primary)]' }
   }, [])
 
   const getStatusBadge = useCallback((status: string) => {
     const badges: Record<string, { label: string; color: string; icon: typeof CheckCircleIcon }> = {
       'confirmed': { label: 'Bestätigt', color: 'bg-yellow-100 text-yellow-800', icon: CheckCircleIcon },
       'checked-in': { label: 'Eingecheckt', color: 'bg-green-100 text-green-800', icon: CheckCircleIcon },
-      'checked-out': { label: 'Ausgecheckt', color: 'bg-gray-100 text-gray-800', icon: XCircleIcon },
+      'checked-out': { label: 'Ausgecheckt', color: 'bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-primary)]', icon: XCircleIcon },
       'cancelled': { label: 'Storniert', color: 'bg-red-100 text-red-800', icon: XCircleIcon }
     }
     return badges[status] || badges['confirmed']
@@ -157,7 +157,7 @@ export function HotelReservations() {
       <div className="p-6 space-y-6">
         <div className="animate-pulse space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-gray-200 rounded-lg" />
+            <div key={i} className="h-24 bg-[var(--ak-color-bg-surface-muted)] rounded-lg" />
           ))}
         </div>
       </div>
@@ -169,11 +169,11 @@ export function HotelReservations() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Reservierungen</h2>
-          <p className="text-gray-600 mt-1">Verwalten Sie alle Buchungen</p>
+          <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">Reservierungen</h2>
+          <p className="text-[var(--ak-color-text-secondary)] mt-1">Verwalten Sie alle Buchungen</p>
         </div>
         <button 
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 apple-glass-enhanced border border-[var(--ak-color-border-subtle)] rounded-lg hover:shadow-[var(--ak-shadow-md)] transition-colors"
           aria-label="Neue Reservierung erstellen"
         >
           <PlusIcon className="h-5 w-5" />
@@ -198,34 +198,34 @@ export function HotelReservations() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-          <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-          <div className="text-sm text-gray-600">Gesamt</div>
+        <div className="apple-glass-enhanced rounded-xl p-4 hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
+          <div className="text-2xl font-bold text-[var(--ak-color-text-primary)]">{stats.total}</div>
+          <div className="text-sm text-[var(--ak-color-text-secondary)]">Gesamt</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div className="apple-glass-enhanced rounded-xl p-4 hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
           <div className="text-2xl font-bold text-green-600">{stats.checkedIn}</div>
-          <div className="text-sm text-gray-600">Eingecheckt</div>
+          <div className="text-sm text-[var(--ak-color-text-secondary)]">Eingecheckt</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div className="apple-glass-enhanced rounded-xl p-4 hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
           <div className="text-2xl font-bold text-yellow-600">{stats.confirmed}</div>
-          <div className="text-sm text-gray-600">Bestätigt</div>
+          <div className="text-sm text-[var(--ak-color-text-secondary)]">Bestätigt</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div className="apple-glass-enhanced rounded-xl p-4 hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
           <div className="text-2xl font-bold text-blue-600">{stats.arrivalsToday}</div>
-          <div className="text-sm text-gray-600">Ankünfte heute</div>
+          <div className="text-sm text-[var(--ak-color-text-secondary)]">Ankünfte heute</div>
         </div>
       </div>
 
       {/* Search & Filters */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" aria-hidden="true" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--ak-color-text-muted)]" aria-hidden="true" />
           <input
             type="text"
             placeholder="Reservierung suchen (Name, Zimmer, E-Mail)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-2 border border-[var(--ak-color-border-subtle)] rounded-lg focus:ring-2 focus:ring-[var(--ak-color-accent)] focus:border-[var(--ak-color-accent)]"
             aria-label="Reservierungen durchsuchen"
           />
         </div>
@@ -237,7 +237,7 @@ export function HotelReservations() {
               className={`px-4 py-2 rounded-lg transition-colors ${
                 filter === f
                   ? 'bg-blue-600 text-white'
-                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  : 'apple-glass-enhanced border border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-primary)] hover:shadow-[var(--ak-shadow-md)]'
               }`}
               aria-pressed={filter === f}
             >
@@ -249,16 +249,16 @@ export function HotelReservations() {
 
       {/* Reservations List */}
       {filteredReservations.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-          <CalendarIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Keine Reservierungen gefunden</h3>
-          <p className="text-gray-600">
+        <div className="apple-glass-enhanced rounded-2xl p-12 text-center">
+          <CalendarIcon className="h-12 w-12 text-[var(--ak-color-text-muted)] mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-[var(--ak-color-text-primary)] mb-2">Keine Reservierungen gefunden</h3>
+          <p className="text-[var(--ak-color-text-secondary)]">
             {searchQuery ? 'Versuchen Sie eine andere Suche.' : 'Erstellen Sie Ihre erste Reservierung.'}
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="divide-y divide-gray-100">
+        <div className="apple-glass-enhanced rounded-2xl overflow-hidden">
+          <div className="divide-y divide-[var(--ak-color-border-subtle)]">
             {filteredReservations.map((reservation) => {
               const sourceBadge = getSourceBadge(reservation.source)
               const statusBadge = getStatusBadge(reservation.status)
@@ -267,7 +267,7 @@ export function HotelReservations() {
               return (
                 <div
                   key={reservation.id}
-                  className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="p-4 hover:bg-[var(--ak-color-bg-hover)] transition-colors cursor-pointer"
                   onClick={() => setSelectedReservation(reservation)}
                   role="button"
                   tabIndex={0}
@@ -281,7 +281,7 @@ export function HotelReservations() {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <div className="font-semibold text-gray-900">{reservation.guestName}</div>
+                        <div className="font-semibold text-[var(--ak-color-text-primary)]">{reservation.guestName}</div>
                         <span className={`px-2 py-0.5 text-xs rounded ${sourceBadge.color}`}>
                           {sourceBadge.label}
                         </span>
@@ -290,14 +290,14 @@ export function HotelReservations() {
                           {statusBadge.label}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <div className="flex items-center gap-4 text-sm text-[var(--ak-color-text-secondary)]">
                         <div className="flex items-center gap-1">
                           <CalendarIcon className="h-4 w-4" aria-hidden="true" />
                           <span>{reservation.checkIn} → {reservation.checkOut}</span>
                         </div>
                         <div>Zimmer {reservation.room}</div>
                         <div>{reservation.guests} {reservation.guests === 1 ? 'Gast' : 'Gäste'}</div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-[var(--ak-color-text-primary)]">
                           {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(reservation.total)}
                         </div>
                       </div>
@@ -348,61 +348,61 @@ export function HotelReservations() {
           aria-labelledby="reservation-detail-title"
         >
           <div 
-            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto" 
+            className="apple-glass-enhanced rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto" 
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6 border-b border-gray-200">
+            <div className="p-6 border-b border-[var(--ak-color-border-subtle)]">
               <div className="flex items-center justify-between">
-                <h3 id="reservation-detail-title" className="text-xl font-bold text-gray-900">Reservierungs-Details</h3>
+                <h3 id="reservation-detail-title" className="text-xl font-bold text-[var(--ak-color-text-primary)]">Reservierungs-Details</h3>
                 <button
                   onClick={() => setSelectedReservation(null)}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  className="p-2 hover:bg-[var(--ak-color-bg-hover)] rounded-lg"
                   aria-label="Modal schließen"
                 >
-                  <XCircleIcon className="h-5 w-5 text-gray-500" />
+                  <XCircleIcon className="h-5 w-5 text-[var(--ak-color-text-muted)]" />
                 </button>
               </div>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">Gast</label>
-                <div className="text-lg font-semibold text-gray-900">{selectedReservation.guestName}</div>
+                <label className="text-sm font-medium text-[var(--ak-color-text-secondary)]">Gast</label>
+                <div className="text-lg font-semibold text-[var(--ak-color-text-primary)]">{selectedReservation.guestName}</div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Check-in</label>
-                  <div className="text-gray-900">{selectedReservation.checkIn}</div>
+                  <label className="text-sm font-medium text-[var(--ak-color-text-secondary)]">Check-in</label>
+                  <div className="text-[var(--ak-color-text-primary)]">{selectedReservation.checkIn}</div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Check-out</label>
-                  <div className="text-gray-900">{selectedReservation.checkOut}</div>
+                  <label className="text-sm font-medium text-[var(--ak-color-text-secondary)]">Check-out</label>
+                  <div className="text-[var(--ak-color-text-primary)]">{selectedReservation.checkOut}</div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Zimmer</label>
-                  <div className="text-gray-900">{selectedReservation.room}</div>
+                  <label className="text-sm font-medium text-[var(--ak-color-text-secondary)]">Zimmer</label>
+                  <div className="text-[var(--ak-color-text-primary)]">{selectedReservation.room}</div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Gäste</label>
-                  <div className="text-gray-900">{selectedReservation.guests}</div>
+                  <label className="text-sm font-medium text-[var(--ak-color-text-secondary)]">Gäste</label>
+                  <div className="text-[var(--ak-color-text-primary)]">{selectedReservation.guests}</div>
                 </div>
               </div>
               {selectedReservation.phone && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Telefon</label>
-                  <div className="text-gray-900">{selectedReservation.phone}</div>
+                  <label className="text-sm font-medium text-[var(--ak-color-text-secondary)]">Telefon</label>
+                  <div className="text-[var(--ak-color-text-primary)]">{selectedReservation.phone}</div>
                 </div>
               )}
               {selectedReservation.email && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700">E-Mail</label>
-                  <div className="text-gray-900">{selectedReservation.email}</div>
+                  <label className="text-sm font-medium text-[var(--ak-color-text-secondary)]">E-Mail</label>
+                  <div className="text-[var(--ak-color-text-primary)]">{selectedReservation.email}</div>
                 </div>
               )}
               <div>
-                <label className="text-sm font-medium text-gray-700">Gesamtpreis</label>
-                <div className="text-2xl font-bold text-gray-900">
+                <label className="text-sm font-medium text-[var(--ak-color-text-secondary)]">Gesamtpreis</label>
+                <div className="text-2xl font-bold text-[var(--ak-color-text-primary)]">
                   {new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(selectedReservation.total)}
                 </div>
               </div>

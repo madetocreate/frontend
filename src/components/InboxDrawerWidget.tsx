@@ -16,6 +16,8 @@ export type InboxItem = {
   badge?: string
   sender: string
   threadId?: string
+  status?: string
+  important?: boolean
 }
 
 type InboxDrawerWidgetProps = {

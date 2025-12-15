@@ -1,6 +1,6 @@
 'use client'
 
-import { MegaphoneIcon, SparklesIcon } from '@heroicons/react/24/outline'
+import { MegaphoneIcon } from '@heroicons/react/24/outline'
 
 export function GastronomieMarketing() {
   return (

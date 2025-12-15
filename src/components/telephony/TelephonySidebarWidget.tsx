@@ -12,6 +12,15 @@ import { WidgetCard } from '@/components/ui/WidgetCard'
 
 export type TelephonyView = 'overview' | 'logs' | 'configuration' | 'numbers'
 
+export type TelephonyItem = {
+  id: string
+  title: string
+  caller?: string
+  duration?: string
+  mode?: 'reservierung' | 'termine' | 'support' | 'mailbox'
+  timestamp?: string
+}
+
 import type { ComponentType } from 'react'
 
 const VIEWS: { id: TelephonyView; label: string; icon: ComponentType<{ className?: string }> }[] = [

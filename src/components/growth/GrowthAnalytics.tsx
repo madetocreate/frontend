@@ -8,7 +8,7 @@ export function GrowthAnalytics() {
   return (
     <div className="p-6 space-y-6">
        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <WidgetCard title="Total Revenue" padding="lg">
+            <WidgetCard title="Total Revenue" padding="lg" className="apple-glass-enhanced hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
                 <div className="mt-2">
                     <div className="text-3xl font-semibold text-[var(--ak-color-text-primary)]">€24,500</div>
                     <div className="flex items-center gap-1 text-sm text-green-600 mt-1">
@@ -17,7 +17,7 @@ export function GrowthAnalytics() {
                     </div>
                 </div>
             </WidgetCard>
-            <WidgetCard title="Avg. Deal Size" padding="lg">
+            <WidgetCard title="Avg. Deal Size" padding="lg" className="apple-glass-enhanced hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
                 <div className="mt-2">
                     <div className="text-3xl font-semibold text-[var(--ak-color-text-primary)]">€1,250</div>
                      <div className="flex items-center gap-1 text-sm text-red-600 mt-1">
@@ -26,7 +26,7 @@ export function GrowthAnalytics() {
                     </div>
                 </div>
             </WidgetCard>
-            <WidgetCard title="Conversion Rate" padding="lg">
+            <WidgetCard title="Conversion Rate" padding="lg" className="apple-glass-enhanced hover:shadow-[var(--ak-shadow-md)] transition-all duration-200">
                 <div className="mt-2">
                     <div className="text-3xl font-semibold text-[var(--ak-color-text-primary)]">3.8%</div>
                      <div className="flex items-center gap-1 text-sm text-green-600 mt-1">
@@ -38,7 +38,7 @@ export function GrowthAnalytics() {
        </div>
 
        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <WidgetCard title="Lead Sources" className="min-h-[300px]" padding="lg">
+            <WidgetCard title="Lead Sources" className="min-h-[300px] apple-glass-enhanced" padding="lg">
                 <div className="space-y-4 pt-2">
                     {[
                         { label: 'Organic Search', value: 45, color: 'bg-blue-500' },
@@ -59,7 +59,7 @@ export function GrowthAnalytics() {
                 </div>
             </WidgetCard>
 
-             <WidgetCard title="Recent Activity" className="min-h-[300px]" padding="none">
+             <WidgetCard title="Recent Activity" className="min-h-[300px] apple-glass-enhanced" padding="sm">
                 <div className="divide-y divide-[var(--ak-color-border-hairline)]">
                     <AkListRow 
                         title="New Deal Created" 

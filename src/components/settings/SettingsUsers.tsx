@@ -18,8 +18,8 @@ export function SettingsUsers({ mode }: { mode: SettingsMode }) {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Rollen & Berechtigungen</h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <h2 className="text-lg font-semibold text-[var(--ak-color-text-primary)]">Rollen & Berechtigungen</h2>
+          <p className="text-sm text-[var(--ak-color-text-secondary)] mt-1">
             {mode === 'simple' 
               ? 'Verwalten Sie Benutzerrollen und Zugriffsrechte'
               : 'Detaillierte Rollenverwaltung mit Scope-basierten Berechtigungen'}
@@ -46,16 +46,16 @@ export function SettingsUsers({ mode }: { mode: SettingsMode }) {
                 {mode === 'expert' && (
                   <div className="flex gap-1">
                     {role.scopes.slice(0, 2).map(scope => (
-                      <span key={scope} className="text-xs px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-mono">
+                      <span key={scope} className="text-xs px-1.5 py-0.5 bg-[var(--ak-color-bg-surface-muted)] rounded text-[var(--ak-color-text-secondary)] font-mono">
                         {scope}
                       </span>
                     ))}
                     {role.scopes.length > 2 && (
-                      <span className="text-xs text-gray-400">+{role.scopes.length - 2}</span>
+                      <span className="text-xs text-[var(--ak-color-text-muted)]">+{role.scopes.length - 2}</span>
                     )}
                   </div>
                 )}
-                <span className="text-sm text-gray-600">{role.users} Nutzer</span>
+                <span className="text-sm text-[var(--ak-color-text-secondary)]">{role.users} Nutzer</span>
                 <AkButton variant="ghost" size="sm">Bearbeiten</AkButton>
               </div>
             }
@@ -75,14 +75,14 @@ export function SettingsUsers({ mode }: { mode: SettingsMode }) {
             title="Aktive Benutzer"
             subtitle="Anzahl der aktiven Benutzer"
             leading={<UserIcon className="h-5 w-5" />}
-            trailing={<span className="text-sm text-gray-600">8</span>}
+            trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">8</span>}
             mode={mode}
           />
           <SettingsRow
             title="Einladungen ausstehend"
             subtitle="Offene Einladungen"
             leading={<UserIcon className="h-5 w-5" />}
-            trailing={<span className="text-sm text-gray-600">2</span>}
+            trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">2</span>}
             mode={mode}
           />
         </SettingsSection>

@@ -95,7 +95,7 @@ export function DashboardConfigurator() {
       ]
     }
   ])
-  const [activeLayout, setActiveLayout] = useState<string>('default')
+  const [activeLayout] = useState<string>('default')
   const [showAddWidget, setShowAddWidget] = useState(false)
 
   const currentLayout = useMemo(() => 

@@ -12,8 +12,10 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   EyeIcon,
-  EyeSlashIcon
+  EyeSlashIcon,
+  ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline'
+import Image from 'next/image'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_CONTROL_PLANE_URL || 'http://localhost:4051'
 
@@ -24,7 +26,9 @@ interface Session {
   is_current?: boolean
 }
 
-export function SettingsAccount() {
+type SettingsMode = 'simple' | 'expert'
+
+export function SettingsAccount({ mode: _mode = 'simple' }: { mode?: SettingsMode }) {
   const auth = useAuth()
   const { user, fetchWithAuth, logout } = auth
   const [loading, setLoading] = useState(false)
@@ -206,6 +210,46 @@ export function SettingsAccount() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* User Profile Card */}
+      {user && (
+        <div className="apple-glass-enhanced rounded-3xl p-6">
+          <div className="flex items-center gap-4">
+            {user.picture ? (
+              <Image 
+                src={user.picture} 
+                alt={user.name || user.email}
+                width={64}
+                height={64}
+                className="w-16 h-16 rounded-full"
+              />
+            ) : (
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-2xl">
+                {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-xl text-[var(--ak-color-text-primary)] truncate">{user.name || 'Benutzer'}</div>
+              <div className="text-sm text-[var(--ak-color-text-secondary)] truncate">{user.email}</div>
+              <div className="text-xs text-[var(--ak-color-text-secondary)] mt-1">
+                {user.provider === 'google' && '🔵 Google'}
+                {user.provider === 'microsoft' && '🔷 Microsoft'}
+                {user.provider === 'apple' && '⚫ Apple'}
+                {user.provider === 'email' && '📧 E-Mail'}
+              </div>
+            </div>
+            <button
+              onClick={async () => {
+                await logout()
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+            >
+              <ArrowRightOnRectangleIcon className="h-5 w-5" />
+              <span>Abmelden</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Alerts */}
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-800">
@@ -229,36 +273,36 @@ export function SettingsAccount() {
 
       {/* Profile Information */}
       <div className="bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-lg p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <h2 className="text-xl font-bold text-[var(--ak-color-text-primary)] mb-6 flex items-center gap-2">
           <UserIcon className="h-6 w-6" />
           Profil-Informationen
         </h2>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">E-Mail</label>
+            <label className="block text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2">E-Mail</label>
             <div className="flex items-center gap-3">
-              <EnvelopeIcon className="h-5 w-5 text-gray-400" />
-              <span className="text-gray-900 font-medium">{user?.email}</span>
-              <span className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded-lg">
+              <EnvelopeIcon className="h-5 w-5 text-[var(--ak-color-text-muted)]" />
+              <span className="text-[var(--ak-color-text-primary)] font-medium">{user?.email}</span>
+              <span className="text-xs text-[var(--ak-color-text-secondary)] px-2 py-1 bg-[var(--ak-color-bg-surface-muted)] rounded-lg">
                 {user?.provider === 'google' && '🔵 Google'}
                 {user?.provider === 'microsoft' && '🔷 Microsoft'}
                 {user?.provider === 'apple' && '⚫ Apple'}
                 {user?.provider === 'email' && '📧 E-Mail'}
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">E-Mail kann nicht geändert werden</p>
+            <p className="text-xs text-[var(--ak-color-text-secondary)] mt-1">E-Mail kann nicht geändert werden</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+            <label className="block text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2">Name</label>
             {isEditingName ? (
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={editedName}
                   onChange={(e) => setEditedName(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="flex-1 px-4 py-2 border border-[var(--ak-color-border-subtle)] rounded-xl focus:ring-2 focus:ring-[var(--ak-color-accent)] focus:border-[var(--ak-color-accent)]"
                   placeholder="Ihr Name"
                 />
                 <button
@@ -273,17 +317,17 @@ export function SettingsAccount() {
                     setIsEditingName(false)
                     setEditedName(user?.name || '')
                   }}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors"
+                  className="px-4 py-2 bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-primary)] rounded-xl hover:bg-[var(--ak-color-bg-hover)] transition-colors"
                 >
                   Abbrechen
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <span className="text-gray-900 font-medium">{user?.name || 'Kein Name gesetzt'}</span>
+                <span className="text-[var(--ak-color-text-primary)] font-medium">{user?.name || 'Kein Name gesetzt'}</span>
                 <button
                   onClick={() => setIsEditingName(true)}
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 text-[var(--ak-color-text-secondary)] hover:text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-hover)] rounded-lg transition-colors"
                 >
                   <PencilIcon className="h-4 w-4" />
                 </button>
@@ -295,9 +339,9 @@ export function SettingsAccount() {
 
       {/* Password Change */}
       {user?.provider === 'email' && (
-        <div className="bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-lg p-6">
+        <div className="apple-glass-enhanced rounded-3xl p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-[var(--ak-color-text-primary)] flex items-center gap-2">
               <LockClosedIcon className="h-6 w-6" />
               Passwort ändern
             </h2>
@@ -314,20 +358,20 @@ export function SettingsAccount() {
           {showPasswordChange && (
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Aktuelles Passwort</label>
+                <label className="block text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2">Aktuelles Passwort</label>
                 <div className="relative">
-                  <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--ak-color-text-muted)]" />
                   <input
                     type={showPasswords ? 'text' : 'password'}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     required
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-12 py-3 border border-[var(--ak-color-border-subtle)] rounded-xl focus:ring-2 focus:ring-[var(--ak-color-accent)] focus:border-[var(--ak-color-accent)]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswords(!showPasswords)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-secondary)]"
                   >
                     {showPasswords ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                   </button>
@@ -335,21 +379,21 @@ export function SettingsAccount() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Neues Passwort</label>
+                <label className="block text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2">Neues Passwort</label>
                 <div className="relative">
-                  <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--ak-color-text-muted)]" />
                   <input
                     type={showPasswords ? 'text' : 'password'}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
                     minLength={8}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-12 py-3 border border-[var(--ak-color-border-subtle)] rounded-xl focus:ring-2 focus:ring-[var(--ak-color-accent)] focus:border-[var(--ak-color-accent)]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswords(!showPasswords)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-secondary)]"
                   >
                     {showPasswords ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                   </button>
@@ -357,21 +401,21 @@ export function SettingsAccount() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Neues Passwort bestätigen</label>
+                <label className="block text-sm font-medium text-[var(--ak-color-text-secondary)] mb-2">Neues Passwort bestätigen</label>
                 <div className="relative">
-                  <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--ak-color-text-muted)]" />
                   <input
                     type={showPasswords ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     minLength={8}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-12 py-3 border border-[var(--ak-color-border-subtle)] rounded-xl focus:ring-2 focus:ring-[var(--ak-color-accent)] focus:border-[var(--ak-color-accent)]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswords(!showPasswords)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-secondary)]"
                   >
                     {showPasswords ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                   </button>
@@ -395,7 +439,7 @@ export function SettingsAccount() {
                     setConfirmPassword('')
                     setError(null)
                   }}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors"
+                  className="px-4 py-2 bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-primary)] rounded-xl hover:bg-[var(--ak-color-bg-hover)] transition-colors"
                 >
                   Abbrechen
                 </button>
@@ -406,32 +450,32 @@ export function SettingsAccount() {
       )}
 
       {/* Active Sessions */}
-      <div className="bg-white/60 backdrop-blur-2xl rounded-3xl border border-gray-200/50 shadow-lg p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+      <div className="apple-glass-enhanced rounded-3xl p-6">
+        <h2 className="text-xl font-bold text-[var(--ak-color-text-primary)] mb-6 flex items-center gap-2">
           <DevicePhoneMobileIcon className="h-6 w-6" />
           Aktive Sessions
         </h2>
 
         {sessions.length === 0 ? (
-          <p className="text-gray-600">Keine aktiven Sessions gefunden</p>
+          <p className="text-[var(--ak-color-text-secondary)]">Keine aktiven Sessions gefunden</p>
         ) : (
           <div className="space-y-3">
             {sessions.map((session, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200"
+                className="flex items-center justify-between p-4 bg-[var(--ak-color-bg-surface-muted)] rounded-xl border border-[var(--ak-color-border-subtle)]"
               >
                 <div>
-                  <div className="font-medium text-gray-900">
+                  <div className="font-medium text-[var(--ak-color-text-primary)]">
                     Session {idx + 1}
                     {session.is_current && (
                       <span className="ml-2 text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-lg">Aktuell</span>
                     )}
                   </div>
-                  <div className="text-sm text-gray-600 mt-1">
+                  <div className="text-sm text-[var(--ak-color-text-secondary)] mt-1">
                     Erstellt: {formatDate(session.created_at)}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-[var(--ak-color-text-secondary)]">
                     Läuft ab: {formatDate(session.expires_at)}
                   </div>
                 </div>
@@ -495,7 +539,7 @@ export function SettingsAccount() {
                   setDeleteConfirmText('')
                   setError(null)
                 }}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors"
+                className="px-4 py-2 bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-primary)] rounded-xl hover:bg-[var(--ak-color-bg-hover)] transition-colors"
               >
                 Abbrechen
               </button>

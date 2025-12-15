@@ -3,12 +3,16 @@
 import { useMemo, useState, useEffect } from 'react'
 import clsx from 'clsx'
 import { useTranslation } from '../../i18n'
+import { AIActions } from '@/components/ui/AIActions'
+import { QuickActions } from '@/components/ui/QuickActions'
 import { 
   BoltIcon, 
   SparklesIcon,
   ClockIcon,
   MapPinIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  CalendarIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline'
 
 interface CalendarEvent {
@@ -66,6 +70,7 @@ export function CalendarDetailPanel() {
   const [focusSlots, setFocusSlots] = useState<FocusSlot[]>([])
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
   const [daySummary] = useState<DaySummary | null>(null)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     loadTodayEvents()
@@ -74,13 +79,26 @@ export function CalendarDetailPanel() {
 
   const loadTodayEvents = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const accountId = 'default' // TODO: Get from auth context
-      // const today = new Date().toISOString().split('T')[0]
-      // const response = await fetch(`/api/v1/calendar/day/${today}?account_id=${accountId}`)
-      // const data = await response.json()
-      // setDaySummary(data.summary)
-      // setEvents(data.summary.events || [])
+      setLoading(true)
+      const accountId = 'default' // TODO: Get from auth context
+      const today = new Date().toISOString().split('T')[0]
+      const response = await fetch(`/api/calendar/events?account_id=${accountId}&start_date=${today}&end_date=${today}`)
+      if (response.ok) {
+        const data = await response.json()
+        setEvents(data.events || [])
+      } else {
+        // Fallback to mock data if API fails
+        setEvents([
+          {
+            id: 'e1',
+            title: 'Weekly Sync mit Team',
+            start_time: new Date().toISOString(),
+            end_time: new Date(Date.now() + 3600000).toISOString(),
+            timeRange: '10:00 - 11:00',
+            source: 'Google Calendar',
+          },
+        ])
+      }
       
       // Calculate focus slots from day summary
       if (daySummary) {
@@ -188,32 +206,63 @@ export function CalendarDetailPanel() {
   }
 
   return (
-    <div className="flex h-full flex-col gap-3">
-      <div className="flex flex-1 flex-col rounded-2xl border border-gray-200/50 bg-white/60 backdrop-blur-2xl p-4 text-sm text-gray-700 shadow-lg">
-        <div className="flex items-center gap-2">
+    <div className="flex h-full flex-col gap-4 overflow-y-auto">
+      <div className="apple-card flex flex-1 flex-col rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-6 text-sm shadow-[var(--ak-shadow-sm)]">
+        {/* AI Actions & Quick Actions - direkt unter Header */}
+        <div className="mb-4 space-y-2">
+          <AIActions context="calendar" />
+          <QuickActions context="calendar" />
+        </div>
+        <div className="flex items-center justify-between gap-4 mb-4">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+            <p className="ak-caption text-[var(--ak-color-text-secondary)] uppercase tracking-wide mb-1">
               Heute
             </p>
-            <p className="text-xs font-semibold text-gray-900">{dayLabel}</p>
+            <p className="ak-heading text-lg text-[var(--ak-color-text-primary)]">{dayLabel}</p>
           </div>
-          <div className="ml-auto inline-flex items-center rounded-full bg-gray-900 px-2.5 py-1 text-[11px] font-medium text-white shadow-sm">
-            <span className={`mr-1.5 h-1.5 w-1.5 rounded-full ${
-              dayLoadInfo.tone === 'low' ? 'bg-emerald-400' :
-              dayLoadInfo.tone === 'medium' ? 'bg-amber-400' :
-              'bg-red-400'
+          <div className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-xs font-semibold text-white shadow-lg">
+            <span className={`mr-2 h-2 w-2 rounded-full ${
+              dayLoadInfo.tone === 'low' ? 'bg-emerald-300' :
+              dayLoadInfo.tone === 'medium' ? 'bg-amber-300' :
+              'bg-red-300'
             }`} />
             <span>Auslastung: {dayLoadInfo.label}</span>
           </div>
         </div>
 
-        <div className="mt-3 border-t border-gray-100 pt-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-            Nächste Termine
-          </p>
+        {/* Stats Widget */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="apple-card rounded-xl border border-[var(--ak-color-border-subtle)] bg-gradient-to-br from-blue-50 to-blue-100/50 p-4">
+            <p className="ak-caption text-blue-600 mb-1 font-semibold">Termine</p>
+            <p className="ak-heading text-2xl font-bold text-blue-900">{events.length}</p>
+          </div>
+          <div className="apple-card rounded-xl border border-[var(--ak-color-border-subtle)] bg-gradient-to-br from-purple-50 to-purple-100/50 p-4">
+            <p className="ak-caption text-purple-600 mb-1 font-semibold">Fokuszeit</p>
+            <p className="ak-heading text-2xl font-bold text-purple-900">
+              {focusSlots.reduce((sum, s) => sum + s.durationMinutes, 0)} Min
+            </p>
+          </div>
+          <div className="apple-card rounded-xl border border-[var(--ak-color-border-subtle)] bg-gradient-to-br from-green-50 to-green-100/50 p-4">
+            <p className="ak-caption text-green-600 mb-1 font-semibold">Auslastung</p>
+            <p className="ak-heading text-2xl font-bold text-green-900">{dayLoadInfo.label}</p>
+          </div>
+        </div>
+
+        <div className="border-t border-[var(--ak-color-border-subtle)] pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="ak-heading text-base text-[var(--ak-color-text-primary)] flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5 text-[var(--ak-color-text-secondary)]" />
+              Nächste Termine
+            </p>
+            {events.length > 0 && (
+              <span className="ak-caption text-[var(--ak-color-text-secondary)]">
+                {events.length} {events.length === 1 ? 'Termin' : 'Termine'}
+              </span>
+            )}
+          </div>
 
           {nextEvent ? (
-            <div className="mt-2 rounded-xl border border-gray-200 bg-gradient-to-r from-blue-50/80 to-white/80 p-3 text-xs shadow-sm">
+            <div className="apple-card rounded-xl border border-[var(--ak-color-border-subtle)] bg-gradient-to-r from-blue-50 to-purple-50 p-4 shadow-[var(--ak-shadow-sm)] mb-3">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 h-7 w-1.5 rounded-full bg-gradient-to-b from-blue-500 to-purple-600" />
                 <div className="flex-1">
@@ -262,11 +311,11 @@ export function CalendarDetailPanel() {
           )}
 
           {upcomingEvents.length > 0 && (
-            <div className="mt-3 space-y-2">
+            <div className="space-y-2">
               {upcomingEvents.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-start gap-3 rounded-xl border border-gray-100 bg-white/80 p-2.5 text-[11px] shadow-sm hover:shadow-md transition-all"
+                  className="apple-card flex items-start gap-3 rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-3 text-sm shadow-[var(--ak-shadow-sm)] hover:shadow-[var(--ak-shadow-md)] transition-all cursor-pointer"
                 >
                   <div className="mt-0.5 h-5 w-1 rounded-full bg-gradient-to-b from-gray-300 to-gray-400" />
                   <div className="flex-1">
@@ -308,9 +357,16 @@ export function CalendarDetailPanel() {
           )}
         </div>
 
-        <div className="mt-4 border-t border-gray-100 pt-3">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+        {/* AI Suggestions & Quick Actions - in der Mitte */}
+        <div className="my-4 flex flex-col gap-3 px-3 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
+          <AIActions context="calendar" />
+          <QuickActions context="calendar" />
+        </div>
+
+        <div className="mt-6 border-t border-[var(--ak-color-border-subtle)] pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="ak-heading text-base text-[var(--ak-color-text-primary)] flex items-center gap-2">
+              <BoltIcon className="h-5 w-5 text-[var(--ak-color-text-secondary)]" />
               {t('calendar.focusTime')}
             </p>
             {daySummary && (
@@ -378,25 +434,46 @@ export function CalendarDetailPanel() {
             </div>
           )}
 
-          <div className="mt-3 flex items-center justify-between">
+          <div className="mt-4 flex items-center gap-3">
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-1.5 text-[11px] font-medium text-white shadow-lg shadow-blue-500/30 transition-all hover:from-blue-700 hover:to-purple-700"
+              className="apple-button-primary flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
             >
-              <SparklesIcon className="h-3 w-3" />
+              <SparklesIcon className="h-4 w-4" />
               {t('calendar.aiPlan')}
             </button>
             <button
               type="button"
               disabled={!selectedFocusSlot}
               className={clsx(
-                'inline-flex items-center justify-center rounded-xl px-3 py-1.5 text-[11px] font-medium shadow-sm transition-all',
+                'apple-button-secondary inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all',
                 selectedFocusSlot
-                  ? 'bg-gray-900 text-white hover:bg-gray-800'
-                  : 'cursor-not-allowed bg-gray-100 text-gray-400',
+                  ? 'hover:shadow-md active:scale-[0.98]'
+                  : 'opacity-50 cursor-not-allowed',
               )}
             >
+              <CalendarIcon className="h-4 w-4" />
               {t('calendar.planFocusBlock')}
+            </button>
+          </div>
+          
+          {/* Quick Actions Widget */}
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              className="apple-card rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-4 text-left hover:shadow-md transition-all active:scale-[0.98]"
+            >
+              <ChartBarIcon className="h-5 w-5 text-blue-600 mb-2" />
+              <p className="ak-body text-sm font-semibold text-[var(--ak-color-text-primary)] mb-1">Analytics</p>
+              <p className="ak-caption text-xs text-[var(--ak-color-text-secondary)]">Kalender-Statistiken</p>
+            </button>
+            <button
+              type="button"
+              className="apple-card rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-4 text-left hover:shadow-md transition-all active:scale-[0.98]"
+            >
+              <SparklesIcon className="h-5 w-5 text-purple-600 mb-2" />
+              <p className="ak-body text-sm font-semibold text-[var(--ak-color-text-primary)] mb-1">KI-Optimierung</p>
+              <p className="ak-caption text-xs text-[var(--ak-color-text-secondary)]">Terminplan optimieren</p>
             </button>
           </div>
         </div>

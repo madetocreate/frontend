@@ -28,7 +28,7 @@ export function GrowthLeads() {
         </div>
       </div>
 
-      <WidgetCard padding="none" className="flex-1 overflow-hidden flex flex-col">
+      <WidgetCard padding="sm" className="flex-1 overflow-hidden flex flex-col apple-glass-enhanced">
          <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-[var(--ak-color-bg-sidebar)] border-b border-[var(--ak-color-border-subtle)]">

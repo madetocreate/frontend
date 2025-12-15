@@ -79,7 +79,7 @@ export function ShieldLogs() {
         />
       </div>
 
-      <WidgetCard padding="none" className="flex-1 overflow-hidden flex flex-col">
+      <WidgetCard padding="sm" className="flex-1 overflow-hidden flex flex-col apple-glass-enhanced">
         <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-[var(--ak-color-bg-sidebar)] border-b border-[var(--ak-color-border-subtle)]">
@@ -109,7 +109,7 @@ export function ShieldLogs() {
                                 </span>
                             </td>
                             <td className="px-4 py-3 text-[var(--ak-color-text-secondary)]">
-                                <AkBadge tone="neutral">{log.model}</AkBadge>
+                                <AkBadge tone="muted">{log.model}</AkBadge>
                             </td>
                             <td className="px-4 py-3 text-[var(--ak-color-text-secondary)]">{log.user}</td>
                             <td className="px-4 py-3 text-[var(--ak-color-text-secondary)] text-right font-mono text-xs">{log.latency}</td>

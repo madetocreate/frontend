@@ -55,7 +55,7 @@ export function ShieldPolicies() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {PRESETS.map((preset) => (
-          <WidgetCard key={preset.id} className="flex flex-col h-full" padding="md">
+          <WidgetCard key={preset.id} className="flex flex-col h-full apple-glass-enhanced" padding="md">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-[var(--ak-color-bg-sidebar)] text-[var(--ak-color-accent)]">
                 <preset.icon className="h-6 w-6" />
@@ -104,7 +104,7 @@ export function ShieldPolicies() {
         ))}
       </div>
 
-      <WidgetCard title="Custom Rules" padding="none">
+      <WidgetCard title="Custom Rules" padding="sm" className="apple-glass-enhanced">
         <div className="p-4 border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-sidebar)]/30">
             <p className="text-sm text-[var(--ak-color-text-secondary)]">
                 Zusätzliche Regeln für spezifische Tools oder User-Gruppen.

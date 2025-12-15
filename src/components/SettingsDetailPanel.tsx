@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
+import { AIActions } from '@/components/ui/AIActions'
+import { QuickActions } from '@/components/ui/QuickActions'
 
 export type SettingsCategory = 'general' | 'memory_crm' | 'notifications' | 'personalization' | 'apps_connectors' | 'schedules' | 'data_controls' | 'security' | 'parental' | 'account' | 'shop'
 
@@ -112,6 +114,13 @@ export function SettingsDetailPanel({ category }: SettingsDetailPanelProps) {
       <div className="flex h-full flex-col gap-4 overflow-y-auto">
         <div className="flex flex-col gap-4">
           <h2 className="ak-heading">{categoryLabels[category]}</h2>
+          
+          {/* AI Suggestions & Quick Actions - in der Mitte */}
+          <div className="flex flex-col gap-3 px-4 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
+            <AIActions context="settings" />
+            <QuickActions context="settings" />
+          </div>
+          
           <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-6">
             <div className="text-center text-sm text-slate-500">
               <p className="font-medium text-slate-600">Einstellungen für {categoryLabels[category]}</p>
@@ -132,6 +141,12 @@ export function SettingsDetailPanel({ category }: SettingsDetailPanelProps) {
     <div className="flex h-full flex-col gap-4 overflow-y-auto">
       <div className="flex flex-col gap-4">
         <h2 className="ak-heading">Allgemein</h2>
+
+        {/* AI Suggestions & Quick Actions - in der Mitte */}
+        <div className="flex flex-col gap-3 px-4 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
+          <AIActions context="settings" />
+          <QuickActions context="settings" />
+        </div>
 
         {/* AUSSEHEN */}
         <div className="flex flex-col gap-3">

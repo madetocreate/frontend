@@ -66,14 +66,14 @@ export function SettingsAI({ mode }: { mode: SettingsMode }) {
               title="Modell-Version"
               subtitle="Spezifische Modell-Version"
               leading={<CpuChipIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-600">latest</span>}
+              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">latest</span>}
               mode={mode}
             />
             <SettingsRow
               title="Fallback-Modell"
               subtitle="Bei Fehlern verwendetes Modell"
               leading={<ExclamationTriangleIcon className="h-5 w-5 text-amber-500" />}
-              trailing={<span className="text-sm text-gray-600">gpt-3.5-turbo</span>}
+              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">gpt-3.5-turbo</span>}
               mode={mode}
             />
           </>
@@ -92,7 +92,7 @@ export function SettingsAI({ mode }: { mode: SettingsMode }) {
           leading={<KeyIcon className="h-5 w-5 text-amber-500" />}
           trailing={
             <div className="flex items-center gap-2">
-              <span className="font-mono text-sm text-gray-400">
+              <span className="font-mono text-sm text-[var(--ak-color-text-muted)]">
                 {apiKeyVisible ? 'sk-proj-...' : 'sk-proj-********************'}
               </span>
               <button
@@ -111,21 +111,21 @@ export function SettingsAI({ mode }: { mode: SettingsMode }) {
               title="API Base URL"
               subtitle="Custom OpenAI-compatible API endpoint"
               leading={<BoltIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-400">https://api.openai.com/v1</span>}
+              trailing={<span className="text-sm text-[var(--ak-color-text-muted)]">https://api.openai.com/v1</span>}
               mode={mode}
             />
             <SettingsRow
               title="API Timeout"
               subtitle="Timeout für API-Anfragen in Sekunden"
               leading={<BoltIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-600">30s</span>}
+              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">30s</span>}
               mode={mode}
             />
             <SettingsRow
               title="Retry Attempts"
               subtitle="Anzahl der Wiederholungsversuche"
               leading={<BoltIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-600">3</span>}
+              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">3</span>}
               mode={mode}
             />
           </>

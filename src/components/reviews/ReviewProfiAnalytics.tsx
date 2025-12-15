@@ -5,7 +5,6 @@ import {
   ChartBarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  StarIcon,
   GlobeAltIcon
 } from '@heroicons/react/24/outline'
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
@@ -45,7 +44,7 @@ export function ReviewProfiAnalytics() {
       neutral: 23.4,
       negative: 8.0,
     }
-  }), [period])
+  }), [])
 
   const totalReviews = Object.values(analytics.ratingDistribution).reduce((a, b) => a + b, 0)
 

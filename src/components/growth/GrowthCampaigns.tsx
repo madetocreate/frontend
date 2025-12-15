@@ -25,7 +25,7 @@ export function GrowthCampaigns() {
         <AkButton variant="primary" leftIcon={<PlusIcon className="h-4 w-4"/>}>Neue Kampagne</AkButton>
       </div>
 
-      <WidgetCard padding="none" className="flex-1 overflow-hidden flex flex-col">
+      <WidgetCard padding="sm" className="flex-1 overflow-hidden flex flex-col apple-glass-enhanced">
         <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-[var(--ak-color-bg-sidebar)] border-b border-[var(--ak-color-border-subtle)]">
@@ -45,7 +45,7 @@ export function GrowthCampaigns() {
                             <td className="px-4 py-3">
                                 {camp.status === 'active' && <AkBadge tone="success">Aktiv</AkBadge>}
                                 {camp.status === 'paused' && <AkBadge tone="warning">Pausiert</AkBadge>}
-                                {camp.status === 'draft' && <AkBadge tone="neutral">Entwurf</AkBadge>}
+                                {camp.status === 'draft' && <AkBadge tone="muted">Entwurf</AkBadge>}
                             </td>
                             <td className="px-4 py-3 font-medium text-[var(--ak-color-text-primary)]">{camp.name}</td>
                             <td className="px-4 py-3 text-[var(--ak-color-text-secondary)]">{camp.channel}</td>

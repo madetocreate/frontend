@@ -86,10 +86,10 @@ export function NotificationsSettingsDrawer({ onClose }: NotificationsSettingsDr
 
       <WidgetCard title="Kategorien" padding="none">
          <div className="divide-y divide-[var(--ak-color-border-hairline)]">
-            <AkListRow title="System Updates" subtitle="Wartung, neue Features" trailing={<AkBadge tone="neutral">An</AkBadge>} />
+            <AkListRow title="System Updates" subtitle="Wartung, neue Features" trailing={<AkBadge tone="muted">An</AkBadge>} />
             <AkListRow title="Sicherheit" subtitle="Login Alerts, Policy" trailing={<AkBadge tone="success">Wichtig</AkBadge>} />
-            <AkListRow title="Leads & Sales" subtitle="Neue Deals, Statusänderungen" trailing={<AkBadge tone="neutral">An</AkBadge>} />
-            <AkListRow title="Marketing" subtitle="Kampagnen Status" trailing={<AkBadge tone="neutral">Aus</AkBadge>} />
+            <AkListRow title="Leads & Sales" subtitle="Neue Deals, Statusänderungen" trailing={<AkBadge tone="muted">An</AkBadge>} />
+            <AkListRow title="Marketing" subtitle="Kampagnen Status" trailing={<AkBadge tone="muted">Aus</AkBadge>} />
          </div>
       </WidgetCard>
     </div>

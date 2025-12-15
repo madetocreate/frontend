@@ -32,8 +32,8 @@ export function SettingsDatabase({ mode }: { mode: SettingsMode }) {
           mode={mode}
         />
         {mode === 'expert' && (
-          <div className="px-4 py-3 bg-gray-50 rounded-lg">
-            <div className="text-xs font-mono text-gray-500 break-all">
+          <div className="px-4 py-3 bg-[var(--ak-color-bg-surface-muted)] rounded-lg">
+            <div className="text-xs font-mono text-[var(--ak-color-text-secondary)] break-all">
               postgresql://postgres:******@localhost:5432/ai_agent_db
             </div>
           </div>
@@ -43,7 +43,7 @@ export function SettingsDatabase({ mode }: { mode: SettingsMode }) {
             title="Datenbank-Status"
             subtitle="Verbindungsqualität"
             leading={<CheckCircleIcon className="h-5 w-5 text-green-500" />}
-            trailing={<span className="text-sm text-gray-600">Optimal</span>}
+            trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">Optimal</span>}
             mode={mode}
           />
         )}
@@ -53,14 +53,14 @@ export function SettingsDatabase({ mode }: { mode: SettingsMode }) {
               title="Connection Pool Size"
               subtitle="Anzahl der Verbindungen im Pool"
               leading={<CircleStackIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-600">20</span>}
+              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">20</span>}
               mode={mode}
             />
             <SettingsRow
               title="Query Timeout"
               subtitle="Timeout für Datenbankabfragen"
               leading={<CircleStackIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-600">30s</span>}
+              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">30s</span>}
               mode={mode}
             />
           </>
@@ -98,14 +98,14 @@ export function SettingsDatabase({ mode }: { mode: SettingsMode }) {
               title="Cache TTL"
               subtitle="Standard Time-to-Live"
               leading={<BoltIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-600">3600s</span>}
+              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">3600s</span>}
               mode={mode}
             />
             <SettingsRow
               title="Max Memory"
               subtitle="Maximaler Speicherverbrauch"
               leading={<BoltIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-600">256MB</span>}
+              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">256MB</span>}
               mode={mode}
             />
           </>
@@ -122,7 +122,7 @@ export function SettingsDatabase({ mode }: { mode: SettingsMode }) {
           <div className="px-4 py-3">
             <div className="flex flex-wrap gap-2">
               {['key', 'team', 'user', 'mcp', 'spend_logs', 'audit_logs'].map(tag => (
-                <span key={tag} className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-600 font-mono">
+                <span key={tag} className="px-2 py-1 bg-[var(--ak-color-bg-surface-muted)] rounded text-xs text-[var(--ak-color-text-secondary)] font-mono">
                   {tag}
                 </span>
               ))}
@@ -142,7 +142,7 @@ export function SettingsDatabase({ mode }: { mode: SettingsMode }) {
             title="Gespeicherte Einträge"
             subtitle="Anzahl der Datensätze"
             leading={<ArchiveBoxIcon className="h-5 w-5" />}
-            trailing={<span className="text-sm text-gray-600">12.458</span>}
+            trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">12.458</span>}
             mode={mode}
           />
           <SettingsRow

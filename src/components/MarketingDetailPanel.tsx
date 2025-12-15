@@ -5,6 +5,7 @@ import { sendChatMessage } from '@/lib/chatClient'
 import clsx from 'clsx'
 import { PhotoIcon } from '@heroicons/react/24/outline'
 import { AIActions } from '@/components/ui/AIActions'
+import { QuickActions } from '@/components/ui/QuickActions'
 
 type MarketingType = {
   id: string
@@ -251,11 +252,6 @@ const handleSuggestionClick = async (s: MarketingSuggestion) => {
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto">
-      {/* AI Actions */}
-      <div className="px-4">
-        <AIActions context="marketing" />
-      </div>
-      
       <div className="flex flex-col gap-3 rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/95 p-4 shadow-[var(--ak-shadow-soft)] backdrop-blur-xl">
         {/* Header */}
         <div className="flex flex-col gap-1">
@@ -280,7 +276,6 @@ const handleSuggestionClick = async (s: MarketingSuggestion) => {
             Erstelle Kampagnen und Inhalte mit KI.
           </p>
         </div>
-
 
 {/* Suggestions */}
 {suggestions.length > 0 && (
@@ -312,6 +307,12 @@ const handleSuggestionClick = async (s: MarketingSuggestion) => {
   </div>
 )}
 
+        {/* AI Suggestions & Quick Actions - in der Mitte */}
+        <div className="mb-4 flex flex-col gap-3 px-3 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
+          <AIActions context="marketing" />
+          <QuickActions context="marketing" />
+        </div>
+
         {/* Type Selection */}
         <div className="flex flex-wrap items-center gap-2">
           {types.map((type) => (
@@ -333,9 +334,41 @@ const handleSuggestionClick = async (s: MarketingSuggestion) => {
 
         {/* Form */}
         <form
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault()
-            // Handle form submission
+            try {
+              const selectedType = types.find(t => t.selected)
+              const selectedChannels = channels.filter(c => c.selected).map(c => c.value)
+              const selectedTone = tones.find(t => t.selected)
+              
+              const response = await fetch('/api/marketing/campaigns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  tenant_id: 'default-tenant',
+                  type: selectedType?.id,
+                  channels: selectedChannels,
+                  tone: selectedTone?.value,
+                  language: selectedLanguage,
+                  briefing,
+                }),
+              })
+              
+              if (response.ok) {
+                window.dispatchEvent(
+                  new CustomEvent('aklow-notification', {
+                    detail: { type: 'success', message: 'Kampagne erstellt' }
+                  })
+                )
+              }
+            } catch (error) {
+              console.error('Error creating campaign:', error)
+              window.dispatchEvent(
+                new CustomEvent('aklow-notification', {
+                  detail: { type: 'error', message: 'Fehler beim Erstellen' }
+                })
+              )
+            }
           }}
           className="flex flex-col gap-3"
         >

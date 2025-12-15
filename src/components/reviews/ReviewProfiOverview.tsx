@@ -2,13 +2,11 @@
 
 import { useState, useMemo } from 'react'
 import { 
-  StarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   ChatBubbleLeftRightIcon,
   ClockIcon,
   CheckCircleIcon,
-  XCircleIcon,
   SparklesIcon,
   GlobeAltIcon
 } from '@heroicons/react/24/outline'
@@ -59,7 +57,7 @@ export function ReviewProfiOverview() {
       yelp: { count: 145, avgRating: 4.4 },
       facebook: { count: 45, avgRating: 4.6 },
     }
-  }), [selectedPeriod])
+  }), [])
 
   const recentReviews = useMemo<RecentReview[]>(() => [
     {

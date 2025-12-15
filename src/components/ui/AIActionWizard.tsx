@@ -34,8 +34,8 @@ function OverviewStep({ action, onNext }: WizardStepProps) {
   return (
     <div className="flex flex-col items-center text-center space-y-6 py-8">
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full blur-2xl opacity-20 animate-pulse" />
-        <div className="relative h-24 w-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full blur-2xl opacity-15 animate-pulse" />
+        <div className="relative h-24 w-24 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-md">
           <SparklesIcon className="h-12 w-12 text-white" />
         </div>
       </div>
@@ -58,7 +58,7 @@ function OverviewStep({ action, onNext }: WizardStepProps) {
       
       <button
         onClick={onNext}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 flex items-center gap-2"
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center gap-2"
       >
         Starten
         <ArrowRightIcon className="h-5 w-5" />
@@ -219,8 +219,8 @@ function ProcessingStep({ onNext }: WizardStepProps) {
   return (
     <div className="flex flex-col items-center justify-center space-y-8 py-12">
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full blur-2xl opacity-30 animate-pulse" />
-        <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full blur-2xl opacity-20 animate-pulse" />
+        <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-md">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
@@ -238,7 +238,7 @@ function ProcessingStep({ onNext }: WizardStepProps) {
           </div>
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"
+              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.3 }}
@@ -314,7 +314,7 @@ function ResultStep({ onBack }: WizardStepProps) {
               className={clsx(
                 'px-4 py-2 rounded-lg font-medium text-sm transition-all',
                 index === 0
-                  ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg hover:shadow-xl'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md hover:shadow-lg'
                   : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300'
               )}
             >
@@ -363,23 +363,31 @@ const WIZARD_STEPS: WizardStep[] = [
   },
 ]
 
-export function AIActionWizard({ isOpen, onClose, action }: AIActionWizardProps) {
+export function AIActionWizard({ isOpen, onClose, context, action }: AIActionWizardProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [wizardData, setWizardData] = useState<Record<string, unknown>>({})
 
-  const currentStep = WIZARD_STEPS[currentStepIndex]
+  // Ensure currentStepIndex is within valid range
+  const safeStepIndex = Math.max(0, Math.min(currentStepIndex, WIZARD_STEPS.length - 1))
+  const currentStep = WIZARD_STEPS[safeStepIndex]
+  
+  // If no valid step, return null
+  if (!currentStep) {
+    return null
+  }
+  
   const StepComponent = currentStep.component
-  const progress = ((currentStepIndex + 1) / WIZARD_STEPS.length) * 100
+  const progress = ((safeStepIndex + 1) / WIZARD_STEPS.length) * 100
 
   const handleNext = () => {
-    if (currentStepIndex < WIZARD_STEPS.length - 1) {
-      setCurrentStepIndex((prev) => prev + 1)
+    if (safeStepIndex < WIZARD_STEPS.length - 1) {
+      setCurrentStepIndex((prev) => Math.min(prev + 1, WIZARD_STEPS.length - 1))
     }
   }
 
   const handleBack = () => {
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex((prev) => prev - 1)
+    if (safeStepIndex > 0) {
+      setCurrentStepIndex((prev) => Math.max(prev - 1, 0))
     } else {
       onClose()
     }
@@ -409,7 +417,7 @@ export function AIActionWizard({ isOpen, onClose, action }: AIActionWizardProps)
           className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden"
         >
           {/* Header */}
-          <div className="relative bg-gradient-to-r from-purple-600 to-blue-600 p-6">
+          <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -445,7 +453,7 @@ export function AIActionWizard({ isOpen, onClose, action }: AIActionWizardProps)
                   key={step.id}
                   className={clsx(
                     'h-2 rounded-full transition-all',
-                    index <= currentStepIndex
+                    index <= safeStepIndex
                       ? 'bg-white w-8'
                       : 'bg-white/30 w-2'
                   )}
@@ -458,7 +466,7 @@ export function AIActionWizard({ isOpen, onClose, action }: AIActionWizardProps)
           <div className="p-8 max-h-[60vh] overflow-y-auto">
             <AnimatePresence mode="wait">
               <motion.div
-                key={currentStepIndex}
+                key={safeStepIndex}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}

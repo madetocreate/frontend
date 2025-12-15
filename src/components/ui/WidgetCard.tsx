@@ -9,7 +9,7 @@ type WidgetCardProps = {
   actions?: ReactNode;
   children: ReactNode;
   className?: string;
-  padding?: "sm" | "md" | "lg";
+  padding?: "sm" | "md" | "lg" | "none";
   shadow?: boolean;
 };
 
@@ -23,7 +23,7 @@ export function WidgetCard({
   shadow = true,
 }: WidgetCardProps) {
   const paddingClass =
-    padding === "sm" ? "px-3 py-3" : padding === "lg" ? "px-6 py-6" : "px-4 py-4";
+    padding === "none" ? "" : padding === "sm" ? "px-3 py-3" : padding === "lg" ? "px-6 py-6" : "px-4 py-4";
 
   const hasHeader = Boolean(title || subtitle || actions);
 

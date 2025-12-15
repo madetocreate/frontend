@@ -1,6 +1,6 @@
 'use client'
 
-import { Cog6ToothIcon, Squares2X2Icon } from '@heroicons/react/24/outline'
+import { Squares2X2Icon } from '@heroicons/react/24/outline'
 import { DashboardConfigurator } from './DashboardConfigurator'
 
 export function GastronomieSettings() {
