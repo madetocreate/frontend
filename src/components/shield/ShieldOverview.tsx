@@ -7,6 +7,7 @@ import { WidgetCard } from '@/components/ui/WidgetCard'
 import { AkSearchField } from '@/components/ui/AkSearchField'
 import { ShieldCheckIcon, ServerStackIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { RechartsGatewayChart } from '@/components/ui/RechartsGatewayChart'
+import { AISuggestionGrid } from '@/components/ui/AISuggestionGrid'
 
 interface HealthData {
     status: string;
@@ -116,6 +117,14 @@ export function ShieldOverview() {
           {/* Content */}
           <div className="flex-1 overflow-y-auto px-6 py-6">
             <motion.div className="space-y-6" variants={itemVariants}>
+              
+              {/* AI Suggestions */}
+              <AISuggestionGrid 
+                context="shield"
+                summary="Sicherheits-Status"
+                text="Das AI Shield System ist operational. Alle Policies sind aktiv."
+              />
+
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <motion.div variants={itemVariants}>

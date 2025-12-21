@@ -64,6 +64,14 @@ frontend/
 - ✅ Feedback API Integration
 - ✅ Feedback Metrics Display
 
+#### AI Suggestion System
+- ✅ Kontextsensitive KI-Vorschläge in Detail-Drawer
+- ✅ FastActionAgent Integration
+- ✅ 4 Hauptaktionen + 4 weitere (expandierbar)
+- ✅ Priorisierte Vorschläge nach Nutzen
+- ✅ Ausführbare Aktionen über Action-Handling-System
+- ✅ Fallback-Mechanismus bei API-Fehlern
+
 #### Other Features
 - ✅ Inbox Management
 - ✅ Memory Overview
@@ -170,6 +178,8 @@ npm run test:watch
 - `AkSearchField` - Search Input
 - `WidgetCard` - Card Component
 - `CommandPalette` - Command Palette
+- `AISuggestionGrid` - KI-Vorschläge Grid (2x2 + expandierbar)
+- `AIActions` - Legacy AI Actions (wird durch AISuggestionGrid ersetzt)
 
 ## 🔐 Security
 
@@ -209,6 +219,8 @@ docker run -p 3000:3000 frontend
 
 ## 📖 Weitere Dokumentation
 
+- [Frontend Architecture](./docs/ARCHITECTURE.md)
+- [AI Suggestion System](./docs/AI_SUGGESTION_SYSTEM.md)
 - [Next.js Documentation](https://nextjs.org/docs)
 - [React Documentation](https://react.dev)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)

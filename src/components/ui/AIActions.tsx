@@ -20,6 +20,8 @@ export type AIActionContext =
   | 'practice'
   | 'realestate'
   | 'hotel'
+  | 'shield'
+  | 'website'
 
 export interface AIAction {
   id: string
@@ -156,6 +158,16 @@ const DEFAULT_ACTIONS: Record<AIActionContext, AIAction[]> = {
     { id: 'suggest-upsell', label: 'Upsell vorschlagen', description: 'Zusatzleistungen' },
     { id: 'optimize-revenue', label: 'Revenue optimieren', description: 'Revenue-Management' },
   ],
+  shield: [
+    { id: 'policy-check', label: 'Policy prüfen', description: 'Eingabe/Antwort auf Richtlinien prüfen' },
+    { id: 'pii-scan', label: 'PII Scan', description: 'Sensible Daten erkennen' },
+    { id: 'risk-report', label: 'Risiko-Report', description: 'Sicherheitsbewertung' },
+  ],
+  website: [
+    { id: 'optimize-widget', label: 'Widget optimieren', description: 'Chat-Widget UX/Copy verbessern' },
+    { id: 'analyze-traffic', label: 'Traffic analysieren', description: 'Besucher-Insights' },
+    { id: 'generate-snippets', label: 'Snippets generieren', description: 'Antwort-Snippets erstellen' },
+  ],
 }
 
 export function AIActions({ 
@@ -167,8 +179,8 @@ export function AIActions({
   const [showMore, setShowMore] = useState(false)
   const allActions = initialActions || DEFAULT_ACTIONS[context] || []
   // Immer mindestens 3 Actions anzeigen
-  const visibleActions = showMore ? allActions : allActions.slice(0, 3)
-  const hasMore = allActions.length > 3
+  const visibleActions = showMore ? allActions : allActions.slice(0, 2)
+  const hasMore = allActions.length > 2
 
   const handleActionClick = (action: AIAction) => {
     // Trigger AI Action Wizard
@@ -191,13 +203,13 @@ export function AIActions({
   }
 
   // Stelle sicher, dass immer mindestens 3 Actions angezeigt werden
-  const displayActions = visibleActions.length >= 3 ? visibleActions : allActions.slice(0, 3)
+  const displayActions = visibleActions.length >= 2 ? visibleActions : allActions.slice(0, 2)
 
   return (
     <div className={clsx('flex flex-col gap-1.5 w-full', className)}>
       <div className="flex items-center gap-1.5 px-0.5 mb-0.5">
-        <SparklesIcon className="h-3 w-3 text-purple-500" />
-        <span className="text-[10px] font-semibold text-gray-600 uppercase tracking-wide">
+        <SparklesIcon className="h-3 w-3 text-[var(--ak-color-accent)]" />
+        <span className="text-[10px] font-semibold text-[var(--ak-color-text-secondary)] uppercase tracking-wide">
           KI Vorschläge
         </span>
       </div>
@@ -208,7 +220,7 @@ export function AIActions({
             key={action.id}
             type="button"
             onClick={() => handleActionClick(action)}
-            className="group relative inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100/80 hover:border-blue-200 hover:from-blue-100 hover:to-indigo-100 transition-all duration-150 text-[11px] font-medium text-gray-800 hover:shadow-sm active:scale-[0.98]"
+            className="group relative inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)] hover:border-[var(--ak-color-accent)] hover:bg-[var(--ak-color-bg-surface)] transition-all duration-150 text-[11px] font-medium text-[var(--ak-color-text-primary)] hover:shadow-sm active:scale-[0.98]"
             title={action.description}
           >
             <span className="truncate max-w-[120px]">{action.label}</span>
@@ -219,7 +231,7 @@ export function AIActions({
           <button
             type="button"
             onClick={() => setShowMore(true)}
-            className="inline-flex items-center gap-0.5 px-2 py-1 rounded-md bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors text-[11px] font-medium text-gray-600 hover:text-gray-900"
+            className="inline-flex items-center gap-0.5 px-2 py-1 rounded-md bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)] hover:bg-[var(--ak-color-bg-hover)] transition-colors text-[11px] font-medium text-[var(--ak-color-text-secondary)] hover:text-[var(--ak-color-text-primary)]"
           >
             Mehr
             <ChevronDownIcon className="h-3 w-3" />
@@ -230,7 +242,7 @@ export function AIActions({
           <button
             type="button"
             onClick={() => setShowMore(false)}
-            className="inline-flex items-center gap-0.5 px-2 py-1 rounded-md bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors text-[11px] font-medium text-gray-600 hover:text-gray-900"
+            className="inline-flex items-center gap-0.5 px-2 py-1 rounded-md bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)] hover:bg-[var(--ak-color-bg-hover)] transition-colors text-[11px] font-medium text-[var(--ak-color-text-secondary)] hover:text-[var(--ak-color-text-primary)]"
           >
             Weniger
             <ChevronDownIcon className="h-3 w-3 rotate-180" />

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { WidgetCard } from '@/components/ui/WidgetCard'
 import { AkButton } from '@/components/ui/AkButton'
 import { AkBadge } from '@/components/ui/AkBadge'
@@ -12,10 +12,14 @@ import {
     SparklesIcon,
     MagnifyingGlassIcon,
     ClockIcon,
-    FolderIcon
+    FolderIcon,
+    CloudArrowUpIcon
 } from '@heroicons/react/24/outline'
 import { DocumentsView } from './DocumentsSidebarWidget'
 import { AkSearchField } from '@/components/ui/AkSearchField'
+import { motion, AnimatePresence } from 'framer-motion'
+
+import { AISuggestionGrid } from '@/components/ui/AISuggestionGrid'
 
 const DOCUMENTS = [
     { id: '1', name: 'Projektplan Q1.pdf', type: 'PDF', size: '2.4 MB', date: 'heute', tag: 'wichtig' },
@@ -31,9 +35,74 @@ export function DocumentsDashboard({ view: _view }: { view: DocumentsView }) {
   const [search, setSearch] = useState('')
   const viewLabel = _view ? ` (${_view})` : ''
 
+  const [isDragging, setIsDragging] = useState(false)
+  const dragCounter = useRef(0)
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current += 1
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true)
+    }
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current -= 1
+    if (dragCounter.current === 0) {
+      setIsDragging(false)
+    }
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    dragCounter.current = 0
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length > 0) {
+        console.log('Files dropped in documents:', files)
+        // Handle file upload here
+        alert(`${files.length} Dateien zum Hochladen empfangen: ${files.map(f => f.name).join(', ')}`)
+    }
+  }, [])
+
   return (
-    <div className="h-full w-full overflow-y-auto bg-[var(--ak-color-bg-app)]">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[var(--ak-color-border-hairline)] bg-[var(--ak-glass-bg)] px-6 backdrop-blur-[var(--ak-glass-blur)]">
+    <div 
+        className="h-full w-full overflow-y-auto bg-[var(--ak-color-bg-app)] relative"
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+    >
+        {/* Drag Overlay */}
+        <AnimatePresence>
+            {isDragging && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 z-[9999] bg-indigo-600/10 backdrop-blur-sm border-2 border-indigo-600 border-dashed m-4 rounded-3xl flex items-center justify-center pointer-events-none"
+                >
+                    <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center gap-3">
+                        <div className="h-16 w-16 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600">
+                            <CloudArrowUpIcon className="h-8 w-8" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Dokumente hier ablegen</h3>
+                        <p className="text-sm text-gray-500">Zum Upload hinzufügen</p>
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between bg-[var(--ak-glass-bg)] px-6 backdrop-blur-[var(--ak-glass-blur)]">
             <h1 className="text-xl font-semibold text-[var(--ak-color-text-primary)] tracking-tight">
                 Smart Documents{viewLabel}
             </h1>
@@ -64,6 +133,15 @@ export function DocumentsDashboard({ view: _view }: { view: DocumentsView }) {
         </header>
         
         <main className="max-w-7xl mx-auto p-6 space-y-8">
+
+             {/* AI Suggestions - Only in All View */}
+             {_view === 'all' && (
+                <AISuggestionGrid 
+                    context="document"
+                    summary="Dokumenten-Management"
+                    text="Intelligente Analyse deiner Verträge und Rechnungen."
+                />
+             )}
 
              {/* AI Insights & Smart Folders */}
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

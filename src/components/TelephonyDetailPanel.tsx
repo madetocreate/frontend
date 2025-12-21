@@ -10,7 +10,6 @@ import {
   GlobeAltIcon,
   EnvelopeIcon,
 } from '@heroicons/react/24/outline'
-import type { TelephonyItem } from './telephony/TelephonySidebarWidget'
 import { AIActions } from '@/components/ui/AIActions'
 import { QuickActions } from '@/components/ui/QuickActions'
 
@@ -38,6 +37,14 @@ type TelephonyHistoryItem = {
   mode: 'reservierung' | 'termine' | 'support' | 'mailbox'
   summary: string
   status: 'Abgeschlossen' | 'Abgebrochen' | 'Weitergeleitet'
+}
+
+type TelephonyItem = {
+  id: string
+  mode?: string
+  caller?: string
+  title?: string
+  duration?: string
 }
 
 type TelephonyDetailPanelProps = {

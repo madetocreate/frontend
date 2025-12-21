@@ -1,12 +1,13 @@
 'use client'
 
-import { motion, useMotionValue, useSpring, HTMLMotionProps } from 'framer-motion'
+import { motion, useMotionValue, useSpring, HTMLMotionProps, useReducedMotion } from 'framer-motion'
 import { useRef, MouseEvent, ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 export interface MagneticButtonProps extends HTMLMotionProps<"button"> {
   children: ReactNode
   isActive?: boolean
+  magnetStrength?: number
 }
 
 export function MagneticButton({ 
@@ -16,15 +17,17 @@ export function MagneticButton({
   isActive, 
   onMouseMove,
   onMouseLeave,
+  magnetStrength = 0.15, // Reduced from implicit higher value
   ...props 
 }: MagneticButtonProps) {
   const ref = useRef<HTMLButtonElement>(null)
+  const shouldReduceMotion = useReducedMotion()
   
   const x = useMotionValue(0)
   const y = useMotionValue(0)
 
-  // Spring physics for smooth "magnetic" return
-  const springConfig = { damping: 15, stiffness: 150, mass: 0.1 }
+  // Spring physics for smooth "magnetic" return - made slightly stiffer/faster for "quiet" feel
+  const springConfig = { damping: 20, stiffness: 300, mass: 0.5 }
   const springX = useSpring(x, springConfig)
   const springY = useSpring(y, springConfig)
 
@@ -32,6 +35,7 @@ export function MagneticButton({
     // Call original handler if provided
     onMouseMove?.(e)
 
+    if (shouldReduceMotion) return
     if (!ref.current) return
     
     const { clientX, clientY } = e
@@ -42,8 +46,8 @@ export function MagneticButton({
     const middleY = clientY - (top + height / 2)
     
     // Move element towards mouse (Magnet effect)
-    x.set(middleX * 0.25)
-    y.set(middleY * 0.25)
+    x.set(middleX * magnetStrength)
+    y.set(middleY * magnetStrength)
   }
 
   const handleMouseLeave = (e: MouseEvent<HTMLButtonElement>) => {
@@ -54,6 +58,18 @@ export function MagneticButton({
     y.set(0)
   }
 
+  // Define animations based on reduced motion preference
+  const animations = shouldReduceMotion ? {
+    animate: { scale: isActive ? 1.02 : 1 },
+    whileHover: { scale: 1 },
+    whileTap: { scale: 0.98 }
+  } : {
+    animate: { scale: isActive ? 1.02 : 1 },
+    whileHover: { scale: 1.02 }, 
+    whileTap: { scale: 0.97 },
+    style: { x: springX, y: springY }
+  }
+
   return (
     <motion.button
       ref={ref}
@@ -61,11 +77,8 @@ export function MagneticButton({
       onClick={onClick}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      style={{ x: springX, y: springY }}
-      animate={{ scale: isActive ? 1.05 : 1 }}
-      whileHover={{ scale: 1.2 }} 
-      whileTap={{ scale: 0.9 }}   
-      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      {...animations}
       {...props}
     >
       {children}

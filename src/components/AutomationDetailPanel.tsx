@@ -1,17 +1,32 @@
 'use client'
-import { sendChatMessage } from '@/lib/chatClient'
 
 import { useState } from 'react'
 import clsx from 'clsx'
-import { WidgetCard } from '@/components/ui/WidgetCard'
-import { AIActions } from '@/components/ui/AIActions'
-import { QuickActions } from '@/components/ui/QuickActions'
+import { AkButton } from '@/components/ui/AkButton'
+import { 
+  DrawerHeader, 
+  DrawerCard, 
+  ActionGroup, 
+  ActionButton, 
+  DrawerEmptyState 
+} from '@/components/ui/drawer-kit'
+import { AkDrawerScaffold } from '@/components/ui/AkDrawerScaffold'
+import { AkBadge } from '@/components/ui/AkBadge'
+import { 
+  CpuChipIcon, 
+  SparklesIcon, 
+  PlayIcon, 
+  CommandLineIcon,
+  CheckCircleIcon,
+  BoltIcon,
+  PlusIcon
+} from '@heroicons/react/24/outline'
 
 type AutomationRun = {
   id: string
   dateTime: string
   resultLabel: 'Erfolgreich' | 'Warnung' | 'Fehlgeschlagen'
-  statusColor: 'success' | 'warning' | 'danger'
+  statusColor: 'success' | 'warning' | 'danger' | 'muted' | 'info' | 'accent'
   itemsProcessed: number
   summary: string
   errorNote?: string
@@ -85,412 +100,169 @@ const MOCK_RUNS: AutomationRun[] = [
   },
 ]
 
-
-
-type AutomationSuggestion = {
-  id: string
-  label: string
-  description: string
-  prompt: string
-}
-
-const AUTOMATION_SUGGESTIONS_BY_WORKFLOW: Record<string, AutomationSuggestion[]> = {
-  workflow_creation: [
-    {
-      id: 'automation.workflow.ticket_intake',
-      label: 'Ticket-Intake automatisieren',
-      description: 'Neue Support-Tickets automatisch triagieren und an das richtige Team leiten.',
-      prompt: 'Wenn in meinem Helpdesk ein neues Ticket erstellt wird, analysiere Thema und Priorität, erstelle eine Aufgabe im Projekt-Tool und informiere das verantwortliche Team.',
-    },
-    {
-      id: 'automation.workflow.onboarding',
-      label: 'Onboarding-Workflow aufsetzen',
-      description: 'Einen mehrstufigen Onboarding-Prozess für neue Kundinnen und Kunden definieren.',
-      prompt: 'Wenn ein neuer Kunde im CRM angelegt wird, starte einen Onboarding-Workflow mit Begrüßungs-E-Mail, Check-in nach 7 Tagen und Feedback-Abfrage nach 30 Tagen.',
-    },
-  ],
-  task_automation: [
-    {
-      id: 'automation.tasks.churn_risk',
-      label: 'Risiko-Kunden markieren',
-      description: 'Kunden mit niedrigem Engagement automatisch kennzeichnen und Aufgaben anlegen.',
-      prompt: 'Wenn ein bestehender Kunde sich seit 30 Tagen nicht eingeloggt hat, markiere ihn als Risiko und lege eine Aufgabe für das Customer-Success-Team an.',
-    },
-  ],
-  schedule_automation: [
-    {
-      id: 'automation.schedule.reporting',
-      label: 'Wöchentliche Reports planen',
-      description: 'Regelmäßige Report-Erstellung und Versand automatisieren.',
-      prompt: 'Erstelle jeden Montagmorgen einen Performance-Report der letzten Woche und sende ihn automatisch an das Team.',
-    },
-  ],
-  email_automation: [
-    {
-      id: 'automation.email.followup',
-      label: 'Follow-up Sequenz bauen',
-      description: 'Automatische Erinnerungs-E-Mails nach Formular- oder Demo-Anfragen einrichten.',
-      prompt: 'Wenn jemand ein Demo-Formular absendet, sende nach 2 Tagen eine Follow-up-Mail und nach 7 Tagen eine zweite Erinnerung, falls noch keine Antwort erfolgt ist.',
-    },
-  ],
-  approval_workflows: [
-    {
-      id: 'automation.approval.discounts',
-      label: 'Rabatt-Genehmigungen steuern',
-      description: 'Genehmigungsprozess für hohe Rabatte oder Sonderkonditionen aufsetzen.',
-      prompt: 'Wenn ein Rabatt von mehr als 20 Prozent eingetragen wird, leite die Anfrage an das Management zur Genehmigung weiter und blockiere die Freigabe bis zur Bestätigung.',
-    },
-  ],
-  report_automation: [
-    {
-      id: 'automation.reporting.summary',
-      label: 'Kompakte Management-Reports erzeugen',
-      description: 'Verdichtete Zusammenfassungen für die Geschäftsführung erstellen.',
-      prompt: 'Fasse jeden Freitag die wichtigsten KPIs der Woche aus CRM und Support-System in einem Management-Report zusammen.',
-    },
-  ],
-}
-
-const getSuggestionsForWorkflow = (workflowId: string | null): AutomationSuggestion[] => {
-  if (!workflowId) return []
-  return AUTOMATION_SUGGESTIONS_BY_WORKFLOW[workflowId] ?? []
-}
-
-const STATUS_COLORS = {
-  success: 'bg-green-100 text-green-700 border-green-200',
-  warning: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  danger: 'bg-red-100 text-red-700 border-red-200',
-} as const
-
 export function AutomationDetailPanel({ workflowId }: AutomationDetailPanelProps) {
   const [aiPrompt, setAiPrompt] = useState<string>('')
-  const [preview, setPreview] = useState<AutomationPreview>(MOCK_PREVIEW)
+  const [preview] = useState<AutomationPreview>(MOCK_PREVIEW)
   const [runs] = useState<AutomationRun[]>(MOCK_RUNS)
   const [selectedRunId, setSelectedRunId] = useState<string | null>('run_2')
-  const [currentWorkflow] = useState<{ id: string; name: string } | null>(
-    workflowId ? { id: workflowId, name: 'Ticket-Intake (Zendesk → Asana)' } : null,
-  )
-
-  const [isSendingSuggestion, setIsSendingSuggestion] = useState(false)
-  const suggestions = getSuggestionsForWorkflow(workflowId ?? null)
-
-  const handleGenerate = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    const prompt = formData.get('ai.prompt') as string
-    setAiPrompt(prompt)
-    
-    try {
-      // Send to AI for workflow generation
-      await sendChatMessage({
-        tenantId: 'demo-tenant',
-        sessionId: 'automation-panel',
-        channel: 'web_chat',
-        message: `Erstelle einen Workflow: ${prompt}`,
-        metadata: {
-          source: 'automation_panel',
-          action: 'generate-workflow',
-          workflowId,
-        },
-      })
-      
-      // Simulate AI generation (will be replaced with actual API response)
-      setPreview({
-        hasPreview: true,
-        adoptEnabled: true,
-        trigger: `Wenn ${prompt}`,
-        steps: ['Schritt 1', 'Schritt 2', 'Schritt 3'],
-        goals: ['Ziel 1', 'Ziel 2'],
-      })
-    } catch (error) {
-      console.error('Error generating workflow:', error)
-    }
-  }
-
-  const handleExtend = async () => {
-    try {
-      await sendChatMessage({
-        tenantId: 'demo-tenant',
-        sessionId: 'automation-panel',
-        channel: 'web_chat',
-        message: `Erweitere Workflow ${workflowId} mit zusätzlichen Schritten`,
-        metadata: {
-          source: 'automation_panel',
-          action: 'extend-workflow',
-          workflowId,
-        },
-      })
-      window.dispatchEvent(
-        new CustomEvent('aklow-notification', {
-          detail: { type: 'info', message: 'Workflow-Erweiterung wird generiert...' }
-        })
-      )
-    } catch (error) {
-      console.error('Error extending workflow:', error)
-    }
-  }
-
-  const handleAdopt = async () => {
-    try {
-      // Trigger workflow creation/update
-      const response = await fetch('/api/automation/workflows', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'trigger',
-          workflow_id: workflowId,
-          tenant_id: 'default-tenant',
-          inputs: {
-            trigger: preview.trigger,
-            steps: preview.steps,
-            goals: preview.goals,
-          },
-        }),
-      })
-      
-      if (response.ok) {
-        window.dispatchEvent(
-          new CustomEvent('aklow-notification', {
-            detail: { type: 'success', message: 'Workflow übernommen' }
-          })
-        )
-      }
-    } catch (error) {
-      console.error('Error adopting workflow:', error)
-      window.dispatchEvent(
-        new CustomEvent('aklow-notification', {
-          detail: { type: 'error', message: 'Fehler beim Übernehmen' }
-        })
-      )
-    }
-  }
-
-  const handleSuggestionClick = async (s: AutomationSuggestion) => {
-  setAiPrompt(s.prompt)
-  setIsSendingSuggestion(true)
-  try {
-    await sendChatMessage({
-      tenantId: 'demo-tenant',
-      sessionId: 'automation-panel',
-      channel: 'web_chat',
-      message: s.prompt,
-      metadata: {
-        source: 'automation_panel',
-        suggestionId: s.id,
-        workflowId,
-      },
-    })
-  } catch (error) {
-    console.error('Error sending automation suggestion to agent', error)
-  } finally {
-    setIsSendingSuggestion(false)
-  }
-}
-
-const handleRunSelect = (id: string) => {
-    setSelectedRunId(selectedRunId === id ? null : id)
-  }
-
+  
   if (!workflowId) {
     return (
-      <div className="flex h-full items-center justify-center p-4">
-        <div className="text-center text-sm text-slate-500">
-          <p className="font-medium text-slate-600">Wähle eine Automatisierung aus</p>
-          <p className="mt-1">Klicke auf eine Automatisierung in der linken Sidebar.</p>
-        </div>
-      </div>
+      <AkDrawerScaffold
+        title={<DrawerHeader title="Automatisierung" subtitle="Kein Workflow" />}
+        headerClassName="!p-0"
+        bodyClassName="h-full"
+      >
+        <DrawerEmptyState
+          icon={<CpuChipIcon className="h-10 w-10" />}
+          title="Kein Workflow ausgewählt"
+          description="Wähle einen Workflow aus der Liste aus oder erstelle einen neuen mit KI-Unterstützung."
+          primaryAction={{
+            label: "KI-Workflow erstellen",
+            shortcut: "N",
+            onClick: () => console.log('New')
+          }}
+          secondaryActions={[
+            { label: "Alle Vorlagen", shortcut: "V", onClick: () => console.log('Templates') },
+            { label: "Doku", shortcut: "?", onClick: () => console.log('Docs') }
+          ]}
+        />
+      </AkDrawerScaffold>
     )
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 overflow-y-auto">
-      <WidgetCard padding="sm">
-        <div className="flex flex-col gap-3">
-          <h2 className="ak-heading">KI-Workflow-Designer</h2>
-          
-          {/* AI Suggestions & Quick Actions - in der Mitte */}
-          <div className="mb-4 flex flex-col gap-3 px-3 py-3 bg-[var(--ak-color-bg-surface-muted)]/50 rounded-xl border border-[var(--ak-color-border-subtle)]">
-            <AIActions context="automation" />
-            <QuickActions context="automation" />
-          </div>
-
-
-{suggestions.length > 0 && (
-  <div className="flex flex-col gap-2 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] px-3 py-2">
-    <p className="ak-caption text-[var(--ak-color-text-secondary)]">
-      Starte mit einem dieser Automatisierungs-Vorschläge
-    </p>
-    <div className="grid gap-2 sm:grid-cols-2">
-      {suggestions.map((s) => (
-        <button
-          key={s.id}
-          type="button"
-          onClick={() => handleSuggestionClick(s)}
-          disabled={isSendingSuggestion}
-          className={clsx(
-            'group flex flex-col items-start rounded-md border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-2 text-left text-sm transition-colors hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]',
-            isSendingSuggestion ? 'opacity-70 cursor-wait' : '',
-          )}
-        >
-          <span className="font-medium text-[var(--ak-color-text-primary)]">
-            {s.label}
-          </span>
-          <span className="ak-caption mt-0.5 text-[var(--ak-color-text-secondary)]">
-            {s.description}
-          </span>
-        </button>
-      ))}
-    </div>
-  </div>
-)}
-
-<form onSubmit={handleGenerate}>
-
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1">
-                <label htmlFor="ai.prompt" className="ak-body font-medium text-[var(--ak-color-text-primary)]">
-                  Beschreibe deinen Workflow in eigenen Worten …
-                </label>
-                <textarea
-                  id="ai.prompt"
-                  name="ai.prompt"
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  placeholder="z. B. Wenn ein Ticket erstellt wird, prüfe Priorität, erstelle Aufgabe und benachrichtige Team."
-                  rows={5}
-                  className="w-full rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-2 text-sm text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-muted)] focus:border-[var(--ak-color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--ak-color-accent)]"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center rounded-lg border border-[var(--ak-color-accent)] bg-[var(--ak-color-accent)] px-3 py-1.5 text-sm font-medium text-white transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-accent)]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
-                >
-                  Vorschlag generieren
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExtend}
-                  className="inline-flex items-center justify-center rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-3 py-1.5 text-sm font-medium text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25"
-                >
-                  Workflow erweitern
-                </button>
-              </div>
+    <div className="h-full grid grid-cols-1 lg:grid-cols-[minmax(0,1fr),360px]">
+      <AkDrawerScaffold
+        title={<DrawerHeader 
+          title="KI-Workflow-Designer" 
+          subtitle="Ticket-Intake (Zendesk → Asana)"
+          status={{ label: 'Aktiv', tone: 'success' }}
+        />}
+        headerClassName="!p-0"
+        bodyClassName="p-4 space-y-6 ak-scrollbar bg-[var(--ak-color-bg-app)]"
+      >
+        {/* Designer Card */}
+        <DrawerCard title="KI-Unterstützung">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="ai.prompt" className="text-xs font-semibold text-[var(--ak-color-text-secondary)]">
+                Workflow-Beschreibung
+              </label>
+              <textarea
+                id="ai.prompt"
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Beschreibe den Workflow in eigenen Worten..."
+                rows={4}
+                className="w-full rounded-xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] p-3 text-sm text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-muted)] focus:border-[var(--ak-color-accent)] focus:outline-none focus:ring-1 focus:ring-[var(--ak-color-accent)] transition-all"
+              />
             </div>
-          </form>
+            <div className="flex gap-2">
+              <AkButton variant="primary" size="sm" className="flex-1" leftIcon={<SparklesIcon className="h-4 w-4" />}>
+                Vorschlag generieren
+              </AkButton>
+              <AkButton variant="secondary" size="sm" leftIcon={<PlusIcon className="h-4 w-4" />}>
+                Erweitern
+              </AkButton>
+            </div>
+          </div>
+        </DrawerCard>
 
-          {preview.hasPreview && (
-            <>
-              <div className="h-px bg-[var(--ak-color-border-subtle)]" />
-
-              <div className="rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] p-3">
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="ak-heading">Vorschau</h3>
-                    {preview.adoptEnabled && (
-                      <button
-                        type="button"
-                        onClick={handleAdopt}
-                        className="inline-flex items-center justify-center rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] px-2.5 py-1 text-xs font-medium text-[var(--ak-color-text-primary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)]"
-                      >
-                        In Builder übernehmen
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <p className="ak-caption font-medium text-[var(--ak-color-text-secondary)]">Trigger</p>
-                    <p className="ak-body text-sm text-[var(--ak-color-text-primary)]">{preview.trigger}</p>
-
-                    <p className="ak-caption font-medium text-[var(--ak-color-text-secondary)]">Hauptschritte</p>
-                    <div className="flex flex-col gap-1">
-                      {preview.steps.map((step, i) => (
-                        <p key={`step-${i}`} className="ak-body text-sm text-[var(--ak-color-text-primary)]">
-                          • {step}
-                        </p>
-                      ))}
+        {/* Preview Card */}
+        {preview.hasPreview && (
+          <DrawerCard title="Vorschau & Logik" className="border-indigo-100 bg-indigo-50/10">
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold uppercase text-indigo-600 tracking-wider">Trigger</p>
+                <p className="text-sm text-[var(--ak-color-text-primary)] font-medium">{preview.trigger}</p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold uppercase text-indigo-600 tracking-wider">Schritte</p>
+                <div className="space-y-1.5">
+                  {preview.steps.map((step, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs text-[var(--ak-color-text-secondary)]">
+                      <div className="h-1 w-1 rounded-full bg-indigo-400" />
+                      <span>{step}</span>
                     </div>
-
-                    <p className="ak-caption font-medium text-[var(--ak-color-text-secondary)]">Ziele</p>
-                    <div className="flex flex-col gap-1">
-                      {preview.goals.map((goal, i) => (
-                        <p key={`goal-${i}`} className="ak-body text-sm text-[var(--ak-color-text-primary)]">
-                          • {goal}
-                        </p>
-                      ))}
-                    </div>
-
-                    <p className="ak-caption text-xs text-[var(--ak-color-text-muted)]">
-                      Klick auf &quot;In Builder übernehmen&quot; fügt die vorgeschlagenen Schritte in den visuellen Builder ein und aktualisiert bestehende Blöcke, falls vorhanden.
-                    </p>
-                  </div>
+                  ))}
                 </div>
               </div>
-            </>
-          )}
-        </div>
-      </WidgetCard>
+              <AkButton variant="secondary" size="sm" className="w-full text-indigo-700 bg-indigo-50 border-indigo-100 hover:bg-indigo-100">
+                In Builder übernehmen
+              </AkButton>
+            </div>
+          </DrawerCard>
+        )}
 
-      <WidgetCard padding="sm">
-        <div className="flex flex-col gap-3">
-          <h2 className="ak-heading">Letzte Ausführungen</h2>
-          <p className="ak-caption text-[var(--ak-color-text-secondary)]">
-            {currentWorkflow?.name
-              ? `Gefiltert nach: ${currentWorkflow.name}`
-              : 'Kein Workflow ausgewählt'}
-          </p>
-
-          <div className="flex flex-col gap-2">
+        {/* History Card */}
+        <DrawerCard title="Letzte Ausführungen">
+          <div className="space-y-2">
             {runs.map((run) => (
               <button
                 key={run.id}
-                type="button"
-                onClick={() => handleRunSelect(run.id)}
-                className="group flex w-full flex-col gap-2 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]/80 p-3 text-left transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] hover:border-[var(--ak-color-border-strong)] hover:bg-[var(--ak-color-bg-surface-muted)] hover:shadow-[var(--ak-shadow-card)]"
+                onClick={() => setSelectedRunId(selectedRunId === run.id ? null : run.id)}
+                className={clsx(
+                  "w-full flex flex-col gap-2 p-3 rounded-xl border transition-all text-left group",
+                  selectedRunId === run.id
+                    ? "bg-[var(--ak-color-bg-surface)] border-[var(--ak-color-border-strong)] shadow-md"
+                    : "bg-[var(--ak-color-bg-surface-muted)] border-transparent hover:border-[var(--ak-color-border-subtle)] hover:bg-[var(--ak-color-bg-hover)]"
+                )}
               >
                 <div className="flex items-center justify-between">
-                  <p className="ak-body text-sm text-[var(--ak-color-text-primary)]">{run.dateTime}</p>
-                  <span
-                    className={clsx(
-                      'inline-flex items-center rounded-[var(--ak-radius-md)] border px-2 py-0.5 text-[11px] font-medium',
-                      STATUS_COLORS[run.statusColor],
-                    )}
-                  >
-                    {run.resultLabel}
-                  </span>
+                  <span className="text-xs font-bold text-[var(--ak-color-text-primary)]">{run.dateTime}</span>
+                  <AkBadge tone={run.statusColor as 'success' | 'warning' | 'danger' | 'muted' | 'info' | 'accent'} size="sm">{run.resultLabel}</AkBadge>
                 </div>
-                <p className="ak-caption text-[var(--ak-color-text-secondary)]">
-                  Elemente: {run.itemsProcessed}
-                </p>
-
+                <div className="flex items-center gap-3 text-[10px] text-[var(--ak-color-text-muted)] font-medium">
+                  <span>Elemente: {run.itemsProcessed}</span>
+                  {run.metrics.map((m: { label: string; value: string }, idx: number) => (
+                    <span key={idx}>{m.label}: {m.value}</span>
+                  ))}
+                </div>
                 {selectedRunId === run.id && (
-                  <div className="mt-2 rounded-md border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] p-2">
-                    <div className="flex flex-col gap-2">
-                      <p className="ak-body text-sm text-[var(--ak-color-text-primary)]">{run.summary}</p>
-                      {run.errorNote && (
-                        <p className="ak-body text-sm text-red-600">{run.errorNote}</p>
-                      )}
-                      {run.metrics.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-2">
-                          {run.metrics.map((m, idx) => (
-                            <span
-                              key={`${run.id}-m${idx}`}
-                              className="inline-flex items-center rounded-[var(--ak-radius-md)] border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700"
-                            >
-                              {m.label}: {m.value}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                  <div className="mt-1 pt-2 border-t border-[var(--ak-color-border-hairline)] text-xs text-[var(--ak-color-text-secondary)] leading-relaxed">
+                    {run.summary}
+                    {run.errorNote && <p className="text-red-600 mt-1 font-bold">{run.errorNote}</p>}
                   </div>
                 )}
               </button>
             ))}
           </div>
-        </div>
-      </WidgetCard>
+        </DrawerCard>
+      </AkDrawerScaffold>
+
+      {/* Right Inspector */}
+      <div className="border-l border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] dark:bg-[var(--ak-color-graphite-surface)] p-4 space-y-4 overflow-y-auto ak-scrollbar">
+        <DrawerCard title="KI-Assistent Aktionen">
+          <div className="space-y-4">
+            <ActionGroup label="Verstehen">
+              <ActionButton icon={<BoltIcon className="h-3.5 w-3.5" />} label="Analyse" shortcut="A" />
+              <ActionButton icon={<SparklesIcon className="h-3.5 w-3.5" />} label="Optimieren" shortcut="O" />
+            </ActionGroup>
+            
+            <ActionGroup label="Prüfen">
+              <ActionButton icon={<CommandLineIcon className="h-3.5 w-3.5" />} label="Logs scannen" shortcut="L" />
+            </ActionGroup>
+
+            <ActionGroup label="Handeln">
+              <ActionButton icon={<PlayIcon className="h-3.5 w-3.5" />} label="Testlauf" shortcut="T" />
+            </ActionGroup>
+          </div>
+        </DrawerCard>
+
+        <DrawerCard className="opacity-60" title="Verbindungen">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-xs text-[var(--ak-color-text-secondary)] font-medium">
+              <CheckCircleIcon className="h-4 w-4 text-green-500" />
+              <span>Zendesk API (verbunden)</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-[var(--ak-color-text-secondary)] font-medium">
+              <CheckCircleIcon className="h-4 w-4 text-green-500" />
+              <span>Asana API (verbunden)</span>
+            </div>
+          </div>
+        </DrawerCard>
+      </div>
     </div>
   )
 }

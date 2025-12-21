@@ -159,6 +159,54 @@
     "error": "Error",
     "success": "Éxito",
     "warning": "Advertencia",
-    "info": "Información"
+    "info": "Información",
+    "copy": "Copiar",
+    "saved": "Guardado"
+  },
+  "chat": {
+    "edit": "Editar",
+    "copy": "Copiar",
+    "retry": "Reenviar",
+    "readAloud": "Leer en voz alta",
+    "stopReadAloud": "Dejar de leer",
+    "save": "Guardar",
+    "saved": "Guardado",
+    "feedback": {
+      "good": "Bueno",
+      "bad": "Malo"
+    },
+    "quickActions": "Acciones rápidas",
+    "regenerate": "Regenerar",
+    "showThinking": "Mostrar razonamiento",
+    "thinking": "Pensando...",
+    "jumpToBottom": "Ir al final",
+    "closeHint": "Cerrar pista",
+    "openMenu": "Abrir menú",
+    "microphone": "Micrófono",
+    "send": "Enviar",
+    "stopGenerating": "Detener",
+    "errorSending": "Error al enviar"
+  },
+  "workspace": {
+    "addons": "Complementos",
+    "dashboards": "Paneles",
+    "wizards": "Asistentes",
+    "onboardings": "Onboardings",
+    "wizardsAndOnboardings": "Asistentes y Onboardings",
+    "settings": "Configuración",
+    "notifications": "Notificaciones",
+    "showDashboard": "Mostrar panel",
+    "collapsePanel": "Contraer panel",
+    "resize": "Cambiar tamaño",
+    "expand": "Expandir",
+    "collapse": "Contraer",
+    "allDashboards": "Todos los Paneles",
+    "allWizards": "Asistentes",
+    "allOnboardings": "Onboardings",
+    "showAll": "Mostrar todo"
+  },
+  "news": {
+    "loading": "Cargando noticias personales…",
+    "noRecommendations": "Aún no hay recomendaciones – inicia una conversación para que pueda conocer mejor tus intereses."
   }
 }

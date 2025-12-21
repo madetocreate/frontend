@@ -94,6 +94,16 @@ const DEFAULT_QUICK_ACTIONS: Record<AIActionContext, QuickAction[]> = {
     { id: 'quick-checkin', label: 'Check-in', icon: BoltIcon },
     { id: 'quick-invoice', label: 'Rechnung', icon: BoltIcon },
   ],
+  shield: [
+    { id: 'quick-policy', label: 'Policy prüfen', icon: BoltIcon },
+    { id: 'quick-pii', label: 'PII Scan', icon: BoltIcon },
+    { id: 'quick-risk', label: 'Risiko-Report', icon: BoltIcon },
+  ],
+  website: [
+    { id: 'quick-optimize', label: 'Widget optimieren', icon: BoltIcon },
+    { id: 'quick-analyze', label: 'Traffic analysieren', icon: BoltIcon },
+    { id: 'quick-snippets', label: 'Snippets', icon: BoltIcon },
+  ],
 }
 
 export function QuickActions({ 
@@ -122,7 +132,7 @@ export function QuickActions({
             key={action.id}
             type="button"
             onClick={action.onClick}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-gray-50 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-all duration-150 text-[11px] font-medium text-gray-700 hover:text-gray-900 active:scale-95"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)] hover:bg-[var(--ak-color-bg-hover)] hover:border-[var(--ak-color-border-strong)] transition-all duration-150 text-[11px] font-medium text-[var(--ak-color-text-secondary)] hover:text-[var(--ak-color-text-primary)] active:scale-95"
             title={action.label}
           >
             <Icon className="h-3 w-3" />

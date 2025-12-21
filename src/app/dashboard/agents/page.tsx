@@ -84,6 +84,22 @@ export default function AgentMonitoringDashboard() {
   }
 
   const agents = metrics?.agents || [];
+  const totalExecutions = agents.reduce((sum, a) => sum + (a.total_executions || 0), 0);
+
+  const toPercent = (value: number | undefined) => {
+    if (value === undefined || Number.isNaN(value)) return 0;
+    return value > 1 ? value : value * 100;
+  };
+  const avgSuccessRate =
+    agents.length > 0
+      ? (() => {
+          const sum = agents.reduce((acc, a) => {
+            const rate = a.success_rate > 1 ? a.success_rate : a.success_rate * 100;
+            return acc + rate;
+          }, 0);
+          return sum / agents.length;
+        })()
+      : 0;
 
   return (
     <div className="container mx-auto p-6">
@@ -123,7 +139,7 @@ export default function AgentMonitoringDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {agents.reduce((sum, a) => sum + a.total_executions, 0)}
+                  {totalExecutions}
                 </div>
               </CardContent>
             </Card>
@@ -136,13 +152,7 @@ export default function AgentMonitoringDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {agents.length > 0
-                    ? (
-                        agents.reduce((sum, a) => sum + a.success_rate, 0) /
-                        agents.length
-                      ).toFixed(1)
-                    : 0}
-                  %
+                  {avgSuccessRate.toFixed(1)}%
                 </div>
               </CardContent>
             </Card>
@@ -200,7 +210,7 @@ export default function AgentMonitoringDashboard() {
                             Success Rate
                           </div>
                           <div className="font-semibold">
-                            {(agent.success_rate * 100).toFixed(1)}%
+                          {toPercent(agent.success_rate).toFixed(1)}%
                           </div>
                         </div>
                         <div className="text-right">
@@ -257,7 +267,7 @@ export default function AgentMonitoringDashboard() {
                         Error Rate
                       </div>
                       <div className="text-2xl font-bold text-red-500">
-                        {(agent.error_rate * 100).toFixed(1)}%
+                          {toPercent(agent.error_rate).toFixed(1)}%
                       </div>
                     </div>
                     <div>

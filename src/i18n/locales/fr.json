@@ -159,6 +159,54 @@
     "error": "Erreur",
     "success": "Succès",
     "warning": "Avertissement",
-    "info": "Information"
+    "info": "Information",
+    "copy": "Copier",
+    "saved": "Enregistré"
+  },
+  "chat": {
+    "edit": "Modifier",
+    "copy": "Copier",
+    "retry": "Renvoyer",
+    "readAloud": "Lire à haute voix",
+    "stopReadAloud": "Arrêter la lecture",
+    "save": "Enregistrer",
+    "saved": "Enregistré",
+    "feedback": {
+      "good": "Bien",
+      "bad": "Mauvais"
+    },
+    "quickActions": "Actions rapides",
+    "regenerate": "Régénérer",
+    "showThinking": "Afficher le raisonnement",
+    "thinking": "Réflexion...",
+    "jumpToBottom": "Aller en bas",
+    "closeHint": "Fermer l'indice",
+    "openMenu": "Ouvrir le menu",
+    "microphone": "Microphone",
+    "send": "Envoyer",
+    "stopGenerating": "Arrêter",
+    "errorSending": "Erreur lors de l'envoi"
+  },
+  "workspace": {
+    "addons": "Modules complémentaires",
+    "dashboards": "Tableaux de bord",
+    "wizards": "Assistants",
+    "onboardings": "Onboardings",
+    "wizardsAndOnboardings": "Assistants et Onboardings",
+    "settings": "Paramètres",
+    "notifications": "Notifications",
+    "showDashboard": "Afficher le tableau de bord",
+    "collapsePanel": "Réduire le panneau",
+    "resize": "Redimensionner",
+    "expand": "Agrandir",
+    "collapse": "Réduire",
+    "allDashboards": "Tous les Tableaux de bord",
+    "allWizards": "Assistants",
+    "allOnboardings": "Onboardings",
+    "showAll": "Tout afficher"
+  },
+  "news": {
+    "loading": "Chargement des actualités personnelles…",
+    "noRecommendations": "Pas encore de recommandations – démarre une conversation pour que je puisse mieux connaître tes intérêts."
   }
 }

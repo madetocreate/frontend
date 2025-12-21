@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 import { AIActions } from '@/components/ui/AIActions'
 import { QuickActions } from '@/components/ui/QuickActions'
+import { RefreshCcw } from 'lucide-react'
 
 export type SettingsCategory = 'general' | 'memory_crm' | 'notifications' | 'personalization' | 'apps_connectors' | 'schedules' | 'data_controls' | 'security' | 'parental' | 'account' | 'shop'
 
@@ -440,6 +441,29 @@ export function SettingsDetailPanel({ category }: SettingsDetailPanelProps) {
               onChange={(e) => handleSettingsChange('workspace.autoSwitchByContext', e.target.checked)}
               className="h-5 w-5 rounded border-slate-300 text-slate-600 focus:ring-2 focus:ring-slate-200"
             />
+          </div>
+        </div>
+
+        <div className="h-px bg-slate-200" />
+
+        {/* ONBOARDING */}
+        <div className="flex flex-col gap-3">
+          <p className="ak-caption uppercase tracking-wide text-slate-400">ONBOARDING</p>
+          
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex w-[220px] flex-col gap-0">
+              <p className="ak-body font-semibold">Assistent neu starten</p>
+              <p className="ak-caption text-slate-500">
+                Führe das initiale Onboarding erneut durch, um deinen Startpunkt neu zu bestimmen.
+              </p>
+            </div>
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('aklow-restart-onboarding'))}
+              className="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors"
+            >
+              <RefreshCcw className="h-4 w-4" />
+              Onboarding neu starten
+            </button>
           </div>
         </div>
       </div>

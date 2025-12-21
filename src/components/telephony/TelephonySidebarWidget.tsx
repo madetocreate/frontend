@@ -1,25 +1,20 @@
 'use client'
 
+import React, { useState, useMemo } from 'react'
 import {
   PhoneIcon,
   TableCellsIcon,
   Cog6ToothIcon,
-  QueueListIcon
+  QueueListIcon,
+  MicrophoneIcon,
 } from '@heroicons/react/24/outline'
-import clsx from 'clsx'
-import { AkListRow } from '@/components/ui/AkListRow'
-import { WidgetCard } from '@/components/ui/WidgetCard'
+import { SidebarHeader } from '@/components/ui/SidebarHeader'
+import { SidebarFooter } from '@/components/ui/SidebarFooter'
+import { 
+  DrawerListRow
+} from '@/components/ui/drawer-kit'
 
 export type TelephonyView = 'overview' | 'logs' | 'configuration' | 'numbers'
-
-export type TelephonyItem = {
-  id: string
-  title: string
-  caller?: string
-  duration?: string
-  mode?: 'reservierung' | 'termine' | 'support' | 'mailbox'
-  timestamp?: string
-}
 
 import type { ComponentType } from 'react'
 
@@ -33,45 +28,60 @@ const VIEWS: { id: TelephonyView; label: string; icon: ComponentType<{ className
 type TelephonySidebarWidgetProps = {
   activeView: TelephonyView
   onViewSelect: (view: TelephonyView) => void
+  onToggleInspector?: () => void
 }
 
 export function TelephonySidebarWidget({
   activeView,
   onViewSelect,
+  onToggleInspector,
 }: TelephonySidebarWidgetProps) {
+  const [search, setSearch] = useState('')
+
+  const filteredViews = useMemo(() => {
+    if (!search) return VIEWS
+    return VIEWS.filter(v => v.label.toLowerCase().includes(search.toLowerCase()))
+  }, [search])
+
   return (
-    <WidgetCard
-      title="Telefon-Assistent"
-      subtitle="Voice & Reservierungen"
-      className="h-full border-none shadow-none bg-transparent"
-      padding="sm"
-    >
-      <ul className="flex flex-col gap-1">
-        {VIEWS.map((view) => {
-          const isActive = view.id === activeView
-          const Icon = view.icon
-          return (
-            <li key={view.id}>
-              <AkListRow
-                accent="telephony"
-                selected={isActive}
-                title={view.label}
-                leading={
-                  <Icon
-                    className={clsx(
-                      'h-5 w-5',
-                      isActive
-                        ? 'text-[var(--ak-color-text-primary)]'
-                        : 'text-[var(--ak-color-text-secondary)]',
-                    )}
+    <div className="flex h-full flex-col bg-transparent">
+      <SidebarHeader 
+        title="Telefon-Bot" 
+        onSearch={setSearch} 
+        onToggleInspector={onToggleInspector} 
+      />
+
+      <div className="flex-1 overflow-y-auto ak-scrollbar px-2 pb-4 mt-4">
+        <div className="flex flex-col gap-6">
+          <ul className="flex flex-col gap-0.5">
+            {filteredViews.map((view) => {
+              const isActive = view.id === activeView
+              const Icon = view.icon
+              return (
+                <li key={view.id}>
+                  <DrawerListRow
+                    accent="settings"
+                    selected={isActive}
+                    title={<span className="text-[15px] font-medium">{view.label}</span>}
+                    leading={<Icon className="h-5 w-5" />}
+                    className="py-3"
+                    onClick={() => onViewSelect(view.id)}
                   />
-                }
-                onClick={() => onViewSelect(view.id)}
-              />
-            </li>
-          )
-        })}
-      </ul>
-    </WidgetCard>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      </div>
+
+      <SidebarFooter 
+        primaryAction={{
+          label: 'Realtime Voice',
+          icon: MicrophoneIcon,
+          onClick: () => {}
+        }}
+        status={{ label: 'v1.2.0', tone: 'neutral' }}
+      />
+    </div>
   )
 }

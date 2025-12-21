@@ -4,13 +4,11 @@ import { useState, useEffect } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 
 interface FeedbackMetrics {
-  total: number;
-  positive: number;
-  negative: number;
-  positive_rate: number;
-  negative_rate: number;
-  recent_positive: number;
-  recent_negative: number;
+  total_feedback?: number;
+  thumbs_up_count?: number;
+  thumbs_down_count?: number;
+  average_rating?: number;
+  positive_feedback_rate?: number; // may be 0..1 or percentage
 }
 
 export default function QualityDashboardPage() {
@@ -67,6 +65,13 @@ export default function QualityDashboardPage() {
     );
   }
 
+  const total = metrics.total_feedback ?? 0;
+  const positive = metrics.thumbs_up_count ?? 0;
+  const negative = metrics.thumbs_down_count ?? 0;
+  const rawPositiveRate = metrics.positive_feedback_rate;
+  const positiveRate = rawPositiveRate !== undefined ? (rawPositiveRate > 1 ? rawPositiveRate : rawPositiveRate * 100) : undefined;
+  const negativeRate = positiveRate !== undefined ? Math.max(0, 100 - positiveRate) : undefined;
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-6">
@@ -80,61 +85,52 @@ export default function QualityDashboardPage() {
         <WidgetCard padding="md">
           <div className="text-sm text-[var(--ak-color-text-muted)] mb-1">Gesamt Feedback</div>
           <div className="text-2xl font-bold text-[var(--ak-color-text-primary)]">
-            {metrics.total}
+            {total}
           </div>
         </WidgetCard>
 
         <WidgetCard padding="md">
           <div className="text-sm text-[var(--ak-color-text-muted)] mb-1">Positive</div>
-          <div className="text-2xl font-bold text-green-600">{metrics.positive}</div>
+          <div className="text-2xl font-bold text-green-600">{positive}</div>
           <div className="text-xs text-[var(--ak-color-text-muted)] mt-1">
-            {metrics.positive_rate.toFixed(1)}%
+            {positiveRate !== undefined ? `${positiveRate.toFixed(1)}%` : "–"}
           </div>
         </WidgetCard>
 
         <WidgetCard padding="md">
           <div className="text-sm text-[var(--ak-color-text-muted)] mb-1">Negative</div>
-          <div className="text-2xl font-bold text-red-600">{metrics.negative}</div>
+          <div className="text-2xl font-bold text-red-600">{negative}</div>
           <div className="text-xs text-[var(--ak-color-text-muted)] mt-1">
-            {metrics.negative_rate.toFixed(1)}%
+            {negativeRate !== undefined ? `${negativeRate.toFixed(1)}%` : "–"}
           </div>
         </WidgetCard>
 
         <WidgetCard padding="md">
           <div className="text-sm text-[var(--ak-color-text-muted)] mb-1">Zufriedenheitsrate</div>
           <div className="text-2xl font-bold text-[var(--ak-color-text-primary)]">
-            {metrics.positive_rate.toFixed(1)}%
+            {positiveRate !== undefined ? `${positiveRate.toFixed(1)}%` : "–"}
           </div>
         </WidgetCard>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <WidgetCard padding="md">
-          <h3 className="ak-heading text-sm font-semibold mb-4">Letzte 24 Stunden</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-[var(--ak-color-text-muted)]">Positive</span>
-              <span className="text-sm font-medium text-green-600">
-                {metrics.recent_positive}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-[var(--ak-color-text-muted)]">Negative</span>
-              <span className="text-sm font-medium text-red-600">
-                {metrics.recent_negative}
-              </span>
-            </div>
+          <h3 className="ak-heading text-sm font-semibold mb-4">Durchschnittsbewertung</h3>
+          <div className="text-2xl font-bold text-[var(--ak-color-text-primary)]">
+            {metrics.average_rating !== undefined ? metrics.average_rating.toFixed(1) : "–"}
+          </div>
+          <div className="text-xs text-[var(--ak-color-text-muted)] mt-1">
+            Skala 1-5
           </div>
         </WidgetCard>
 
         <WidgetCard padding="md">
-          <h3 className="ak-heading text-sm font-semibold mb-4">Trend</h3>
-          <div className="text-sm text-[var(--ak-color-text-muted)]">
-            {metrics.recent_positive > metrics.recent_negative
-              ? "📈 Verbesserung"
-              : metrics.recent_positive < metrics.recent_negative
-              ? "📉 Verschlechterung"
-              : "➡️ Stabil"}
+          <h3 className="ak-heading text-sm font-semibold mb-4">Positive Rate</h3>
+          <div className="text-2xl font-bold text-[var(--ak-color-text-primary)]">
+            {positiveRate !== undefined ? `${positiveRate.toFixed(1)}%` : "–"}
+          </div>
+          <div className="text-xs text-[var(--ak-color-text-muted)] mt-1">
+            Anteil positiver Feedbacks
           </div>
         </WidgetCard>
       </div>

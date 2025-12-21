@@ -1,45 +1,42 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+const BACKEND_URL = process.env.AGENT_BACKEND_URL || 'http://127.0.0.1:8000'
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const tenantId = searchParams.get("tenant_id");
-    const agentName = searchParams.get("agent_name");
-    const days = searchParams.get("days") || "7";
+    const searchParams = request.nextUrl.searchParams
+    const tenantId = searchParams.get('tenant_id') || 'demo-tenant'
+    const days = searchParams.get('days') || '7'
 
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: "tenant_id is required" },
-        { status: 400 }
-      );
-    }
-
-    const params = new URLSearchParams({
-      tenant_id: tenantId,
-      days,
-    });
-    if (agentName) params.append("agent_name", agentName);
-
-    const response = await fetch(`${BACKEND_URL}/feedback/metrics?${params.toString()}`);
+    const response = await fetch(`${BACKEND_URL}/feedback/metrics?tenant_id=${tenantId}&days=${days}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
 
     if (!response.ok) {
-      const error = await response.text();
-      return NextResponse.json(
-        { error: error || "Failed to fetch feedback metrics" },
-        { status: response.status }
-      );
+      // Return fallback metrics if endpoint fails
+      return NextResponse.json({
+         tenant_id: tenantId,
+         agent_name: 'all',
+         period_start: new Date().toISOString(),
+         period_end: new Date().toISOString(),
+         total_feedback: 0,
+         thumbs_up_count: 0,
+         thumbs_down_count: 0,
+         average_rating: 0,
+         positive_feedback_rate: 0
+      })
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    const data = await response.json()
+    return NextResponse.json(data)
   } catch (error) {
-    console.error("Error fetching feedback metrics:", error);
+    console.error('Feedback metrics API error:', error)
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 }
-    );
+    )
   }
 }
-

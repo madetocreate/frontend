@@ -3,7 +3,7 @@
 import { WidgetCard } from '@/components/ui/WidgetCard'
 import { AkBadge } from '@/components/ui/AkBadge'
 import { AkButton } from '@/components/ui/AkButton'
-import { BoltIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { BoltIcon, PlusIcon, SparklesIcon } from '@heroicons/react/24/outline'
 
 const WORKFLOWS = [
     { id: '1', name: 'New Lead Welcome', trigger: 'Lead Created', status: 'active', runs: 1245 },
@@ -23,6 +23,12 @@ export function GrowthAutomation() {
             </p>
         </div>
         <AkButton variant="primary" leftIcon={<PlusIcon className="h-4 w-4"/>}>Neuer Workflow</AkButton>
+      </div>
+
+      {/* AI Automation Insight */}
+      <div className="flex items-center gap-2 p-3 bg-purple-50/50 border border-purple-100 rounded-xl text-[11px] text-purple-700">
+          <SparklesIcon className="h-4 w-4 shrink-0" />
+          <span>KI-Tipp: Der &quot;New Lead Welcome&quot; Workflow hat eine 15% höhere Abschlussquote wenn er innerhalb von 5 Min läuft.</span>
       </div>
 
        <div className="grid grid-cols-1 gap-4">

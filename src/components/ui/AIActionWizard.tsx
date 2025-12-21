@@ -177,9 +177,11 @@ function ConfigurationStep({ data, onUpdate, onNext, onBack }: WizardStepProps) 
   )
 }
 
-function ProcessingStep({ onNext }: WizardStepProps) {
+function ProcessingStep({ context, action, data, onNext, onUpdate }: WizardStepProps) {
   const [progress, setProgress] = useState(0)
   const [currentStep, setCurrentStep] = useState(0)
+  const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<string | null>(null)
 
   const steps = [
     'Kontext analysieren...',
@@ -189,32 +191,99 @@ function ProcessingStep({ onNext }: WizardStepProps) {
   ]
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          setTimeout(() => onNext(), 500)
-          return 100
-        }
-        return prev + 2
-      })
-    }, 100)
+    let cancelled = false
 
-    const stepInterval = setInterval(() => {
-      setCurrentStep((prev) => {
-        if (prev >= steps.length - 1) {
-          clearInterval(stepInterval)
-          return prev
+    const executeAction = async () => {
+      try {
+        setCurrentStep(0) // Kontext analysieren
+        setProgress(25)
+
+        // Echter Chat-Call zum Backend (nicht Dummy)
+        const { sendChatMessage } = await import('@/lib/chatClient')
+        
+        // Baue Prompt aus Action + Context + Config
+        const config = (data.config as { tone?: string; length?: string; language?: string; includeContext?: boolean }) || {}
+        const includeContext = config.includeContext !== false
+        
+        // Context ist ein String (AIActionContext), kein Objekt
+        const contextText = typeof context === 'string' ? context : ''
+        
+        let prompt = action.label
+        if (action.description) {
+          prompt = `${prompt}: ${action.description}`
         }
-        return prev + 1
-      })
-    }, 800)
+        if (includeContext && contextText) {
+          prompt = `${prompt}\n\nKontext: ${contextText}`
+        }
+        if (config.tone) {
+          prompt = `${prompt}\n\nTon: ${config.tone}`
+        }
+        if (config.length) {
+          prompt = `${prompt}\n\nLänge: ${config.length}`
+        }
+        
+        // Chat-Call mit channel='ui_action_wizard'
+        const response = await sendChatMessage({
+          tenantId: 'aklow-main',
+          sessionId: `wizard-${action.id}-${Date.now()}`,
+          channel: 'ui_action_wizard',
+          message: prompt,
+          metadata: {
+            actionId: action.id,
+            actionLabel: action.label,
+            config: data.config,
+            context: includeContext ? context : undefined,
+          },
+        })
+
+        setCurrentStep(1) // Daten sammeln
+        setProgress(50)
+        setCurrentStep(2) // KI-Verarbeitung
+        setProgress(75)
+        
+        // Response ist ChatResponse mit content
+        const resultText = response.content || ''
+        setResult(resultText)
+        setCurrentStep(3) // Ergebnis generieren
+        setProgress(100)
+        onUpdate({ result: resultText })
+        setTimeout(() => onNext(), 500)
+      } catch (err) {
+        if (cancelled) return
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+        setError(errorMessage)
+        console.error('Action execution failed:', err)
+      }
+    }
+
+    executeAction()
 
     return () => {
-      clearInterval(interval)
-      clearInterval(stepInterval)
+      cancelled = true
     }
-  }, [onNext, steps.length])
+  }, [context, action, data, onNext, onUpdate])
+
+  if (error) {
+    return (
+      <div className="space-y-4 py-8 text-center">
+        <div className="p-4 bg-red-50 rounded-xl border border-red-200">
+          <p className="text-red-900 font-medium">Fehler</p>
+          <p className="text-sm text-red-700 mt-1">{error}</p>
+        </div>
+        <button
+          onClick={() => {
+            setError(null)
+            setProgress(0)
+            setCurrentStep(0)
+            setResult(null)
+          }}
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+        >
+          Erneut versuchen
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col items-center justify-center space-y-8 py-12">
@@ -273,21 +342,54 @@ function ProcessingStep({ onNext }: WizardStepProps) {
             </div>
           ))}
         </div>
+
+        {result && (
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 max-h-40 overflow-y-auto">
+            <p className="text-xs text-gray-600 font-medium mb-1">Vorschau:</p>
+            <p className="text-sm text-gray-700 whitespace-pre-wrap line-clamp-3">{result}</p>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-function ResultStep({ onBack }: WizardStepProps) {
-  const [result] = useState({
-    title: 'Ergebnis generiert',
-    content: 'Die KI-Aktion wurde erfolgreich ausgeführt. Hier ist das Ergebnis...',
-    actions: [
-      { label: 'Anwenden', action: 'apply' },
-      { label: 'Bearbeiten', action: 'edit' },
-      { label: 'Kopieren', action: 'copy' },
-    ],
-  })
+function ResultStep({ data, onBack }: WizardStepProps) {
+  const result = data.result as string | undefined
+
+  if (!result) {
+    return (
+      <div className="space-y-4 py-8 text-center">
+        <p className="text-gray-600">Kein Ergebnis verfügbar</p>
+        <button
+          onClick={onBack}
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+        >
+          Zurück
+        </button>
+      </div>
+    )
+  }
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(result)
+      // Optional: Toast-Notification
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
+
+  const handleApply = () => {
+    // Öffne Artifact im Inspector via CustomEvent
+    const event = new CustomEvent('aklow-open-artifact', {
+      detail: {
+        content: result,
+        threadId: `wizard-${Date.now()}`,
+      },
+    })
+    window.dispatchEvent(event)
+  }
 
   return (
     <div className="space-y-6 py-4">
@@ -301,26 +403,25 @@ function ResultStep({ onBack }: WizardStepProps) {
 
       <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">{result.title}</h3>
-          <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">{result.content}</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Ergebnis</h3>
+          <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 max-h-96 overflow-y-auto">
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">{result}</p>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-2 pt-2">
-          {result.actions.map((action, index) => (
-            <button
-              key={index}
-              className={clsx(
-                'px-4 py-2 rounded-lg font-medium text-sm transition-all',
-                index === 0
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md hover:shadow-lg'
-                  : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300'
-              )}
-            >
-              {action.label}
-            </button>
-          ))}
+          <button
+            onClick={handleCopy}
+            className="px-4 py-2 rounded-lg font-medium text-sm bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md hover:shadow-lg transition-all"
+          >
+            Kopieren
+          </button>
+          <button
+            onClick={handleApply}
+            className="px-4 py-2 rounded-lg font-medium text-sm bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md hover:shadow-lg transition-all"
+          >
+            Anwenden
+          </button>
         </div>
       </div>
 

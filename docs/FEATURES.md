@@ -37,37 +37,42 @@
 
 ## Workspace Modules
 
-### Chat
+### Chat (Chat First Design)
 - Streaming Responses (SSE)
 - Rich Markdown Rendering
 - Message Actions (Copy, Edit, Save, Update, Read Aloud)
 - Thinking Steps Visualization
 - Quick Actions Suggestions
+- **Rich Content Cards**: E-Mails, Chats, Tabellen werden direkt im Chat gerendert
+- **Floating Action Button (FAB)**: Kontextbezogene Aktionen
+- **ContextCardRenderer**: Rendert interaktive Cards basierend auf aktivem Kontext
+
+Siehe [CHAT_FIRST_REDESIGN.md](./CHAT_FIRST_REDESIGN.md) für vollständige Details.
 
 ### Posteingang (Inbox)
 - **Channels**: Email, Messenger, Support, Reviews
 - **Filter**: Alle, E-Mail, Messenger, Support
 - **Quick Actions**: Antworten, Zusammenfassen, Aufräumen
 - **Thread-Liste**: Mit unread-Indicators und Badges
-- **Detail Drawer**: Thread-Details, Verknüpfungen, Sync-Info
+- **Rich Content**: E-Mails werden als EmailCard im Chat angezeigt (Chat First)
 
 ### Dokumente (Documents)
 - **Filter**: Alle, Rechnungen, Verträge, Fotos, Sonstiges
 - **Quick Actions**: Belege auslesen, Sortieren, Fragen
 - **Document-Liste**: Mit Typ-Icons und Metadaten
-- **Detail Drawer**: Dokument-Übersicht, Zuweisung, Metadaten
+- **Rich Content**: Dokumente werden als EmailCard im Chat angezeigt (Chat First)
 
 ### Kunden (Customers)
 - **Segments**: Alle, Leads, Aktiv, Schläft, VIP
 - **Quick Actions**: Datei erstellen, Suchen, Notiz
 - **Customer-Cards**: Mit Tags und Initials
-- **Detail Drawer**: Kunden-Profil, Verknüpfte Kanäle, Datenschutz
+- **Rich Content**: Kundenlisten werden als DataTableCard im Chat angezeigt (Chat First)
 
 ### Wachstum (Growth)
 - **Status-Filter**: Entwürfe, Geplant, Ergebnisse
 - **Action-Buttons**: Kampagne starten, Social Post, Newsletter
 - **Item-Liste**: Mit Status-Badges und Kanälen
-- **Detail Drawer**: Kampagnen-Übersicht, Planung, Assets
+- **Rich Content**: Kampagnen werden als DataTableCard im Chat angezeigt (Chat First)
 
 ## Message Actions
 
@@ -91,9 +96,11 @@
 - **Micro-Interactions**: Subtile Hover-Effekte (1-2px lift, 160-220ms)
 
 ### Responsive Layout
-- **Fixed Drawer**: 320px (nicht responsive)
+- **Left Drawer**: 280px (optional, nicht responsive)
+- **Chat**: Volle Breite (Chat First - keine rechten Drawer)
 - **Pixel-Perfect**: Keine Prozent-Werte für kritische Layouts
 - **Apple-Style**: Ruhige, hochwertige Optik
+- **Dashboard Overlay**: Modal für Übersichten (statt Drawer)
 
 ## Keyboard Shortcuts
 

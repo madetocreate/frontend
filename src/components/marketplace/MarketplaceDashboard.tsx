@@ -636,7 +636,7 @@ export default function MarketplaceDashboard() {
       </div>
 
       {/* Header */}
-      <div className="sticky top-0 z-20 apple-glass-enhanced border-b border-[var(--ak-color-border-subtle)] px-6 py-4 shadow-[var(--ak-shadow-soft)]">
+      <div className="sticky top-0 z-20 apple-glass-enhanced px-6 py-4 shadow-[var(--ak-shadow-soft)]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-tight text-[var(--ak-color-text-primary)]">{t('marketplace.title') || 'Marketplace'}</h1>
           <div className="relative w-full md:w-96">

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTheme } from 'next-themes'
+import { useTranslation } from '@/i18n'
 import { 
   GlobeAltIcon, 
   ClockIcon, 
@@ -13,20 +14,79 @@ import {
   ComputerDesktopIcon
 } from '@heroicons/react/24/outline'
 import { SettingsSection, SettingsRow, SettingsSelect, SettingsToggle } from './SettingsSection'
+import { loadSettings, saveSettings } from '@/lib/settingsClient'
+import { useDebounce } from '@/hooks/useDebounce'
 
 type SettingsMode = 'simple' | 'expert'
 
 export function SettingsGeneral({ mode }: { mode: SettingsMode }) {
   const [mounted, setMounted] = useState(false)
   const { theme, setTheme, resolvedTheme } = useTheme()
+  const { i18n } = useTranslation()
   const [timezone, setTimezone] = useState('Europe/Berlin')
-  const [language, setLanguage] = useState('de')
+  const [language, setLanguage] = useState(i18n.language || 'de')
   const [notifications, setNotifications] = useState(true)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_saving, setSaving] = useState(false)
+
+  // Save function
+  const saveSettingsData = useCallback(async (settings: { appearance: { theme: 'light' | 'dark' | 'system'; language: string; timezone: string }; notifications: { enabled: boolean; email: boolean; push: boolean } }) => {
+    setSaving(true)
+    try {
+      await saveSettings(settings)
+    } catch (error) {
+      console.error('Failed to save settings:', error)
+    } finally {
+      setSaving(false)
+    }
+  }, [])
+
+  // Debounced save function
+  const debouncedSave = useDebounce(saveSettingsData, 1000)
+
+
+  // Save when settings change (only after initial load)
+  const [hasLoaded, setHasLoaded] = useState(false)
+  
+  useEffect(() => {
+    if (mounted) {
+      const load = async () => {
+        const settings = await loadSettings()
+        if (settings) {
+          if (settings.appearance) {
+            setTimezone(settings.appearance.timezone || 'Europe/Berlin')
+            setLanguage(settings.appearance.language || 'de')
+          }
+          if (settings.notifications) {
+            setNotifications(settings.notifications.enabled ?? true)
+          }
+        }
+        setHasLoaded(true)
+      }
+      void load()
+    }
+  }, [mounted])
+
+  // Save when settings change (only after initial load to prevent saving defaults)
+  useEffect(() => {
+    if (mounted && hasLoaded) {
+      void debouncedSave({
+        appearance: { theme: (theme as 'light' | 'dark' | 'system') || 'system', language, timezone },
+        notifications: { enabled: notifications, email: notifications, push: notifications }
+      })
+    }
+  }, [theme, language, timezone, notifications, mounted, hasLoaded, debouncedSave])
 
   // Avoid hydration mismatch
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    // Use setTimeout to avoid synchronous setState in effect
+    const timer = setTimeout(() => {
+      setMounted(true)
+      // Initialize language from i18n
+      setLanguage(i18n.language || 'de')
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [i18n])
 
   if (!mounted) {
     return null // or a placeholder
@@ -87,10 +147,17 @@ export function SettingsGeneral({ mode }: { mode: SettingsMode }) {
           options={[
             { value: 'de', label: 'Deutsch' },
             { value: 'en', label: 'English' },
+            { value: 'es', label: 'Español' },
             { value: 'fr', label: 'Français' },
-            { value: 'es', label: 'Español' }
+            { value: 'it', label: 'Italiano' }
           ]}
-          onChange={setLanguage}
+          onChange={(val) => {
+            setLanguage(val)
+            i18n.changeLanguage(val)
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('language', val)
+            }
+          }}
           mode={mode}
         />
         <SettingsSelect

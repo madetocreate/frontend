@@ -130,24 +130,24 @@ export function CalendarSidebarWidget({ onOpenDetails, onNLPSchedule }: Calendar
   useEffect(() => {
     const loadEvents = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const accountId = 'default' // TODO: Get from auth context
-        // const response = await fetch(`/api/v1/calendar/events?account_id=${accountId}&days=60`)
-        // const data = await response.json()
-        // setEvents(data.events || [])
-        
-        // Load today's events
-        const today = new Date().toISOString().split('T')[0]
-        const todayEventsList = events.filter(e => e.start_time.startsWith(today))
-        setTimeout(() => {
+        const response = await fetch('/api/calendar/events')
+        if (response.ok) {
+          const data = await response.json()
+          const loadedEvents = data.events || []
+          // Load today's events
+          const today = new Date().toISOString().split('T')[0]
+          const todayEventsList = loadedEvents.filter((e: { start_time: string }) => e.start_time.startsWith(today))
           setTodayEvents(todayEventsList as Array<{ title: string; start_time: string; end_time: string; location?: string }>)
-        }, 0)
+        } else {
+          setTodayEvents([])
+        }
       } catch (error) {
         console.error('Failed to load events:', error)
+        setTodayEvents([])
       }
     }
     loadEvents()
-  }, [viewDate, events])
+  }, [viewDate])
 
   const { monthLabel, weeks, selectedDateText } = useMemo(() => {
     return {

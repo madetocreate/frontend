@@ -35,26 +35,32 @@ Das Design-System ist zentral in `ak-tokens.css` definiert:
 - **Right Drawer**: Füllt verfügbaren Raum
 - **Icon Rail**: 64px (Sidebar mit Modul-Icons)
 
-#### Component Hierarchy
+#### Component Hierarchy (Chat First Design)
 ```
 ChatWorkspaceShell
 ├── Sidebar (64px, Icons)
-├── Left Drawer (320px, Widgets)
-│   ├── Header (Titel, Info-Button, Collapse)
+├── Left Drawer (280px, optional, Widgets)
+│   ├── Header (Titel, Info-Button → Dashboard Overlay)
 │   └── Widget Content
-├── Main Content (Chat)
-└── Right Drawer (Details)
-    ├── Glass Header
-    └── Detail Content
+├── Main Content (Chat - volle Breite)
+│   ├── ChatShell
+│   │   ├── ContextCardRenderer (Rich Content Cards)
+│   │   └── Chat Messages
+│   └── ChatFirstFAB (Floating Action Button)
+└── DashboardOverlay (Modal, bei Info-Button)
 ```
+
+**Wichtig**: Rechte Drawer wurden komplett entfernt. Alle Inhalte werden als Rich Content Cards direkt im Chat gerendert. Siehe [CHAT_FIRST_REDESIGN.md](./CHAT_FIRST_REDESIGN.md) für Details.
 
 ## Core Components
 
 ### ChatWorkspaceShell
 Haupt-Layout-Komponente, verwaltet:
 - Module-Navigation (Chat, Posteingang, Dokumente, Kunden, Wachstum)
-- Drawer-State (Left/Right)
-- Selected Items für Detail-Drawers
+- Left Drawer State (optional, 280px)
+- Context State für Rich Content Cards
+- Dashboard Overlay State
+- **Chat First**: Keine rechten Drawer mehr, alles wird im Chat gerendert
 
 ### ChatShell
 Chat-Interface mit:
@@ -62,6 +68,8 @@ Chat-Interface mit:
 - Voice Input (Dictation & Real-time)
 - TTS (Text-to-Speech)
 - Message-Actions (Copy, Edit, Save, Update, Read Aloud)
+- **ContextCardRenderer**: Rendert Rich Content Cards (E-Mails, Chats, Tabellen) direkt im Chat
+- **Event-Listener**: `aklow-prefill-chat` für Input-Befüllung
 
 ### Sidebar Widgets
 
@@ -86,32 +94,35 @@ Chat-Interface mit:
 - Status-Filter (Entwürfe, Geplant, Ergebnisse)
 - Action-Buttons (Kampagne starten, Social Post, Newsletter)
 
-### Detail Drawers (Right Side)
+### Rich Content Cards (Chat First)
 
-#### InboxDetailsDrawer
-- Thread-Details (Status, Wichtig, Zugewiesen, Tags)
-- Verknüpfungen (Kunde, Projekt)
-- Quelle & Sync-Info
-- Erweiterte Einstellungen
+**Hinweis**: Rechte Drawer wurden entfernt. Alle Inhalte werden als interaktive Cards direkt im Chat gerendert.
 
-#### CustomerDetailsDrawer
-- Kunden-Profil-Formular
-- Verknüpfte Kanäle
-- Datenschutz-Optionen
-- Erweiterte Einstellungen
+#### EmailCard
+- E-Mail-Details (Von, An, Betreff, Datum)
+- Expandierbar (kollabiert/expandiert)
+- Attachments-Anzeige
+- Actions (Antworten, etc.)
 
-#### DocumentDetailsDrawer
-- Dokument-Übersicht (Typ, Status, Quelle, Datum)
-- Zuweisung (Kunde, Tags)
-- Metadaten
-- Erweiterte Info
+#### ChatThreadCard
+- Chat-Verläufe (WhatsApp, Telegram, SMS, etc.)
+- Platform-spezifisches Styling
+- Chat-Bubbles (incoming/outgoing)
+- Status-Indikatoren
 
-#### GrowthDetailsDrawer
-- Kampagnen-Übersicht (Status, Ziel, Zielgruppe, Kanäle)
-- Planung (Datum, Zeit, Freigabe)
-- Assets
-- Verknüpfungen
-- Erweiterte Einstellungen
+#### DataTableCard
+- Tabellen (Kunden, Kampagnen, etc.)
+- Sortierbar, filterbar
+- Status-Badges
+- Row-Click-Handler
+
+#### DashboardOverlay
+- Modal für Übersichten (statt Drawer)
+- Statistiken-Grid
+- Letzte Aktivitäten
+- Öffnet über Info-Button in Sidebar
+
+Siehe [CHAT_FIRST_REDESIGN.md](./CHAT_FIRST_REDESIGN.md) für vollständige Details.
 
 ## Voice & Audio Features
 
@@ -173,9 +184,19 @@ Chat-Interface mit:
 
 ### Event System
 - Custom Events für Inter-Component-Kommunikation:
+  - `aklow-show-context-card`: Zeigt Rich Content Card im Chat (Chat First)
+  - `aklow-prefill-chat`: Befüllt Chat-Input mit Text (Chat First)
+  - `aklow-clear-context`: Schließt aktuelle Context Card (Chat First)
   - `aklow-focus-thread`: Fokussiere Thread im Chat
   - `aklow-open-module`: Öffne Modul von außen
   - `ak-escape-pressed`: Global Escape-Handler
+  - ~~`aklow-ai-action-wizard`~~: **Entfernt** (ersetzt durch FAB + prefill-chat)
+
+### AI Suggestion System
+- **AISuggestionGrid**: Kontextsensitive KI-Vorschläge für Detail-Drawer
+- **FastActionAgent Integration**: Backend-API für intelligente Aktionen
+- **Action-Handling**: Zentrale Dispatcher für alle Aktionen
+- Siehe [AI_SUGGESTION_SYSTEM.md](./AI_SUGGESTION_SYSTEM.md) für Details
 
 ## File Structure
 
@@ -190,16 +211,25 @@ src/
 │   ├── ChatWorkspaceShell.tsx # Main Layout
 │   ├── ChatShell.tsx          # Chat Interface
 │   ├── *SidebarWidget.tsx     # Sidebar Widgets
-│   ├── *DetailsDrawer.tsx     # Right Drawers
+│   ├── dashboard/
+│   │   └── DashboardOverlay.tsx # Dashboard Modal (Chat First)
 │   └── chat/                  # Chat Components
-│       ├── markdown/          # Markdown Rendering
-│       └── ...
+│       ├── ChatFirstFAB.tsx   # Floating Action Button (Chat First)
+│       ├── cards/              # Rich Content Cards (Chat First)
+│       │   ├── EmailCard.tsx
+│       │   ├── ChatThreadCard.tsx
+│       │   ├── DataTableCard.tsx
+│       │   └── ContextCardRenderer.tsx
+│       └── markdown/          # Markdown Rendering
 ├── hooks/
 │   ├── useRealtimeVoice.ts
 │   ├── useSpeechSynthesis.ts
 │   └── useKeyboardShortcuts.ts
 └── lib/
     ├── chatClient.ts          # Chat API Client
-    └── realtimeVoiceClient.ts # Realtime WebSocket Client
+    ├── realtimeVoiceClient.ts # Realtime WebSocket Client
+    ├── fastActionsClient.ts   # Fast Actions API Client
+    ├── actionHandlers.ts     # Action Dispatcher System
+    └── contextDataService.ts  # Context Data API (Chat First)
 ```
 

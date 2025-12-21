@@ -36,6 +36,13 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## 📚 Documentation
+
+- [Complete Documentation](./COMPLETE_DOCUMENTATION.md) - Full feature overview
+- [Architecture](./docs/ARCHITECTURE.md) - System architecture and design patterns
+- [AI Suggestion System](./docs/AI_SUGGESTION_SYSTEM.md) - AI-powered action suggestions
+- [Getting Started](./GETTING_STARTED.md) - Setup and installation guide
+
 ## 📁 Project Structure
 
 ```
@@ -54,11 +61,18 @@ frontend/
 │   │   ├── InboxDrawerWidget.tsx      # Inbox module
 │   │   ├── *DetailsDrawer.tsx         # Right-side detail drawers
 │   │   └── ui/           # UI primitives
+│   │       ├── AISuggestionGrid.tsx   # AI Suggestion System
+│   │       └── ...
 │   ├── hooks/            # Custom React hooks
 │   │   ├── useRealtimeVoice.ts  # OpenAI Realtime integration
 │   │   ├── useSpeechSynthesis.ts # TTS streaming
 │   │   └── useKeyboardShortcuts.ts # Global shortcuts
 │   └── lib/              # Utilities and clients
+│       ├── fastActionsClient.ts  # Fast Actions API Client
+│       └── actionHandlers.ts    # Action Dispatcher System
+├── docs/                 # Documentation
+│   ├── ARCHITECTURE.md   # Frontend Architecture
+│   └── AI_SUGGESTION_SYSTEM.md  # AI Suggestion System Docs
 │       └── realtimeVoiceClient.ts # WebSocket client for OpenAI Realtime
 ```
 

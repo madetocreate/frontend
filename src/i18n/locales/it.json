@@ -159,6 +159,54 @@
     "error": "Errore",
     "success": "Successo",
     "warning": "Avviso",
-    "info": "Informazione"
+    "info": "Informazione",
+    "copy": "Copia",
+    "saved": "Salvato"
+  },
+  "chat": {
+    "edit": "Modifica",
+    "copy": "Copia",
+    "retry": "Reinvia",
+    "readAloud": "Leggi ad alta voce",
+    "stopReadAloud": "Interrompi lettura",
+    "save": "Salva",
+    "saved": "Salvato",
+    "feedback": {
+      "good": "Bene",
+      "bad": "Male"
+    },
+    "quickActions": "Azioni rapide",
+    "regenerate": "Rigenera",
+    "showThinking": "Mostra ragionamento",
+    "thinking": "Ragionando...",
+    "jumpToBottom": "Vai in fondo",
+    "closeHint": "Chiudi suggerimento",
+    "openMenu": "Apri menu",
+    "microphone": "Microfono",
+    "send": "Invia",
+    "stopGenerating": "Ferma",
+    "errorSending": "Errore durante l'invio"
+  },
+  "workspace": {
+    "addons": "Componenti aggiuntivi",
+    "dashboards": "Dashboard",
+    "wizards": "Procedure guidate",
+    "onboardings": "Onboardings",
+    "wizardsAndOnboardings": "Procedure guidate e Onboardings",
+    "settings": "Impostazioni",
+    "notifications": "Notifiche",
+    "showDashboard": "Mostra dashboard",
+    "collapsePanel": "Comprimi pannello",
+    "resize": "Ridimensiona",
+    "expand": "Espandi",
+    "collapse": "Comprimi",
+    "allDashboards": "Tutte le Dashboard",
+    "allWizards": "Procedure guidate",
+    "allOnboardings": "Onboardings",
+    "showAll": "Mostra tutto"
+  },
+  "news": {
+    "loading": "Caricamento notizie personali…",
+    "noRecommendations": "Nessuna raccomandazione ancora – avvia una conversazione così posso conoscere meglio i tuoi interessi."
   }
 }

@@ -7,6 +7,7 @@ import { AkBadge } from '@/components/ui/AkBadge'
 import { AkSearchField } from '@/components/ui/AkSearchField'
 import { PhoneIcon, CheckCircleIcon, ExclamationTriangleIcon, ClockIcon, ChartBarIcon } from '@heroicons/react/24/outline'
 import { RechartsPerformanceChart } from '@/components/ui/RechartsPerformanceChart'
+import { AISuggestionGrid } from '@/components/ui/AISuggestionGrid'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -57,6 +58,14 @@ export function TelephonyOverview() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <motion.div className="space-y-6" variants={itemVariants}>
+          
+          {/* AI Suggestions */}
+          <AISuggestionGrid 
+            context="telephony"
+            summary="Anruf-Strategie"
+            text="Intelligente Anruferkennung und Automatisierung ist aktiv."
+          />
+
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <motion.div variants={itemVariants}>

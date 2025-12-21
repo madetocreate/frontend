@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { frontendWiring, type ActionConfig } from '@/lib/frontendWiring'
 
@@ -21,15 +21,22 @@ export function useActionHandler() {
     frontendWiring.registerAction(actionId, config)
   }, [])
 
-  // Setup navigation listener
-  if (typeof window !== 'undefined') {
-    window.addEventListener('aklow-navigate', ((event: CustomEvent) => {
+  // Setup navigation listener with cleanup
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const handleNavigate = (event: CustomEvent<{ path: string }>) => {
       const { path } = event.detail
       if (path) {
         router.push(path)
       }
-    }) as EventListener)
-  }
+    }
+
+    window.addEventListener('aklow-navigate', handleNavigate as EventListener)
+    return () => window.removeEventListener('aklow-navigate', handleNavigate as EventListener)
+  }, [router])
 
   return {
     handleAction,

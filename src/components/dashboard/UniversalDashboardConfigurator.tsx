@@ -17,10 +17,17 @@ import {
 } from '@heroicons/react/24/outline'
 import { AppleCard, AppleButton, AppleBadge, AppleSection } from '../ui/AppleDesignSystem'
 import { useTranslation } from 'react-i18next'
-import { DashboardProConfig } from '../../features/dashboard-pro/types'
-import { INDUSTRY_TEMPLATES } from '../../features/dashboard-pro/templates'
+// Dashboard-Pro types moved to archive - using local types instead
+export type DashboardProConfig = {
+  enabledViews: string[]
+  // Add other config fields as needed
+}
+const INDUSTRY_TEMPLATES: Record<string, { availableViews: Array<{ id: string; label: string }> }> = {
+  // Templates moved to archive - empty for now
+  general: { availableViews: [] }
+}
 
-export type DashboardType = 'hotel' | 'practice' | 'realestate' | 'general' | 'gastronomie'
+export type DashboardType = 'general' // Removed profession-specific types: 'hotel' | 'practice' | 'realestate' | 'gastronomie'
 
 export type WidgetSize = 'small' | 'medium' | 'large'
 

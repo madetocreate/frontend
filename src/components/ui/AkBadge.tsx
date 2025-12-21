@@ -3,9 +3,17 @@
 import React from "react";
 import clsx from "clsx";
 
-export type AkBadgeSize = "sm" | "md";
+export type AkBadgeSize = "xs" | "sm" | "md";
 
-export type AkBadgeTone = "muted" | "success" | "warning" | "danger" | "info" | "accent";
+export type AkBadgeTone =
+  | "muted"
+  | "success"
+  | "warning"
+  | "danger"
+  | "info"
+  | "accent"
+  | "neutral"
+  | "error";
 
 export type AkBadgeProps = React.HTMLAttributes<HTMLSpanElement> & {
   size?: AkBadgeSize;
@@ -25,6 +33,10 @@ const TONE_CLASSES: Record<AkBadgeTone, string> = {
     "bg-[var(--ak-color-bg-info)] text-[var(--ak-color-text-info)] ring-[var(--ak-color-border-info)]",
   accent:
     "bg-[var(--ak-color-accent-soft)] text-[var(--ak-color-accent-strong)] ring-[var(--ak-color-border-subtle)]",
+  neutral:
+    "bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-secondary)] ring-[var(--ak-color-border-subtle)]",
+  error:
+    "bg-[var(--ak-color-bg-danger)] text-[var(--ak-color-text-danger)] ring-[var(--ak-color-border-danger)]",
 };
 
 export function AkBadge({ className, size = "sm", tone = "muted", ...props }: AkBadgeProps) {
@@ -33,6 +45,7 @@ export function AkBadge({ className, size = "sm", tone = "muted", ...props }: Ak
       className={clsx(
         "inline-flex items-center rounded-[var(--ak-radius-pill)] px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
         size === "md" ? "px-2.5 py-1 text-sm" : "",
+        size === "xs" ? "px-1.5 py-[3px] text-[11px]" : "",
         TONE_CLASSES[tone],
         className,
       )}

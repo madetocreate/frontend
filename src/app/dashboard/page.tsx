@@ -76,10 +76,10 @@ const MetricCard = ({
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5, delay }}
-    className="bg-white p-6 rounded-[24px] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.08)] transition-shadow"
+    className="bg-[var(--ak-color-bg-surface)] p-6 rounded-[24px] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.04)] border border-[var(--ak-color-border-subtle)] hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.08)] transition-shadow"
   >
     <div className="flex justify-between items-start mb-4">
-      <div className={cn("p-3 rounded-2xl", trendUp ? "bg-blue-50 text-blue-600" : "bg-gray-50 text-gray-600")}>
+      <div className={cn("p-3 rounded-2xl", trendUp ? "bg-blue-50 text-blue-600" : "bg-[var(--ak-color-bg-surface-muted)] text-[var(--ak-color-text-secondary)]")}>
         <Icon className="w-6 h-6" />
       </div>
       <span
@@ -94,8 +94,8 @@ const MetricCard = ({
       </span>
     </div>
     <div className="space-y-1">
-      <p className="text-sm font-medium text-gray-500">{title}</p>
-      <h3 className="text-3xl font-bold tracking-tight text-[#1D1D1F]">{value}</h3>
+      <p className="text-sm font-medium text-[var(--ak-color-text-secondary)]">{title}</p>
+      <h3 className="text-3xl font-bold tracking-tight text-[var(--ak-color-text-primary)]">{value}</h3>
     </div>
   </motion.div>
 );
@@ -111,17 +111,48 @@ const ActivityItem = ({
   desc: string;
   time: string;
 }) => (
-  <div className="flex items-start gap-4 p-4 hover:bg-gray-50 rounded-2xl transition-colors cursor-pointer group">
-    <div className="p-2.5 bg-gray-100 rounded-xl text-gray-600 group-hover:bg-white group-hover:shadow-sm transition-all">
+  <div className="flex items-start gap-4 p-4 hover:bg-[var(--ak-color-bg-surface-muted)] rounded-2xl transition-colors cursor-pointer group">
+    <div className="p-2.5 bg-[var(--ak-color-bg-surface-muted)] rounded-xl text-[var(--ak-color-text-secondary)] group-hover:bg-[var(--ak-color-bg-surface)] group-hover:shadow-sm transition-all">
       <Icon className="w-5 h-5" />
     </div>
     <div className="flex-1 min-w-0">
-      <h4 className="text-sm font-semibold text-gray-900 truncate">{title}</h4>
-      <p className="text-sm text-gray-500 truncate">{desc}</p>
+      <h4 className="text-sm font-semibold text-[var(--ak-color-text-primary)] truncate">{title}</h4>
+      <p className="text-sm text-[var(--ak-color-text-secondary)] truncate">{desc}</p>
     </div>
-    <span className="text-xs text-gray-400 whitespace-nowrap">{time}</span>
+    <span className="text-xs text-[var(--ak-color-text-muted)] whitespace-nowrap">{time}</span>
   </div>
 );
+
+const quickLinkStyles: Record<
+  string,
+  { overlay: string; icon: string; accent: string }
+> = {
+  violet: {
+    overlay: "text-violet-500",
+    icon: "bg-violet-50 text-violet-600",
+    accent: "text-violet-600",
+  },
+  amber: {
+    overlay: "text-amber-500",
+    icon: "bg-amber-50 text-amber-600",
+    accent: "text-amber-600",
+  },
+  blue: {
+    overlay: "text-blue-500",
+    icon: "bg-blue-50 text-blue-600",
+    accent: "text-blue-600",
+  },
+  pink: {
+    overlay: "text-pink-500",
+    icon: "bg-pink-50 text-pink-600",
+    accent: "text-pink-600",
+  },
+  emerald: {
+    overlay: "text-emerald-500",
+    icon: "bg-emerald-50 text-emerald-600",
+    accent: "text-emerald-600",
+  },
+};
 
 const QuickLink = ({
   title,
@@ -133,32 +164,37 @@ const QuickLink = ({
   title: string;
   desc: string;
   href: string;
-  color: string;
+  color: keyof typeof quickLinkStyles;
   icon: LucideIcon;
-}) => (
-  <Link
-    href={href}
-    className="group relative overflow-hidden rounded-[24px] p-6 border border-gray-100 bg-white shadow-sm hover:shadow-md transition-all"
-  >
-    <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-${color}-500`}>
-      <Icon className="w-24 h-24 -mr-8 -mt-8" />
-    </div>
-    <div className="relative z-10 space-y-4">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-${color}-50 text-${color}-600`}>
-        <Icon className="w-6 h-6" />
+}) => {
+  const styles = quickLinkStyles[color] ?? quickLinkStyles.blue;
+  return (
+    <Link
+      href={href}
+      className="group relative overflow-hidden rounded-[24px] p-6 border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] shadow-sm hover:shadow-md transition-all"
+    >
+      <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity ${styles.overlay}`}>
+        <Icon className="w-24 h-24 -mr-8 -mt-8" />
       </div>
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{title}</h3>
-        <p className="text-sm text-gray-500 mt-1">{desc}</p>
+      <div className="relative z-10 space-y-4">
+        <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", styles.icon)}>
+          <Icon className="w-6 h-6" />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-[var(--ak-color-text-primary)] group-hover:text-[var(--ak-color-text-primary)] transition-colors">
+            {title}
+          </h3>
+          <p className="text-sm text-[var(--ak-color-text-secondary)] mt-1">{desc}</p>
+        </div>
+        <div className="pt-2">
+          <span className={cn("text-sm font-medium flex items-center opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300", styles.accent)}>
+            Öffnen <ArrowUpRight className="w-4 h-4 ml-1" />
+          </span>
+        </div>
       </div>
-      <div className="pt-2">
-        <span className="text-sm font-medium text-blue-600 flex items-center opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300">
-          Öffnen <ArrowUpRight className="w-4 h-4 ml-1" />
-        </span>
-      </div>
-    </div>
-  </Link>
-);
+    </Link>
+  );
+};
 
 // --- Main Page ---
 
@@ -205,18 +241,18 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] p-6 md:p-8 font-sans">
+    <div className="min-h-screen bg-[var(--ak-color-bg-app)] p-6 md:p-8 font-sans">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-[#1D1D1F] tracking-tight">Admin Dashboard</h1>
-            <p className="text-[#86868B] mt-1">Überblick über Systemstatus, Agenten und Performance.</p>
+            <h1 className="text-3xl font-bold text-[var(--ak-color-text-primary)] tracking-tight">Admin Dashboard</h1>
+            <p className="text-[var(--ak-color-text-muted)] mt-1">Überblick über Systemstatus, Agenten und Performance.</p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="rounded-xl h-10 border-gray-200 bg-white">
-              <Clock className="w-4 h-4 mr-2 text-gray-500" />
+            <Button variant="outline" className="rounded-xl h-10 border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)]">
+              <Clock className="w-4 h-4 mr-2 text-[var(--ak-color-text-secondary)]" />
               Letzte 24h
             </Button>
             <Button className="rounded-xl h-10 bg-[#1D1D1F] text-white hover:bg-black shadow-lg shadow-gray-200/50">
@@ -310,11 +346,11 @@ export default function DashboardPage() {
             </section>
 
             {/* Main Chart */}
-            <section className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100">
+            <section className="bg-[var(--ak-color-bg-surface)] rounded-[24px] p-6 shadow-sm border border-[var(--ak-color-border-subtle)]">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-[#1D1D1F]">System Auslastung & Requests</h3>
+                <h3 className="text-lg font-semibold text-[var(--ak-color-text-primary)]">System Auslastung & Requests</h3>
                 <Button variant="ghost" size="icon" className="rounded-full">
-                  <MoreHorizontal className="w-5 h-5 text-gray-400" />
+                  <MoreHorizontal className="w-5 h-5 text-[var(--ak-color-text-muted)]" />
                 </Button>
               </div>
               <div className="h-80 w-full">
@@ -353,8 +389,8 @@ export default function DashboardPage() {
           <div className="space-y-8">
             
             {/* Feedback / Sentiment Chart */}
-            <section className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100">
-                <h3 className="text-lg font-semibold text-[#1D1D1F] mb-6">User Feedback</h3>
+            <section className="bg-[var(--ak-color-bg-surface)] rounded-[24px] p-6 shadow-sm border border-[var(--ak-color-border-subtle)]">
+                <h3 className="text-lg font-semibold text-[var(--ak-color-text-primary)] mb-6">User Feedback</h3>
                 <div className="h-64 w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -376,8 +412,8 @@ export default function DashboardPage() {
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="text-center">
-                            <span className="text-3xl font-bold text-gray-900">92%</span>
-                            <p className="text-xs text-gray-500">Positiv</p>
+                            <span className="text-3xl font-bold text-[var(--ak-color-text-primary)]">92%</span>
+                            <p className="text-xs text-[var(--ak-color-text-muted)]">Positiv</p>
                         </div>
                     </div>
                 </div>
@@ -385,15 +421,15 @@ export default function DashboardPage() {
                     {pieData.map((entry: PieDataPoint, i: number) => (
                         <div key={i} className="flex items-center gap-2 text-xs">
                             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                            <span className="text-gray-600">{entry.name}</span>
+                            <span className="text-[var(--ak-color-text-secondary)]">{entry.name}</span>
                         </div>
                     ))}
                 </div>
             </section>
 
             {/* Recent Activity */}
-            <section className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100">
-              <h3 className="text-lg font-semibold text-[#1D1D1F] mb-6">Letzte Aktivitäten</h3>
+            <section className="bg-[var(--ak-color-bg-surface)] rounded-[24px] p-6 shadow-sm border border-[var(--ak-color-border-subtle)]">
+              <h3 className="text-lg font-semibold text-[var(--ak-color-text-primary)] mb-6">Letzte Aktivitäten</h3>
               <div className="space-y-2">
                 <ActivityItem
                   icon={Bot}

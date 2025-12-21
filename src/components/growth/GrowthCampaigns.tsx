@@ -3,7 +3,7 @@
 import { WidgetCard } from '@/components/ui/WidgetCard'
 import { AkBadge } from '@/components/ui/AkBadge'
 import { AkButton } from '@/components/ui/AkButton'
-import { PlusIcon, PlayIcon, PauseIcon, ChartBarIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, PlayIcon, PauseIcon, ChartBarIcon, SparklesIcon } from '@heroicons/react/24/outline'
 
 const CAMPAIGNS = [
     { id: '1', name: 'Winter Sale 2025', channel: 'Multi', status: 'active', budget: '500€', leads: 42, roas: '4.5' },
@@ -23,6 +23,18 @@ export function GrowthCampaigns() {
             </p>
         </div>
         <AkButton variant="primary" leftIcon={<PlusIcon className="h-4 w-4"/>}>Neue Kampagne</AkButton>
+      </div>
+
+      {/* Mini AI Rec */}
+      <div className="p-4 rounded-xl border border-indigo-100 bg-indigo-50/30 flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-indigo-100 text-indigo-600">
+              <SparklesIcon className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+              <p className="text-sm font-medium text-indigo-900">Empfehlung: Facebook Ad Retargeting</p>
+              <p className="text-xs text-indigo-700">Deine Warenkorb-Abbrecher sind um 20% gestiegen. Aktiviere die Retargeting-Kampagne.</p>
+          </div>
+          <AkButton size="sm" variant="primary" className="shrink-0">Kampagne starten</AkButton>
       </div>
 
       <WidgetCard padding="sm" className="flex-1 overflow-hidden flex flex-col apple-glass-enhanced">

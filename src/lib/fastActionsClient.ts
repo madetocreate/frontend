@@ -39,15 +39,55 @@ export type FastActionsRequest = {
   allowed_action_ids?: string[];
 };
 
+function getAuthToken(): string | null {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('auth_token');
+    if (token) return token;
+  }
+  return process.env.NEXT_PUBLIC_AUTH_TOKEN || null;
+}
+
 export async function fetchFastActions(payload: FastActionsRequest): Promise<FastActionsResponse> {
-  const response = await fetch(FAST_ACTIONS_URL, {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  let response = await fetch(FAST_ACTIONS_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(payload),
   });
 
+  // If 404, try without /api prefix (fallback for different server configs)
+  if (response.status === 404 && FAST_ACTIONS_URL.includes("/api/fast-actions")) {
+    const fallbackUrl = FAST_ACTIONS_URL.replace("/api/fast-actions", "/fast-actions");
+    response = await fetch(fallbackUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    });
+  }
+
   if (!response.ok) {
     const text = await response.text().catch(() => "");
+    // Don't throw error for 404 - just return empty suggestions
+    if (response.status === 404) {
+      console.warn(`Fast Actions endpoint not available (404): ${FAST_ACTIONS_URL}`);
+      return {
+        suggestions: [],
+        meta: {
+          surface: payload.surface || "unknown",
+          max_actions: payload.max_actions || 5,
+          signals: [],
+          generated_at: new Date().toISOString(),
+        },
+      };
+    }
     throw new Error(`fast-actions ${response.status} ${text}`);
   }
 

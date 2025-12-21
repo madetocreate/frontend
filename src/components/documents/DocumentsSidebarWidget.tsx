@@ -1,16 +1,20 @@
 'use client'
 
-import clsx from 'clsx'
+import React, { useState, useMemo } from 'react'
 import {
   DocumentIcon,
   CloudArrowUpIcon,
   ReceiptPercentIcon,
   ClipboardDocumentCheckIcon,
   FolderIcon,
-  TagIcon
+  TagIcon,
 } from '@heroicons/react/24/outline'
-import { AkListRow } from '@/components/ui/AkListRow'
-import { WidgetCard } from '@/components/ui/WidgetCard'
+import { SidebarHeader } from '@/components/ui/SidebarHeader'
+import { SidebarFooter } from '@/components/ui/SidebarFooter'
+import { 
+  DrawerSectionTitle, 
+  DrawerListRow
+} from '@/components/ui/drawer-kit'
 
 import type { ComponentType } from 'react'
 
@@ -27,42 +31,44 @@ const VIEWS: { id: DocumentsView; label: string; icon: ComponentType<{ className
 type DocumentsSidebarWidgetProps = {
   activeView: DocumentsView
   onViewSelect: (view: DocumentsView) => void
+  onToggleInspector?: () => void
 }
 
 export function DocumentsSidebarWidget({
   activeView,
   onViewSelect,
+  onToggleInspector,
 }: DocumentsSidebarWidgetProps) {
+  const [search, setSearch] = useState('')
+
+  const filteredViews = useMemo(() => {
+    if (!search) return VIEWS
+    return VIEWS.filter(v => v.label.toLowerCase().includes(search.toLowerCase()))
+  }, [search])
+
   return (
-    <WidgetCard
-      className="h-full border-none shadow-none bg-transparent"
-      padding="sm"
-    >
-      <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-1">
-            <h3 className="px-3 text-xs font-medium text-[var(--ak-color-text-secondary)] uppercase tracking-wider mb-1">
-              Bibliothek
-            </h3>
-            <ul className="flex flex-col gap-1">
-              {VIEWS.map((view) => {
+    <div className="flex h-full flex-col bg-transparent">
+      <SidebarHeader 
+        title="Dokumente" 
+        onSearch={setSearch} 
+        onToggleInspector={onToggleInspector} 
+      />
+
+      <div className="flex-1 overflow-y-auto ak-scrollbar px-2 pb-4 mt-4">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-0.5">
+            <ul className="flex flex-col gap-0.5">
+              {filteredViews.map((view) => {
                 const isActive = view.id === activeView
                 const Icon = view.icon
                 return (
                   <li key={view.id}>
-                    <AkListRow
+                    <DrawerListRow
                       accent="documents"
                       selected={isActive}
-                      title={view.label}
-                      leading={
-                        <Icon
-                          className={clsx(
-                            'h-5 w-5',
-                            isActive
-                              ? 'text-[var(--ak-color-text-primary)]'
-                              : 'text-[var(--ak-color-text-secondary)]',
-                          )}
-                        />
-                      }
+                      title={<span className="text-[15px] font-medium">{view.label}</span>}
+                      leading={<Icon className="h-5 w-5" />}
+                      className="py-3"
                       onClick={() => onViewSelect(view.id)}
                     />
                   </li>
@@ -71,23 +77,31 @@ export function DocumentsSidebarWidget({
             </ul>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <h3 className="px-3 text-xs font-medium text-[var(--ak-color-text-secondary)] uppercase tracking-wider mb-1">
-              Tags
-            </h3>
-             <ul className="flex flex-col gap-1">
-                {['#wichtig', '#neu', '#archiv'].map(tag => (
-                    <li key={tag}>
-                        <AkListRow
-                            title={tag}
-                            leading={<TagIcon className="h-4 w-4 text-gray-400" />}
-                            onClick={() => {}}
-                        />
-                    </li>
-                ))}
-             </ul>
+          <div className="flex flex-col gap-0.5">
+            <DrawerSectionTitle className="px-3">Tags</DrawerSectionTitle>
+            <ul className="flex flex-col gap-0.5">
+              {['#wichtig', '#neu', '#archiv'].map(tag => (
+                <li key={tag}>
+                  <DrawerListRow
+                    title={<span className="text-[14px]">{tag}</span>}
+                    leading={<TagIcon className="h-4 w-4" />}
+                    onClick={() => {}}
+                  />
+                </li>
+              ))}
+            </ul>
           </div>
+        </div>
       </div>
-    </WidgetCard>
+
+      <SidebarFooter 
+        primaryAction={{
+          label: 'Upload',
+          icon: CloudArrowUpIcon,
+          onClick: () => {}
+        }}
+        status={{ label: 'Sync', tone: 'success' }}
+      />
+    </div>
   )
 }

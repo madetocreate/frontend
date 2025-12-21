@@ -17,6 +17,7 @@ const inter = Inter({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-inter",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const viewport: Viewport = {
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "AI Shield",
+    title: "Aklow Workspace",
   },
 };
 

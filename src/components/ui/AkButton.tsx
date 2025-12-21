@@ -2,6 +2,7 @@
 
 import clsx from 'clsx'
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react'
+import { useGlowEffect } from '@/hooks/useGlowEffect'
 
 export type AkAccent =
   | 'default'
@@ -24,6 +25,7 @@ export type AkButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'class
   variant?: AkButtonVariant
   size?: AkButtonSize
   pressed?: boolean
+  glow?: boolean
   leftIcon?: ReactNode
   rightIcon?: ReactNode
   className?: string
@@ -51,6 +53,7 @@ export function AkButton({
   variant = 'secondary',
   size = 'md',
   pressed = false,
+  glow = false,
   leftIcon,
   rightIcon,
   className,
@@ -58,6 +61,7 @@ export function AkButton({
   ...props
 }: AkButtonProps) {
   const accentVar = ACCENT_VAR[accent] ?? ACCENT_VAR.default
+  const { onMouseMove } = useGlowEffect()
 
   const style: CSSProperties & CSSVars = {
     ...(props.style ?? {}),
@@ -70,7 +74,7 @@ export function AkButton({
 
   const base =
     'inline-flex items-center justify-center gap-2 select-none whitespace-nowrap font-medium ' +
-    'rounded-[4px] border transition-colors duration-150 ease-out ' +
+    'rounded-[var(--ak-radius-md)] border transition-colors duration-150 ease-out ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-control-accent-soft)] ' +
     'focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ak-color-bg-sidebar)] ' +
     'disabled:pointer-events-none disabled:opacity-50'
@@ -94,6 +98,8 @@ export function AkButton({
     pressed && variant !== 'primary'
       ? 'bg-[var(--ak-color-bg-selected)] text-[var(--ak-color-text-primary)] border-[var(--ak-color-border-strong)] shadow-[inset_0_0_0_1px_var(--ak-control-accent-soft)]'
       : ''
+  
+  const glowCls = glow ? 'ak-sidebar-button' : ''
 
   return (
     <button
@@ -101,7 +107,8 @@ export function AkButton({
       type={type}
       style={style}
       data-pressed={pressed ? 'true' : 'false'}
-      className={clsx(base, sizeCls, variants[variant], pressedCls, className)}
+      onMouseMove={glow ? onMouseMove : props.onMouseMove}
+      className={clsx(base, sizeCls, variants[variant], pressedCls, glowCls, className)}
     >
       {leftIcon ? <span className="shrink-0">{leftIcon}</span> : null}
       <span className="min-w-0 truncate">{props.children}</span>

@@ -204,11 +204,11 @@ export function SmartDashboardOnboarding({
 function WelcomeStep({ dashboardType }: { dashboardType: DashboardType }) {
   const { t } = useTranslation()
   const dashboardNames: Record<DashboardType, string> = {
-    hotel: 'Hotel',
-    practice: t('onboarding.dashboard'),
-    realestate: 'Immobilien',
-    general: 'Allgemein',
-    gastronomie: 'Gastronomie',
+    // hotel: 'Hotel', // Archived
+    // practice: t('onboarding.dashboard'), // Archived
+    // realestate: 'Immobilien', // Archived
+    // gastronomie: 'Gastronomie', // Archived
+    general: t('onboarding.dashboard') || 'Allgemein',
   }
 
   return (

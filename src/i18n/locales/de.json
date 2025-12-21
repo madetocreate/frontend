@@ -159,6 +159,54 @@
     "error": "Fehler",
     "success": "Erfolg",
     "warning": "Warnung",
-    "info": "Information"
+    "info": "Information",
+    "copy": "Kopieren",
+    "saved": "Gespeichert"
+  },
+  "chat": {
+    "edit": "Bearbeiten",
+    "copy": "Kopieren",
+    "retry": "Erneut senden",
+    "readAloud": "Vorlesen",
+    "stopReadAloud": "Vorlesen stoppen",
+    "save": "Speichern",
+    "saved": "Gespeichert",
+    "feedback": {
+      "good": "Gut",
+      "bad": "Schlecht"
+    },
+    "quickActions": "Schnellaktionen",
+    "regenerate": "Neu generieren",
+    "showThinking": "Gedankengang anzeigen",
+    "thinking": "Überlegt...",
+    "jumpToBottom": "Nach unten springen",
+    "closeHint": "Hinweis schließen",
+    "openMenu": "Menü öffnen",
+    "microphone": "Mikrofon",
+    "send": "Senden",
+    "stopGenerating": "Stoppen",
+    "errorSending": "Fehler beim Senden"
+  },
+  "workspace": {
+    "addons": "Add-ons",
+    "dashboards": "Dashboards",
+    "wizards": "Wizards",
+    "onboardings": "Onboardings",
+    "wizardsAndOnboardings": "Wizards & Onboardings",
+    "settings": "Einstellungen",
+    "notifications": "Benachrichtigungen",
+    "showDashboard": "Dashboard anzeigen",
+    "collapsePanel": "Panel einklappen",
+    "resize": "Größe ändern",
+    "expand": "Vergrößern",
+    "collapse": "Verkleinern",
+    "allDashboards": "Alle Dashboards",
+    "allWizards": "Wizards",
+    "allOnboardings": "Onboardings",
+    "showAll": "Alle anzeigen"
+  },
+  "news": {
+    "loading": "Persönliche News werden geladen…",
+    "noRecommendations": "Noch keine Empfehlungen – starte ein Gespräch, damit ich deine Interessen besser kennenlerne."
   }
 }

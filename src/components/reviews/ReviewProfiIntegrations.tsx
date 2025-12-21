@@ -65,14 +65,18 @@ export function ReviewProfiIntegrations() {
   const [loading, setLoading] = useState<string | null>(null)
 
   useEffect(() => {
-    // TODO: Load connection status from backend
     loadConnections()
   }, [])
 
   const loadConnections = async () => {
     try {
-      // TODO: Fetch from backend
-      // For now, use mock data
+      // TODO: Create backend endpoint for review integrations
+      // For now, use existing platform state
+      // const response = await fetch('/api/reviews/integrations')
+      // if (response.ok) {
+      //   const data = await response.json()
+      //   setPlatforms(data.platforms || platforms)
+      // }
     } catch (error) {
       console.error('Failed to load connections:', error)
     }

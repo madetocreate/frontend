@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { useTranslation } from '../i18n'
 
 type CardSource = {
   name: string
@@ -33,6 +34,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:4000'
 
 export function NewsGreetingWidget() {
+  const { t } = useTranslation();
   const [cards, setCards] = useState<GreetingCard[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -96,7 +98,7 @@ export function NewsGreetingWidget() {
   if (loading) {
     return (
       <div className="border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] px-6 py-4 ak-body text-[var(--ak-color-text-muted)]">
-        Persönliche News werden geladen…
+        {t('news.loading')}
       </div>
     )
   }
@@ -112,7 +114,7 @@ export function NewsGreetingWidget() {
   if (!cards || cards.length === 0) {
     return (
       <div className="border-b border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)] px-6 py-4 ak-body text-[var(--ak-color-text-muted)]">
-        Noch keine Empfehlungen – starte ein Gespräch, damit ich deine Interessen besser kennenlerne.
+        {t('news.noRecommendations')}
       </div>
     )
   }

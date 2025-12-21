@@ -4,7 +4,8 @@ import type { ReactNode } from 'react'
 import clsx from 'clsx'
 
 export type AkDrawerScaffoldProps = {
-  title: ReactNode
+  header?: ReactNode
+  title?: ReactNode
   subtitle?: ReactNode
   leading?: ReactNode
   trailing?: ReactNode
@@ -18,6 +19,7 @@ export type AkDrawerScaffoldProps = {
 }
 
 export function AkDrawerScaffold({
+  header,
   title,
   subtitle,
   leading,
@@ -37,26 +39,28 @@ export function AkDrawerScaffold({
         variant === 'graphite' && 'bg-[var(--ak-color-graphite-surface)] text-[var(--ak-color-graphite-text)] border-[var(--ak-color-graphite-border)]',
         headerClassName
       )}>
-        <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-2">
-          <div className="flex items-center">{leading}</div>
-          <div className="min-w-0">
-            <div className={clsx(
-              "truncate text-[var(--ak-font-size-base)] font-semibold tracking-tight",
-              variant === 'graphite' ? "text-[var(--ak-color-graphite-text)]" : "text-[var(--ak-color-text-primary)]"
-            )}>
-              {title}
-            </div>
-            {subtitle ? (
+        {header ? header : (
+          <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-2">
+            <div className="flex items-center">{leading}</div>
+            <div className="min-w-0">
               <div className={clsx(
-                "truncate text-[var(--ak-font-size-xs)]",
-                variant === 'graphite' ? "text-[var(--ak-color-graphite-text)]/70" : "text-[var(--ak-color-text-secondary)]"
+                "truncate text-[var(--ak-font-size-base)] font-semibold tracking-tight",
+                variant === 'graphite' ? "text-[var(--ak-color-graphite-text)]" : "text-[var(--ak-color-text-primary)]"
               )}>
-                {subtitle}
+                {title}
               </div>
-            ) : null}
+              {subtitle ? (
+                <div className={clsx(
+                  "truncate text-[var(--ak-font-size-xs)]",
+                  variant === 'graphite' ? "text-[var(--ak-color-graphite-text)]/70" : "text-[var(--ak-color-text-secondary)]"
+                )}>
+                  {subtitle}
+                </div>
+              ) : null}
+            </div>
+            <div className="flex items-center justify-end gap-2">{trailing}</div>
           </div>
-          <div className="flex items-center justify-end gap-2">{trailing}</div>
-        </div>
+        )}
       </div>
 
       <div className={clsx('flex-1 min-h-0 overflow-y-auto', bodyClassName)}>{children}</div>

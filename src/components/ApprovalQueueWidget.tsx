@@ -1,20 +1,28 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { WidgetCard } from "./ui/WidgetCard";
-import { AkButton } from "./ui/AkButton";
+import { useEffect, useState } from "react";
+import { AkButton } from '@/components/ui/AkButton';
+
+type ApprovalStatus = "pending" | "approved" | "denied";
 
 interface ApprovalRequest {
-  approval_id: string;
-  workflow_id: string;
-  run_id: string;
-  step_key: string;
+  id: string;
+  tenant_id: string;
   tool_name: string;
-  action_description: string;
-  input_data: Record<string, unknown>;
-  status: "pending" | "approved" | "denied";
-  requested_at: string;
-  actor: string;
+  parameters: Record<string, unknown>;
+  status: ApprovalStatus;
+  created_at: string;
+  decided_at?: string;
+  actor?: string | null;
+  reason?: string | null;
+  approval_token?: string | null;
+  source?: string | null;
+}
+
+interface ApprovalQueueResponse {
+  queue: ApprovalRequest[];
+  total_count: number;
+  pending_count: number;
 }
 
 interface ApprovalQueueWidgetProps {
@@ -26,159 +34,113 @@ export function ApprovalQueueWidget({ tenantId = "demo-tenant" }: ApprovalQueueW
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchApprovals = useCallback(async () => {
+  const fetchApprovals = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/approval-flows/queue?tenant_id=${tenantId}&status=pending`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch approvals");
-      }
-      const data = await response.json();
-      setApprovals(data.queue || []);
       setError(null);
+      const response = await fetch(
+        `/api/approval-flows/queue?tenant_id=${encodeURIComponent(tenantId)}&status=pending`
+      );
+      if (!response.ok) throw new Error("Failed to fetch approvals");
+      const data: ApprovalQueueResponse = await response.json();
+      setApprovals(data.queue || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
     }
-  }, [tenantId]);
-
-  useEffect(() => {
-    fetchApprovals();
-    // Poll every 5 seconds
-    const interval = setInterval(fetchApprovals, 5000);
-    return () => clearInterval(interval);
-  }, [tenantId, fetchApprovals]);
+  };
 
   const handleApprove = async (approvalId: string) => {
     try {
+      setError(null);
       const response = await fetch(`/api/approval-flows/${approvalId}/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tenant_id: tenantId }),
       });
-      if (!response.ok) {
-        throw new Error("Failed to approve");
-      }
+      if (!response.ok) throw new Error("Failed to approve");
       await fetchApprovals();
     } catch (err) {
-      console.error("Failed to approve:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
     }
   };
 
   const handleDeny = async (approvalId: string) => {
     try {
+      setError(null);
       const response = await fetch(`/api/approval-flows/${approvalId}/deny`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tenant_id: tenantId }),
       });
-      if (!response.ok) {
-        throw new Error("Failed to deny");
-      }
+      if (!response.ok) throw new Error("Failed to deny");
       await fetchApprovals();
     } catch (err) {
-      console.error("Failed to deny:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
     }
   };
 
-  if (loading && approvals.length === 0) {
-    return (
-      <WidgetCard padding="sm">
-        <div className="flex items-center justify-center py-8">
-          <div className="text-sm text-[var(--ak-color-text-muted)]">Lade Freigaben...</div>
-        </div>
-      </WidgetCard>
-    );
-  }
+  useEffect(() => {
+    fetchApprovals();
+    const interval = setInterval(fetchApprovals, 30000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId]);
 
-  if (error) {
-    return (
-      <WidgetCard padding="sm">
-        <div className="flex items-center justify-center py-8">
-          <div className="text-sm text-[var(--ak-color-text-error)]">{error}</div>
-        </div>
-      </WidgetCard>
-    );
-  }
-
-  if (approvals.length === 0) {
-    return (
-      <WidgetCard padding="sm">
-        <div className="flex items-center justify-center py-8">
-          <div className="text-sm text-[var(--ak-color-text-muted)]">
-            Keine ausstehenden Freigaben
-          </div>
-        </div>
-      </WidgetCard>
-    );
-  }
+  if (loading) return <div className="p-4 text-sm text-[var(--ak-color-text-muted)]">Loading approval queue...</div>;
+  if (error) return <div className="p-4 text-sm text-[var(--ak-color-danger-strong)]">Error: {error}</div>;
+  if (approvals.length === 0)
+    return <div className="p-4 text-sm text-[var(--ak-color-text-muted)]">No pending approvals</div>;
 
   return (
-    <WidgetCard padding="sm">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="ak-heading text-sm font-semibold">Freigaben ({approvals.length})</h3>
-        <button
-          onClick={fetchApprovals}
-          className="text-xs text-[var(--ak-color-text-muted)] hover:text-[var(--ak-color-text-primary)]"
-        >
-          Aktualisieren
-        </button>
-      </div>
-
+    <div className="p-4 border border-[var(--ak-color-border-subtle)] rounded-[var(--ak-radius-lg)] bg-[var(--ak-color-bg-surface)] shadow-[var(--ak-shadow-sm)]">
+      <h3 className="text-lg font-semibold mb-4 text-[var(--ak-color-text-primary)]">Pending Approvals</h3>
       <div className="space-y-3">
         {approvals.map((approval) => (
-          <div
-            key={approval.approval_id}
-            className="rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-3"
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex-1">
-                <div className="text-sm font-medium text-[var(--ak-color-text-primary)]">
-                  {approval.tool_name}
-                </div>
-                <div className="text-xs text-[var(--ak-color-text-muted)] mt-1">
-                  {approval.action_description || "Aktion erfordert Freigabe"}
-                </div>
+          <div key={approval.id} className="p-3 border border-[var(--ak-color-border-subtle)] rounded-[var(--ak-radius-md)] bg-[var(--ak-color-bg-surface-muted)]">
+            <div className="flex justify-between items-start gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-[var(--ak-color-text-primary)] break-words">Tool: {approval.tool_name}</p>
+                <p className="text-sm text-[var(--ak-color-text-secondary)]">
+                  Requested: {new Date(approval.created_at).toLocaleString()}
+                </p>
+                {approval.reason ? (
+                  <p className="text-sm text-[var(--ak-color-text-secondary)] break-words">Reason: {approval.reason}</p>
+                ) : null}
+                {approval.actor ? (
+                  <p className="text-sm text-[var(--ak-color-text-secondary)] break-words">Actor: {approval.actor}</p>
+                ) : null}
+                {approval.source ? (
+                  <p className="text-sm text-[var(--ak-color-text-secondary)] break-words">Source: {approval.source}</p>
+                ) : null}
+                <details className="mt-2 group">
+                  <summary className="text-sm text-[var(--ak-color-text-secondary)] cursor-pointer hover:text-[var(--ak-color-text-primary)] transition-colors">Parameters</summary>
+                  <pre className="mt-2 p-2 bg-[var(--ak-color-bg-surface)] rounded text-xs overflow-auto border border-[var(--ak-color-border-fine)]">
+                    {JSON.stringify(approval.parameters, null, 2)}
+                  </pre>
+                </details>
               </div>
-              <div className="text-xs text-[var(--ak-color-text-muted)]">
-                {new Date(approval.requested_at).toLocaleTimeString()}
+              <div className="flex gap-2 flex-shrink-0">
+                <AkButton
+                  onClick={() => handleApprove(approval.id)}
+                  variant="primary"
+                  className="!bg-[var(--ak-color-success)] !border-transparent hover:!opacity-90 text-white"
+                >
+                  Approve
+                </AkButton>
+                <AkButton
+                  onClick={() => handleDeny(approval.id)}
+                  variant="primary"
+                  className="!bg-[var(--ak-color-danger-strong)] !border-transparent hover:!opacity-90 text-white"
+                >
+                  Deny
+                </AkButton>
               </div>
-            </div>
-
-            {approval.input_data && Object.keys(approval.input_data).length > 0 && (
-              <div className="mt-2 p-2 bg-[var(--ak-color-bg-surface-muted)] rounded text-xs">
-                <div className="font-medium mb-1">Details:</div>
-                <pre className="text-[var(--ak-color-text-muted)] whitespace-pre-wrap break-words">
-                  {JSON.stringify(approval.input_data, null, 2)}
-                </pre>
-              </div>
-            )}
-
-            <div className="flex gap-2 mt-3">
-              <AkButton
-                onClick={() => handleApprove(approval.approval_id)}
-                variant="primary"
-                size="sm"
-                className="flex-1"
-              >
-                Genehmigen
-              </AkButton>
-              <AkButton
-                onClick={() => handleDeny(approval.approval_id)}
-                variant="secondary"
-                size="sm"
-                className="flex-1"
-              >
-                Ablehnen
-              </AkButton>
             </div>
           </div>
         ))}
       </div>
-    </WidgetCard>
+    </div>
   );
 }
-

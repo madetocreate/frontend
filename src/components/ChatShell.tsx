@@ -32,9 +32,11 @@ import { ChatMarkdown } from "./chat/markdown/ChatMarkdown";
 import { normalizeChatMarkdown } from "./chat/markdown/normalizeChatMarkdown";
 import { FastActionsChips } from "./chat/FastActionsChips";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
-import { useChatThreads, setActiveThreadId, updateChatThread } from "../lib/chatThreadsStore";
+import { useChatThreads, setActiveThreadId, updateChatThread, writeChatThreads } from "../lib/chatThreadsStore";
 import { useSearchParams } from "next/navigation";
-import { currentIndustry } from "../lib/featureFlags";
+// import { currentIndustry } from "../lib/featureFlags"; // Not used
+import { useTranslation } from "../i18n";
+import { ContextCardRenderer } from "./chat/cards";
 
 type ChatMessage = {
   id: string;
@@ -51,9 +53,10 @@ type ThinkingStep = {
 };
 
 export function ChatShell() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const [tenantId] = useState<string>("aklow-main");
-  const [hostname, setHostname] = useState<string | null>(null);
+  // const [hostname, setHostname] = useState<string | null>(null); // Not used
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -64,28 +67,11 @@ export function ChatShell() {
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
   const [isStepsOpen, setIsStepsOpen] = useState(false);
   
-  useEffect(() => {
-    // Ensure SSR/CSR initial render matches; hostname is only known on the client.
-    setHostname(typeof window !== "undefined" ? window.location.hostname : null);
-  }, []);
+  // Hostname check removed - profession-specific features archived
+  // useEffect(() => {
+  //   setHostname(typeof window !== "undefined" ? window.location.hostname : null);
+  // }, []);
 
-  const [showPromptStarters] = useState(true);
-  const isGastroTenant =
-    currentIndustry === "gastronomie" ||
-    tenantId.includes("gastro") ||
-    (hostname ? hostname.includes("gastro") : false);
-  
-  const PROMPT_STARTERS = isGastroTenant ? [
-    { title: "Speisekarte", text: "Zeig mir die aktuelle Speisekarte", icon: "🍴" },
-    { title: "Reservierung", text: "Ich möchte einen Tisch reservieren", icon: "📅" },
-    { title: "Getränke", text: "Welche Weine empfehlt ihr?", icon: "🍷" },
-    { title: "Öffnungszeiten", text: "Wann habt ihr heute offen?", icon: "🕒" },
-  ] : [
-    { title: "E-Mail schreiben", text: "Schreibe eine professionelle E-Mail an einen Kunden...", icon: "✉️" },
-    { title: "Code analysieren", text: "Analysiere diesen Code-Schnipsel auf Fehler...", icon: "💻" },
-    { title: "Strategie planen", text: "Erstelle eine Marketing-Strategie für ein neues Produkt...", icon: "📈" },
-    { title: "Text zusammenfassen", text: "Fasse den folgenden Text kurz und prägnant zusammen...", icon: "📝" },
-  ];
 
   const [hoveredTooltip, setHoveredTooltip] = useState<{ messageId: string; icon: string } | null>(null);
   const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -187,6 +173,7 @@ export function ChatShell() {
   const messagesRef = useRef<ChatMessage[]>([]);
   const isSendingRef = useRef(false);
   const activeThreadIdRef = useRef(activeThreadId);
+  const viewTransitionRef = useRef<{ transition: ReturnType<typeof document.startViewTransition> | null }>({ transition: null });
   const inputLatestRef = useRef("");
 
   useEffect(() => { messagesRef.current = messages; }, [messages]);
@@ -195,6 +182,7 @@ export function ChatShell() {
   useEffect(() => { inputLatestRef.current = input; }, [input]);
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
+  const scrollParentRef = useRef<HTMLDivElement>(null);
   const [showJumpToBottom, setShowJumpToBottom] = useState(false);
   const isNearBottomRef = useRef(true);
 
@@ -408,13 +396,56 @@ export function ChatShell() {
     [threadStorageKey]
   );
 
+  // Entfernt leere Threads (keine Nachrichten mit Inhalt) und deren Speicher
+  const removeThreadIfEmpty = useCallback((threadId: string | null) => {
+    if (typeof window === "undefined" || !threadId) return;
+
+    // Hole gespeicherte Nachrichten; wenn der Thread aktiv ist, nutze aktuelle Messages
+    const stored = loadMessages(threadId);
+    const candidate = activeThreadIdRef.current === threadId ? messagesRef.current : stored;
+    const hasContent = candidate.some((m) => (m.text || "").trim().length > 0);
+
+    if (!hasContent) {
+      try {
+        localStorage.removeItem(threadStorageKey(threadId));
+      } catch {
+        // ignore
+      }
+      const next = threads.filter((t) => t.id !== threadId);
+      writeChatThreads(next);
+
+      // Falls gerade aktiv, auf einen vorhandenen Thread umschalten
+      if (activeThreadIdRef.current === threadId) {
+        const fallback = next[0]?.id || null;
+        setActiveThreadId(fallback);
+        setActiveThreadIdLocal(fallback || "thread-default");
+        currentThreadRef.current = fallback;
+        if (fallback) {
+          const loaded = loadMessages(fallback);
+          setMessages(loaded);
+        } else {
+          setMessages([]);
+        }
+      }
+    }
+  }, [loadMessages, threadStorageKey, threads]);
+
   // Sync local activeThreadId with store and URL
   useEffect(() => {
+    // Skip if a view transition is already in progress
+    if (viewTransitionRef.current.transition) {
+      return;
+    }
+
     const urlThreadId = searchParams.get("thread");
     if (urlThreadId && urlThreadId !== activeThreadId) {
       if (document.startViewTransition) {
-        document.startViewTransition(() => {
+        const transition = document.startViewTransition(() => {
           setActiveThreadId(urlThreadId);
+        });
+        viewTransitionRef.current.transition = transition;
+        transition.finished.finally(() => {
+          viewTransitionRef.current.transition = null;
         });
       } else {
         setActiveThreadId(urlThreadId);
@@ -424,11 +455,15 @@ export function ChatShell() {
 
     if (storeActiveThreadId && storeActiveThreadId !== activeThreadId) {
       if (document.startViewTransition) {
-        document.startViewTransition(() => {
+        const transition = document.startViewTransition(() => {
           setActiveThreadIdLocal(storeActiveThreadId);
           currentThreadRef.current = storeActiveThreadId;
           const loaded = loadMessages(storeActiveThreadId);
           setMessages(loaded);
+        });
+        viewTransitionRef.current.transition = transition;
+        transition.finished.finally(() => {
+          viewTransitionRef.current.transition = null;
         });
       } else {
         setActiveThreadIdLocal(storeActiveThreadId);
@@ -500,10 +535,42 @@ export function ChatShell() {
     return base.length > 80 ? base.slice(0, 77) + "…" : base || "Neuer Chat";
   }, []);
 
+  // Speichern/Ablegen eines Threads inkl. Zusammenfassung an Memory-Agent
+  const saveThreadToMemory = useCallback(async (threadId: string) => {
+    const tenant = tenantId || "aklow-main";
+    const messagesToUse = threadId === currentThreadRef.current ? messagesRef.current : loadMessages(threadId);
+    const textParts = messagesToUse
+      .filter(m => (m.text || "").trim().length > 0)
+      .slice(-10) // letzte 10 Nachrichten
+      .map(m => `${m.role === "user" ? "User" : "Assistant"}: ${m.text?.trim() || ""}`);
+    const summarySource = textParts.join("\n").slice(0, 4000);
+
+    const summary = summarySource
+      ? `Zusammenfassung des Chats:\n${summarySource}`
+      : "Leerer Chat ohne Inhalt.";
+
+    try {
+      await fetch("/api/memory/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          threadId,
+          role: "assistant",
+          content: summary,
+          timestamp: new Date().toISOString(),
+          tenantId: tenant,
+        }),
+      });
+    } catch (err) {
+      console.error("Speichern fehlgeschlagen:", err);
+    }
+  }, [loadMessages, tenantId]);
+
   useEffect(() => {
     const handleSelect = (e: Event) => {
       const detail = (e as CustomEvent).detail as { threadId?: string } | undefined;
       if (!detail?.threadId) return;
+      removeThreadIfEmpty(activeThreadIdRef.current);
       setActiveThreadId(detail.threadId);
     };
 
@@ -516,6 +583,7 @@ export function ChatShell() {
         return `thread-${performance.now()}-${Math.random().toString(36).slice(2)}`;
       };
       const newId = detail?.threadId || generateThreadId();
+      removeThreadIfEmpty(activeThreadIdRef.current);
       setActiveThreadId(newId);
     };
 
@@ -611,7 +679,7 @@ export function ChatShell() {
       const lastAssistantMessage = [...messagesRef.current].reverse().find((m) => m.role === "assistant");
       if (lastAssistantMessage) {
         // Simulate click on quick actions button for last message
-        const quickActionsButton = document.querySelector(`[data-message-id="${lastAssistantMessage.id}"] [aria-label="Schnellaktionen"]`) as HTMLButtonElement;
+        const quickActionsButton = document.querySelector(`[data-message-id="${lastAssistantMessage.id}"] [aria-label="${t('chat.quickActions')}"]`) as HTMLButtonElement;
         if (quickActionsButton) {
           quickActionsButton.click();
         }
@@ -638,6 +706,28 @@ export function ChatShell() {
       }
     };
 
+    const handleSaveThread = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { threadId?: string } | undefined;
+      const threadId = detail?.threadId || activeThreadIdRef.current || currentThreadRef.current;
+      if (threadId) {
+        void saveThreadToMemory(threadId);
+      }
+    };
+
+    // Chat First: Handle prefill-chat events from FAB and other sources
+    const handlePrefillChat = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { prompt?: string; context?: string; id?: string } | undefined;
+      if (detail?.prompt) {
+        setInput(detail.prompt);
+        inputRef.current?.focus();
+        // Auto-resize textarea
+        if (inputRef.current) {
+          inputRef.current.style.height = 'auto';
+          inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 200)}px`;
+        }
+      }
+    };
+
     window.addEventListener("aklow-toggle-dictation", handleToggleDictation as EventListener);
     window.addEventListener("aklow-toggle-realtime", handleToggleRealtime as EventListener);
     window.addEventListener("aklow-stop-tts", handleStopTts as EventListener);
@@ -648,6 +738,8 @@ export function ChatShell() {
     window.addEventListener("aklow-read-message", handleReadMessage as EventListener);
     window.addEventListener("aklow-open-quick-actions", handleOpenQuickActions as EventListener);
     window.addEventListener("aklow-send-quick-action", handleQuickAction as EventListener);
+    window.addEventListener("aklow-save-thread", handleSaveThread as EventListener);
+    window.addEventListener("aklow-prefill-chat", handlePrefillChat as EventListener);
 
     return () => {
       window.removeEventListener("aklow-select-thread", handleSelect as EventListener);
@@ -663,8 +755,10 @@ export function ChatShell() {
       window.removeEventListener("aklow-read-message", handleReadMessage as EventListener);
       window.removeEventListener("aklow-open-quick-actions", handleOpenQuickActions as EventListener);
       window.removeEventListener("aklow-send-quick-action", handleQuickAction as EventListener);
+      window.removeEventListener("aklow-save-thread", handleSaveThread as EventListener);
+      window.removeEventListener("aklow-prefill-chat", handlePrefillChat as EventListener);
     };
-  }, [stopTts, dictationStatus, startRecording, stopRecording, toggleTts, tenantId, pressRealtime, stopRealtimeAll, realtimeStatus]);
+  }, [stopTts, dictationStatus, startRecording, stopRecording, toggleTts, tenantId, pressRealtime, stopRealtimeAll, realtimeStatus, t, removeThreadIfEmpty, saveThreadToMemory]);
 
   // Initial load messages on mount if thread is already selected
   useEffect(() => {
@@ -731,6 +825,18 @@ export function ChatShell() {
       saveMessages(threadId, next, false);
       return next;
     });
+
+    // Automatische Titel-/Preview-Generierung beim ersten Inhalt
+    const currentThread = threads.find(t => t.id === threadId);
+    const needsAutoNaming = currentThread && (currentThread.title === "Neuer Chat" || currentThread.title === "Willkommen!");
+    if (needsAutoNaming) {
+      const autoTitle = makeTitle(trimmed);
+      updateChatThread(threadId, {
+        title: autoTitle,
+        preview: trimmed.slice(0, 120),
+        lastMessageAt: Date.now(),
+      });
+    }
     
     setInput("");
     setAttachments([]); // Clear attachments after sending
@@ -878,7 +984,7 @@ export function ChatShell() {
             const errorText = error.message || "Unbekannter Fehler im Chat";
             setMessages((prev) => {
               const updated = prev.map((msg) =>
-                msg.id === assistantMessageId ? { ...msg, text: "Fehler beim Senden: " + errorText } : msg
+                msg.id === assistantMessageId ? { ...msg, text: t('chat.errorSending') + ": " + errorText } : msg
               );
               saveMessages(threadId, updated);
               return updated;
@@ -912,7 +1018,7 @@ export function ChatShell() {
       setThinkingNote("Fehler beim Streamen");
       setIsSending(false);
     }
-  }, [isSending, tenantId, stopTts, saveMessages, attachments, threads, makeTitle]);
+  }, [isSending, tenantId, stopTts, saveMessages, attachments, threads, makeTitle, t]);
 
   const handleQuickCardClick = useCallback(async (text: string) => {
     setFollowUpSuggestions([]);
@@ -984,7 +1090,7 @@ export function ChatShell() {
             }
             setHoveredTooltip(null);
           }}
-          style={{ marginLeft: "auto", maxWidth: "60%", marginRight: "3%" }}
+          style={{ marginLeft: "auto", maxWidth: "70%", marginRight: "4%" }}
         >
           <div className="flex flex-col gap-2" style={{ alignItems: "flex-end", width: "100%" }}>
             {editingMessageId === message.id ? (
@@ -1000,7 +1106,7 @@ export function ChatShell() {
                       handleEditCancel();
                     }
                   }}
-                  className="ak-body whitespace-pre-wrap leading-relaxed rounded-xl px-2.5 py-1.5 shadow-sm text-right bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="ak-body whitespace-pre-wrap leading-relaxed rounded-xl px-2.5 py-1.5 shadow-sm text-right bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)] resize-none focus:outline-none focus:ring-0"
                   style={{ color: "var(--ak-color-text-primary)", fontSize: "16px", minHeight: "60px" }}
                   autoFocus
                 />
@@ -1023,8 +1129,8 @@ export function ChatShell() {
               </div>
             ) : (
               <div
-                className="ak-body whitespace-pre-wrap leading-relaxed rounded-xl px-2.5 py-1.5 shadow-sm text-right bg-[var(--ak-color-bg-surface-muted)] border border-[var(--ak-color-border-subtle)]"
-                style={{ color: "var(--ak-color-text-primary)", fontSize: "16px" }}
+                className="ak-body whitespace-pre-wrap leading-[1.7] rounded-2xl px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)] text-right bg-gradient-to-br from-[var(--ak-color-bg-surface-muted)] to-[var(--ak-color-bg-surface)] border border-[var(--ak-color-border-subtle)]"
+                style={{ color: "var(--ak-color-text-primary)", fontSize: "15px" }}
               >
                 {message.text}
               </div>
@@ -1032,7 +1138,7 @@ export function ChatShell() {
             
             {/* Action Row (User) */}
             <div 
-              className={`${hoveredUserMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-1 mt-1`}
+              className={`${hoveredUserMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-0 mt-1`}
             >
               {/* Edit */}
               <div className="relative">
@@ -1041,14 +1147,14 @@ export function ChatShell() {
                   onClick={handleUserEdit}
                   onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'edit' })}
                   onMouseLeave={() => setHoveredTooltip(null)}
-                  className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-md hover:bg-black/5 active:scale-95"
-                  aria-label="Bearbeiten"
+                  className="p-1.5 text-gray-800 hover:text-black transition-colors rounded-md hover:bg-black/5 active:scale-95"
+                  aria-label={t('chat.edit')}
                 >
-                  <PencilSquareIcon className="h-4 w-4" />
+                  <PencilSquareIcon className="h-5 w-5" />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'edit' && (
                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
-                    Bearbeiten
+                    {t('chat.edit')}
                   </span>
                 )}
               </div>
@@ -1060,10 +1166,10 @@ export function ChatShell() {
                   onClick={handleUserCopy}
                   onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'copy' })}
                   onMouseLeave={() => setHoveredTooltip(null)}
-                  className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-md hover:bg-black/5 active:scale-95"
+                  className="p-1.5 text-gray-800 hover:text-black transition-colors rounded-md hover:bg-black/5 active:scale-95"
                   aria-label="Kopieren"
                 >
-                  <ClipboardDocumentIcon className="h-4 w-4" />
+                  <ClipboardDocumentIcon className="h-5 w-5" />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'copy' && (
                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
@@ -1079,14 +1185,14 @@ export function ChatShell() {
                   onClick={() => sendMessage(message.text)}
                   onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'retry' })}
                   onMouseLeave={() => setHoveredTooltip(null)}
-                  className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-md hover:bg-black/5 active:scale-95"
-                  aria-label="Erneut senden"
+                  className="p-1.5 text-gray-800 hover:text-black transition-colors rounded-md hover:bg-black/5 active:scale-95"
+                  aria-label={t('chat.retry')}
                 >
-                  <ArrowPathIcon className="h-4 w-4" />
+                  <ArrowPathIcon className="h-5 w-5" />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'retry' && (
                   <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
-                    Erneut senden
+                    {t('chat.retry')}
                   </span>
                 )}
               </div>
@@ -1254,8 +1360,8 @@ export function ChatShell() {
           }
         }}
         style={{
-          marginLeft: "3%",
-          maxWidth: "85%",
+          marginLeft: "4%",
+          maxWidth: "80%",
           opacity: 1,
         }}
       >
@@ -1270,7 +1376,7 @@ export function ChatShell() {
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-xs font-medium text-gray-500 hover:bg-gray-100 transition-colors group/think"
                 >
                   <SparklesIcon className={clsx("h-3.5 w-3.5 transition-transform duration-500", isSending && "animate-spin text-indigo-500")} />
-                  <span>{isSending ? "Überlegt..." : "Gedankengang anzeigen"}</span>
+                  <span>{isSending ? t('chat.thinking') : t('chat.showThinking')}</span>
                   <ChevronRightIcon className={clsx("h-3 w-3 ml-1 transition-transform", showThinkingInline[message.id] && "rotate-90")} />
                 </button>
                 
@@ -1303,7 +1409,7 @@ export function ChatShell() {
             )}
 
             <div className="flex w-full items-start justify-between gap-3">
-              <div className="flex-1 min-w-0 text-black font-medium antialiased">
+              <div className="flex-1 min-w-0 text-[var(--ak-color-text-primary)] font-normal antialiased leading-[1.7]">
                 <ChatMarkdown content={normalizeChatMarkdown(message.text)} />
               </div>
             </div>
@@ -1324,97 +1430,103 @@ export function ChatShell() {
                 <button
                   type="button"
                   onClick={handleReadAloud}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded text-blue-600 hover:bg-blue-50 transition-colors"
-                  aria-label="Vorlesen stoppen"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                  aria-label={t('chat.stopReadAloud')}
                 >
-                  <SpeakerWaveIcon className="h-4 w-4" aria-hidden="true" strokeWidth={1} />
+                  <SpeakerWaveIcon className="h-5 w-5" aria-hidden="true" strokeWidth={1} />
                 </button>
               </div>
             )}
 
             {/* Action Row (Inline Expansion) */}
-            <div className="flex items-center gap-1 mt-1.5 opacity-100 transition-opacity duration-200 relative">
-              {/* 1. Copy */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'copy' })}
-                  onMouseLeave={() => setHoveredTooltip(null)}
-                  className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-md hover:bg-black/5 active:scale-95"
-                  aria-label="Kopieren"
-                >
-                  <ClipboardDocumentIcon className="h-4 w-4" />
-                </button>
+            <div className="flex items-center gap-0 mt-1.5 opacity-100 transition-opacity duration-200 relative">
+{/* 1. Copy */}
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={handleCopy}
+                                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'copy' })}
+                                  onMouseLeave={() => setHoveredTooltip(null)}
+                                  className="p-1.5 text-gray-500 hover:text-gray-900 transition-all duration-150 rounded-lg hover:bg-gray-100 hover:scale-110 active:scale-95"
+                                  aria-label={t('chat.copy')}
+                                >
+                                  <ClipboardDocumentIcon className="h-5 w-5" />
+                                </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'copy' && (
                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
-                    Kopieren
+                    {t('chat.copy')}
                   </span>
                 )}
               </div>
 
-              {/* 2. Thumb Up */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => handleFeedback(message.id, 'thumbs_up')}
-                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'thumbs_up' })}
-                  onMouseLeave={() => setHoveredTooltip(null)}
-                  className={clsx(
-                    "p-1.5 transition-colors rounded-md hover:bg-black/5 active:scale-95",
-                    feedbackStatus[message.id] === 'thumbs_up' ? "text-green-600" : "text-gray-400 hover:text-gray-900"
-                  )}
-                  aria-label="Gut"
-                >
-                  <HandThumbUpIcon className="h-4 w-4" />
-                </button>
+{/* 2. Thumb Up */}
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={() => handleFeedback(message.id, 'thumbs_up')}
+                                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'thumbs_up' })}
+                                  onMouseLeave={() => setHoveredTooltip(null)}
+                                  className={clsx(
+                                    "p-1.5 transition-all duration-150 rounded-lg hover:scale-110 active:scale-95",
+                                    feedbackStatus[message.id] === 'thumbs_up' 
+                                      ? "text-green-600 bg-green-50 scale-110" 
+                                      : "text-gray-500 hover:text-green-600 hover:bg-green-50"
+                                  )}
+                                  aria-label={t('chat.feedback.good')}
+                                >
+                                  <HandThumbUpIcon className="h-5 w-5" />
+                                </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'thumbs_up' && (
                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
-                    Gut
+                    {t('chat.feedback.good')}
                   </span>
                 )}
               </div>
 
-              {/* 3. Thumb Down */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => handleFeedback(message.id, 'thumbs_down')}
-                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'thumbs_down' })}
-                  onMouseLeave={() => setHoveredTooltip(null)}
-                  className={clsx(
-                    "p-1.5 transition-colors rounded-md hover:bg-black/5 active:scale-95",
-                    feedbackStatus[message.id] === 'thumbs_down' ? "text-red-600" : "text-gray-400 hover:text-gray-900"
-                  )}
-                  aria-label="Schlecht"
-                >
-                  <HandThumbDownIcon className="h-4 w-4" />
-                </button>
+{/* 3. Thumb Down */}
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={() => handleFeedback(message.id, 'thumbs_down')}
+                                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'thumbs_down' })}
+                                  onMouseLeave={() => setHoveredTooltip(null)}
+                                  className={clsx(
+                                    "p-1.5 transition-all duration-150 rounded-lg hover:scale-110 active:scale-95",
+                                    feedbackStatus[message.id] === 'thumbs_down' 
+                                      ? "text-red-600 bg-red-50 scale-110" 
+                                      : "text-gray-500 hover:text-red-600 hover:bg-red-50"
+                                  )}
+                                  aria-label={t('chat.feedback.bad')}
+                                >
+                                  <HandThumbDownIcon className="h-5 w-5" />
+                                </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'thumbs_down' && (
                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
-                    Schlecht
+                    {t('chat.feedback.bad')}
                   </span>
                 )}
               </div>
 
-              {/* 4. Quick Actions */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={handleQuickActions}
-                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'quick' })}
-                  onMouseLeave={() => setHoveredTooltip(null)}
-                  className={clsx(
-                    "p-1.5 transition-colors rounded-md hover:bg-black/5 active:scale-95",
-                    fastActionsOpenMessageId === message.id ? "text-blue-600 bg-blue-50" : "text-gray-400 hover:text-gray-900"
-                  )}
-                  aria-label="Schnellaktionen"
-                >
-                  <SparklesIcon className="h-4 w-4" />
-                </button>
+{/* 4. Quick Actions */}
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={handleQuickActions}
+                                  onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'quick' })}
+                                  onMouseLeave={() => setHoveredTooltip(null)}
+                                  className={clsx(
+                                    "p-1.5 transition-all duration-150 rounded-lg hover:scale-110 active:scale-95",
+                                    fastActionsOpenMessageId === message.id 
+                                      ? "text-indigo-600 bg-indigo-50 scale-110" 
+                                      : "text-gray-500 hover:text-indigo-600 hover:bg-indigo-50"
+                                  )}
+                                  aria-label={t('chat.quickActions')}
+                                >
+                                  <SparklesIcon className="h-5 w-5" />
+                                </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'quick' && (
                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
-                    Schnellaktionen
+                    {t('chat.quickActions')}
                   </span>
                 )}
               </div>
@@ -1429,14 +1541,14 @@ export function ChatShell() {
                       onClick={handleUpdate}
                       onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'update' })}
                       onMouseLeave={() => setHoveredTooltip(null)}
-                      className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-md hover:bg-black/5 active:scale-95"
-                      aria-label="Neu generieren"
+                      className="p-1.5 text-gray-800 hover:text-black transition-colors rounded-md hover:bg-black/5 active:scale-95"
+                      aria-label={t('chat.regenerate')}
                     >
-                      <ArrowPathIcon className="h-4 w-4" />
+                      <ArrowPathIcon className="h-5 w-5" />
                     </button>
                     {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'update' && (
                       <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
-                        Neu generieren
+                        {t('chat.regenerate')}
                       </span>
                     )}
                   </div>
@@ -1451,11 +1563,11 @@ export function ChatShell() {
                       onMouseLeave={() => setHoveredTooltip(null)}
                       className={clsx(
                         "p-1.5 transition-colors rounded-md hover:bg-black/5 disabled:opacity-50 active:scale-95",
-                        ttsActive ? "text-gray-900 bg-black/5" : "text-gray-400 hover:text-gray-900"
+                        ttsActive ? "text-gray-900 bg-black/5" : "text-gray-800 hover:text-black"
                       )}
                       aria-label="Vorlesen"
                     >
-                      <SpeakerWaveIcon className="h-4 w-4" />
+                      <SpeakerWaveIcon className="h-5 w-5" />
                     </button>
                     {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'read' && (
                       <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
@@ -1473,15 +1585,15 @@ export function ChatShell() {
                       onMouseLeave={() => setHoveredTooltip(null)}
                       className={clsx(
                         "p-1.5 transition-colors rounded-md hover:bg-black/5 active:scale-95",
-                        savedMessageId === message.id ? "text-green-600" : "text-gray-400 hover:text-gray-900"
+                        savedMessageId === message.id ? "text-green-600" : "text-gray-800 hover:text-black"
                       )}
-                      aria-label="Speichern"
+                      aria-label={t('chat.save')}
                     >
-                      <BookmarkIcon className="h-4 w-4" />
+                      <BookmarkIcon className="h-5 w-5" />
                     </button>
                     {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'save' && (
                       <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
-                        {savedMessageId === message.id ? "Gespeichert" : "Speichern"}
+                        {savedMessageId === message.id ? t('chat.saved') : t('chat.save')}
                       </span>
                     )}
                   </div>
@@ -1493,10 +1605,10 @@ export function ChatShell() {
                     onClick={() => setExpandedActions(prev => ({ ...prev, [message.id]: true }))}
                     onMouseEnter={() => setHoveredTooltip({ messageId: message.id, icon: 'more' })}
                     onMouseLeave={() => setHoveredTooltip(null)}
-                    className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors rounded-md hover:bg-black/5 active:scale-95"
+                    className="p-1.5 text-gray-800 hover:text-black transition-colors rounded-md hover:bg-black/5 active:scale-95"
                     aria-label="Mehr"
                   >
-                    <EllipsisHorizontalIcon className="h-4 w-4" />
+                    <EllipsisHorizontalIcon className="h-5 w-5" />
                   </button>
                   {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'more' && (
                     <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
@@ -1534,25 +1646,26 @@ export function ChatShell() {
             ) : null}
 
 
-            {isLastAssistantMessage(message) && followUpSuggestions.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2 animate-[fadeInUp_0.3s_var(--ak-motion-ease)]">
-                {followUpSuggestions.slice(0, 3).map((suggestion, index) => (
-                  <button
-                    key={`suggestion-${index}`}
-                    type="button"
-                    onClick={() => handleQuickCardClick(suggestion)}
-                    className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 active:scale-95 transition-all shadow-sm"
-                    style={{
-                      animationDelay: `${index * 50}ms`,
-                      animation: "fadeInUp 0.3s var(--ak-motion-ease) forwards",
-                      opacity: 0,
-                    }}
-                  >
-                    {suggestion} <span className="text-gray-400 ml-1">→</span>
-                  </button>
-                ))}
-              </div>
-            )}
+{isLastAssistantMessage(message) && followUpSuggestions.length > 0 && (
+                              <div className="mt-6 flex flex-wrap gap-2.5">
+                                {followUpSuggestions.slice(0, 3).map((suggestion, index) => (
+                                  <button
+                                    key={`suggestion-${index}`}
+                                    type="button"
+                                    onClick={() => handleQuickCardClick(suggestion)}
+                                    className="px-4 py-2 rounded-full bg-gradient-to-b from-white to-gray-50/80 border border-gray-200/80 text-sm font-medium text-gray-700 hover:bg-white hover:border-gray-300 hover:text-gray-900 hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow-sm backdrop-blur-sm group"
+                                    style={{
+                                      animationDelay: `${index * 80}ms`,
+                                      animation: "fadeInUp 0.4s var(--ak-motion-ease) forwards",
+                                      opacity: 0,
+                                    }}
+                                  >
+                                    {suggestion} 
+                                    <span className="text-gray-400 ml-1.5 group-hover:text-indigo-500 group-hover:translate-x-0.5 inline-block transition-all">→</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
           </div>
         </div>
       </div>
@@ -1646,8 +1759,8 @@ export function ChatShell() {
     <div
       suppressHydrationWarning
       className={clsx(
-        "flex h-full min-h-0 w-full max-w-full flex-col gap-4 px-4 pt-4 pb-2 relative overflow-hidden transition-colors duration-1000 ease-in-out",
-        ambientColor
+        "flex h-screen min-h-screen w-full max-w-full flex-col gap-0 relative transition-colors duration-1000 ease-in-out overflow-hidden",
+        ambientColor === "bg-white" ? "bg-slate-50/50" : ambientColor
       )}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
@@ -1673,7 +1786,7 @@ export function ChatShell() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[9999] bg-indigo-600/10 backdrop-blur-sm border-2 border-indigo-600 border-dashed m-4 rounded-3xl flex items-center justify-center pointer-events-none"
+            className="fixed inset-0 z-[9999] bg-indigo-600/10 backdrop-blur-sm border-2 border-indigo-600 border-dashed m-4 rounded-3xl flex items-center justify-center pointer-events-none"
           >
             <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center gap-3">
               <div className="h-16 w-16 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600">
@@ -1737,88 +1850,86 @@ export function ChatShell() {
         note={thinkingNote}
       />
 
-      <div className="flex-1 min-h-0 w-full max-w-full relative">
-        <Virtuoso
-          ref={virtuosoRef}
-          data={messages}
-          atBottomStateChange={atBottomStateChange}
-          followOutput="auto"
-          initialTopMostItemIndex={messages.length - 1}
-          className="ak-scrollbar"
-          itemContent={(index, msg) => (
-            <div className="mx-auto max-w-3xl w-full px-4 py-2">
-              {renderMessageMemo(msg)}
-            </div>
-          )}
-          components={{
-            Header: () => (
-              <div className="mx-auto max-w-3xl w-full px-4 py-8">
-                {messages.length === 0 && (
-                  <div className="flex min-h-[60vh] flex-col items-center justify-center gap-12">
-                    <div className="flex flex-col items-center gap-4 opacity-0 animate-[fadeIn_0.5s_ease-out_forwards]">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-                        <SparklesIcon className="h-6 w-6 text-gray-900" />
-                      </div>
-                      <h2 className="text-2xl font-semibold text-gray-900 tracking-tight text-center">
-                        Was kann ich für dich tun?
-                      </h2>
-                    </div>
+      {/* Top Spacer to keep content below header/toolbars */}
+      <div className="h-14 shrink-0" />
 
-                    {showPromptStarters && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl opacity-0 animate-[fadeIn_0.5s_ease-out_0.2s_forwards]">
-                        {PROMPT_STARTERS.map((starter) => (
-                          <button
-                            key={starter.title}
-                            onClick={() => sendMessage(starter.text)}
-                            className="flex flex-col gap-1 text-left p-4 rounded-2xl border border-gray-200 bg-white/50 hover:bg-white hover:border-gray-300 hover:shadow-md transition-all active:scale-[0.98] group"
-                          >
-                            <span className="text-xl mb-1">{starter.icon}</span>
-                            <span className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
-                              {starter.title}
-                            </span>
-                            <span className="text-xs text-gray-500 line-clamp-1 italic">
-                              {starter.text}
-                            </span>
-                          </button>
-                        ))}
+      {/* Scrollable Content Area - single scroll parent */}
+      <div className="flex-1 min-h-0 relative overflow-hidden">
+        <div
+          ref={scrollParentRef}
+          className="h-full overflow-y-auto ak-scrollbar pt-16 pb-48"
+        >
+          {/* Context cards */}
+          <div className="px-4 pt-2 pb-4">
+            <ContextCardRenderer className="mx-auto max-w-3xl w-full" />
+          </div>
+
+          {/* Messages */}
+          <Virtuoso
+            ref={virtuosoRef}
+            data={messages}
+            atBottomStateChange={atBottomStateChange}
+            followOutput="auto"
+            initialTopMostItemIndex={messages.length - 1}
+            customScrollParent={scrollParentRef.current || undefined}
+            style={{ height: "auto", minHeight: 400 }}
+            itemContent={(index, msg) => (
+              <div className="mx-auto max-w-3xl w-full px-4 py-2">
+                {renderMessageMemo(msg)}
+              </div>
+            )}
+            components={{
+              Header: () => (
+                <div className="mx-auto max-w-3xl w-full px-4 py-8 pt-4">
+                  {messages.length === 0 && (
+                    <div className="flex min-h-[60vh] flex-col items-center justify-center">
+                      <div className="text-center">
+                        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                          Guten Tag!
+                        </h2>
+                        <p className="text-gray-600">
+                          Wie kann ich dir heute helfen?
+                        </p>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ),
-            Footer: () => (
-              <div className="mx-auto max-w-3xl w-full px-4">
-                {showThinking && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="flex justify-start relative px-[5%] mt-4 mb-8"
-                  >
-                    <div className="flex items-center gap-1 relative">
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400" style={{ animation: "thinking-dot-blink 1.2s ease-in-out infinite", animationDelay: "0ms" }} />
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400" style={{ animation: "thinking-dot-blink 1.2s ease-in-out infinite", animationDelay: "400ms" }} />
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400" style={{ animation: "thinking-dot-blink 1.2s ease-in-out infinite", animationDelay: "800ms" }} />
-                      <span className="ml-3 text-gray-400 text-sm font-light animate-[flicker_2s_ease-in-out_infinite]">
-                        Denke nach...
-                      </span>
                     </div>
-                  </motion.div>
-                )}
-                <div className="h-32 w-full flex-none" />
-              </div>
-            )
-          }}
-        />
+                  )}
+                </div>
+              ),
+              Footer: () => (
+                <div className="mx-auto max-w-3xl w-full px-4">
+                  {showThinking && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="flex justify-start relative px-[5%] mt-4 mb-8"
+                    >
+                      <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-50/80 to-purple-50/60 border border-indigo-100/50 shadow-sm">
+                        <div className="flex items-center gap-1">
+                          <span className="inline-block w-2 h-2 rounded-full bg-indigo-400" style={{ animation: "thinking-dot-blink 1.2s ease-in-out infinite", animationDelay: "0ms" }} />
+                          <span className="inline-block w-2 h-2 rounded-full bg-purple-400" style={{ animation: "thinking-dot-blink 1.2s ease-in-out infinite", animationDelay: "300ms" }} />
+                          <span className="inline-block w-2 h-2 rounded-full bg-pink-400" style={{ animation: "thinking-dot-blink 1.2s ease-in-out infinite", animationDelay: "600ms" }} />
+                        </div>
+                        <span className="ml-1 text-indigo-600/80 text-sm font-medium">
+                          Denke nach...
+                        </span>
+                      </div>
+                    </motion.div>
+                  )}
+                  <div className="h-20 w-full flex-none" />
+                </div>
+              )
+            }}
+          />
+        </div>
       </div>
 
-      {/* Jump to bottom Button */}
+      {/* Jump to bottom Button (relative to chat container) */}
       {showJumpToBottom && (
         <button
           onClick={() => scrollToBottom()}
-          className="absolute bottom-36 right-[12%] z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-500 shadow-xl ring-1 ring-black/5 backdrop-blur-md hover:bg-white hover:text-indigo-600 active:scale-90 transition-all animate-in fade-in zoom-in duration-300 pointer-events-auto"
-          aria-label="Nach unten springen"
+          className="absolute bottom-32 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-500 shadow-xl ring-1 ring-black/5 backdrop-blur-md hover:bg-white hover:text-indigo-600 active:scale-90 transition-all pointer-events-auto"
+          aria-label={t('chat.jumpToBottom')}
         >
           <svg 
             viewBox="0 0 24 24" 
@@ -1835,10 +1946,10 @@ export function ChatShell() {
         </button>
       )}
 
-      {/* Floating Composer Area */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 w-full px-4 pb-6 pt-10 pointer-events-none">
+      {/* Composer unterhalb des Scrollbereichs, passt sich der Chatbreite an */}
+      <div className="absolute inset-x-0 bottom-0 z-30 w-full px-4 pb-6 pt-6 pointer-events-none flex justify-center bg-transparent">
         {/* Subtitle Gradient for better readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#F3F5F7] via-[#F3F5F7]/80 to-transparent pointer-events-none -z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-50/50 via-slate-50/50/90 via-60% to-transparent pointer-events-none -z-10" />
         
         <div className="mx-auto max-w-3xl w-full pointer-events-auto">
           {/* Attachment Previews */}
@@ -1872,10 +1983,12 @@ export function ChatShell() {
           </AnimatePresence>
 
           <div className={clsx(
-            "relative flex items-center gap-2 rounded-2xl px-5 py-4 transition-all duration-300 ease-[var(--ak-motion-ease)] shadow-[0_10px_40px_rgba(0,0,0,0.08)] border outline-none ring-0",
+            "relative flex items-center gap-2 rounded-[28px] px-4 py-2.5 transition-all duration-300 ease-[var(--ak-motion-ease)]",
+            "bg-gradient-to-b from-white/98 to-white/92 backdrop-blur-[40px] backdrop-saturate-[180%]",
+            "border border-white/60 shadow-[0_0_0_1px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.04),0_16px_48px_rgba(0,0,0,0.08)]",
             isRealtimeActive 
-              ? "bg-red-500/10 border-red-200/50"
-              : "bg-white/90 border-white/40 backdrop-blur-xl hover:border-white/60 focus-within:bg-white focus-within:shadow-[0_10px_50px_rgba(0,0,0,0.12)] focus-within:border-white/80"
+              ? "!bg-gradient-to-b !from-red-50/90 !to-red-100/80 !border-red-200/60 ring-2 ring-red-500/20"
+              : "hover:border-white/80 hover:shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_8px_24px_rgba(0,0,0,0.06),0_24px_64px_rgba(0,0,0,0.1)] focus-within:bg-white focus-within:shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_12px_32px_rgba(0,0,0,0.08),0_32px_80px_rgba(0,0,0,0.12)] focus-within:border-white/90"
           )}>
             {/* Audio-Wellen-Visualisierung */}
             {isMicrophoneActive && (
@@ -1930,7 +2043,7 @@ export function ChatShell() {
                   type="button"
                   onClick={() => setQuickHint("")}
                   className="inline-flex h-4 w-4 items-center justify-center rounded-full text-[var(--ak-color-success)] hover:bg-[var(--ak-color-bg-hover)]"
-                  aria-label="Hinweis schließen"
+                  aria-label={t('chat.closeHint')}
                 >
                   ×
                 </button>
@@ -1941,8 +2054,8 @@ export function ChatShell() {
               <button
                 type="button"
                 onClick={() => setIsPlusMenuOpen(!isPlusMenuOpen)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
-                aria-label="Menü öffnen"
+                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-transparent text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                aria-label={t('chat.openMenu')}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                   <line x1="12" y1="5" x2="12" y2="19" />
@@ -1961,7 +2074,7 @@ export function ChatShell() {
                         setIsPlusMenuOpen(false);
                         fileInputRef.current?.click();
                       }}
-                      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left text-sm font-medium text-gray-700 hover:bg-black/5 transition-colors"
+                      className="flex items-center gap-3 w-full px-4 py-3 min-h-[44px] rounded-xl text-left text-sm font-medium text-gray-700 hover:bg-black/5 transition-colors"
                     >
                       <CloudArrowUpIcon className="h-5 w-5 text-gray-400" />
                       Datei oder Foto hochladen
@@ -1970,9 +2083,13 @@ export function ChatShell() {
                       type="button"
                       onClick={() => {
                         setIsPlusMenuOpen(false);
-                        setQuickHint("Intensive Internetsuche aktiviert");
+                        setInput("Führe eine intensive Internetsuche durch zu: ");
+                        inputRef.current?.focus();
+                        if (inputRef.current) {
+                          inputRef.current.setSelectionRange(inputRef.current.value.length, inputRef.current.value.length);
+                        }
                       }}
-                      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left text-sm font-medium text-gray-700 hover:bg-black/5 transition-colors"
+                      className="flex items-center gap-3 w-full px-4 py-3 min-h-[44px] rounded-xl text-left text-sm font-medium text-gray-700 hover:bg-black/5 transition-colors"
                     >
                       <GlobeAltIcon className="h-5 w-5 text-gray-400" />
                       Intensive Internetsuche
@@ -2008,8 +2125,9 @@ export function ChatShell() {
             rows={1}
             readOnly={shouldHideInput}
             aria-disabled={shouldHideInput}
+          style={{ WebkitAppearance: 'none' }}
             className={clsx(
-              "ak-body flex-1 border-none bg-transparent text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-secondary)] focus-visible:outline-none outline-none ring-0 resize-none py-1 max-h-[200px] overflow-y-auto",
+              "ak-body flex-1 border-none bg-transparent text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-secondary)] focus:ring-0 focus:outline-none outline-none ring-0 border-0 shadow-none resize-none py-1 max-h-[200px] overflow-y-auto focus:!outline-none focus:!ring-0 focus:!shadow-none focus:!border-none focus-visible:!outline-none focus-visible:!ring-0 focus-visible:!shadow-none focus-visible:!border-none",
               shouldHideInput && "text-transparent placeholder-transparent caret-transparent cursor-not-allowed select-none opacity-80"
             )}
           />
@@ -2040,11 +2158,11 @@ export function ChatShell() {
                 void releaseRealtime();
               }}
               className={clsx(
-                "relative inline-flex h-7 w-7 items-center justify-center rounded-full bg-transparent text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px]",
+                "relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-transparent text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px]",
                 isMicrophoneActive && "ring-2 ring-[var(--ak-color-bg-danger-soft)] ring-offset-2",
                 isRealtimeActive && "bg-red-500/20 text-red-600"
               )}
-              aria-label="Mikrofon"
+              aria-label={t('chat.microphone')}
               onMouseEnter={() => {
                 if (isRealtimeActive) {
                   if (tooltipTimeoutRef.current) {
@@ -2074,7 +2192,7 @@ export function ChatShell() {
               onClick={isSending ? handleStopGeneration : () => handleSend()}
               disabled={!isSending && !input.trim()}
               className={clsx(
-                "inline-flex h-8 w-8 items-center justify-center rounded-full shadow-[var(--ak-shadow-soft)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px] active:scale-95 border",
+                "inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full shadow-[var(--ak-shadow-soft)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px] active:scale-95 border",
                 isSending 
                   ? "bg-black text-white hover:bg-gray-800 border-transparent"
                   : input.trim()
@@ -2082,7 +2200,7 @@ export function ChatShell() {
                     : "bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-muted)] border-gray-300/40",
                 "disabled:opacity-60"
               )}
-              aria-label={isSending ? "Stoppen" : "Senden"}
+              aria-label={isSending ? t('chat.stopGenerating') : t('chat.send')}
             >
               {isSending ? (
                 <div className="h-3 w-3 bg-white rounded-sm" />
@@ -2134,7 +2252,7 @@ export function ChatShell() {
           </div>
           <div className="flex justify-between gap-4">
             <span className="text-gray-400">industry:</span>
-            <span>{isGastroTenant ? "GASTRO" : "GENERAL"}</span>
+            <span>GENERAL</span>
           </div>
         </div>
       )}

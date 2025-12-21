@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
   MapPin,
-  Ruler,
+  // Ruler, // Archived with Real Estate scenario
   FileText,
   CheckCircle2,
   ChevronRight,
@@ -108,8 +108,9 @@ type WizardScenario<Data> = {
   initialData: Data;
 };
 
-// ------------ Step Components (Real Estate) ------------
+// ------------ Step Components (Real Estate) - ARCHIVED ------------
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const StepBasicInfo: StepComponent<RealEstateForm> = ({ data, update }) => (
   <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <div className="space-y-2">
@@ -183,6 +184,7 @@ const StepBasicInfo: StepComponent<RealEstateForm> = ({ data, update }) => (
   </div>
 );
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const StepAddress: StepComponent<RealEstateForm> = ({ data, update }) => (
   <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <div className="space-y-2">
@@ -234,6 +236,7 @@ const StepAddress: StepComponent<RealEstateForm> = ({ data, update }) => (
   </div>
 );
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const StepDetails: StepComponent<RealEstateForm> = ({ data, update }) => (
   <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <div className="space-y-2">
@@ -328,6 +331,7 @@ const StepDetails: StepComponent<RealEstateForm> = ({ data, update }) => (
   </div>
 );
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const StepReview: StepComponent<RealEstateForm> = ({ data }) => (
   <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <div className="text-center py-8">
@@ -597,6 +601,8 @@ const StepCampaignReview: StepComponent<MarketingCampaignForm> = ({ data }) => (
 
 // ------------ Scenarios ------------
 
+// Real Estate scenario archived
+/*
 const REAL_ESTATE_SCENARIO: WizardScenario<RealEstateForm> = {
   id: "real_estate",
   label: "Immobilie erfassen",
@@ -626,6 +632,7 @@ const REAL_ESTATE_SCENARIO: WizardScenario<RealEstateForm> = {
     { id: "review", label: "Abschluss", icon: CheckCircle2, description: "Prüfung", component: StepReview },
   ],
 };
+*/
 
 const USER_ONBOARDING_SCENARIO: WizardScenario<UserOnboardingForm> = {
   id: "user_onboarding",
@@ -737,12 +744,13 @@ const MARKETING_CAMPAIGN_SCENARIO: WizardScenario<MarketingCampaignForm> = {
   ],
 };
 
+// Real Estate scenario moved to archive
 const SCENARIOS: {
-  real_estate: WizardScenario<RealEstateForm>;
+  // real_estate: WizardScenario<RealEstateForm>; // Archived
   user_onboarding: WizardScenario<UserOnboardingForm>;
   marketing_campaign: WizardScenario<MarketingCampaignForm>;
 } = {
-  real_estate: REAL_ESTATE_SCENARIO,
+  // real_estate: REAL_ESTATE_SCENARIO, // Archived
   user_onboarding: USER_ONBOARDING_SCENARIO,
   marketing_campaign: MARKETING_CAMPAIGN_SCENARIO,
 };
@@ -753,9 +761,9 @@ type ScenarioKey = keyof typeof SCENARIOS;
 
 export default function WizardPage() {
   const router = useRouter();
-  const [selectedScenario, setSelectedScenario] = useState<ScenarioKey>("real_estate");
+  const [selectedScenario, setSelectedScenario] = useState<ScenarioKey>("user_onboarding"); // Changed from "real_estate"
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [formData, setFormData] = useState<RealEstateForm | UserOnboardingForm | MarketingCampaignForm>(SCENARIOS.real_estate.initialData);
+  const [formData, setFormData] = useState<UserOnboardingForm | MarketingCampaignForm>(SCENARIOS.user_onboarding.initialData);
   const [isLoading, setIsLoading] = useState(false);
   const [direction, setDirection] = useState(0);
 
@@ -788,15 +796,8 @@ export default function WizardPage() {
 
   const renderCurrentStep = () => {
     if (!currentStep) return null;
-    if (selectedScenario === "real_estate") {
-      const step = currentStep as WizardStep<RealEstateForm>;
-      return (
-        <step.component
-          data={formData as RealEstateForm}
-          update={(section: string, field?: string, value?: unknown) => updateField(section, field, value)}
-        />
-      );
-    }
+    // Real Estate scenario archived
+    // if (selectedScenario === "real_estate") { ... }
     if (selectedScenario === "user_onboarding") {
       const step = currentStep as WizardStep<UserOnboardingForm>;
       return (
@@ -824,7 +825,9 @@ export default function WizardPage() {
     setIsLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 800));
     setIsLoading(false);
-    router.push("/real-estate/properties");
+    // Real Estate route archived
+    // router.push("/real-estate/properties");
+    router.push("/dashboard"); // Fallback to dashboard
   };
 
   const handleBack = () => {

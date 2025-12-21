@@ -10,7 +10,7 @@ import { GrowthAutomation } from './GrowthAutomation'
 export function GrowthDashboard({ view }: { view: GrowthView }) {
   return (
     <div className="h-full w-full overflow-y-auto bg-[var(--ak-color-bg-app)]">
-        <header className="sticky top-0 z-10 flex h-16 items-center border-b border-[var(--ak-color-border-hairline)] bg-[var(--ak-glass-bg)] px-6 backdrop-blur-[var(--ak-glass-blur)]">
+        <header className="sticky top-0 z-10 flex h-16 items-center bg-[var(--ak-glass-bg)] px-6 backdrop-blur-[var(--ak-glass-blur)]">
             <h1 className="text-xl font-semibold text-[var(--ak-color-text-primary)] tracking-tight">
                 {view === 'overview' && 'Growth Übersicht'}
                 {view === 'campaigns' && 'Kampagnen Manager'}

@@ -3,12 +3,20 @@
 import { WidgetCard } from '@/components/ui/WidgetCard'
 import { SimpleChart } from '@/components/ui/SimpleChart'
 import { SparklesIcon, ArrowTrendingUpIcon, MegaphoneIcon } from '@heroicons/react/24/outline'
+import { AISuggestionGrid } from '@/components/ui/AISuggestionGrid'
 
 export function GrowthOverview() {
   return (
     <div className="p-6 space-y-8">
       
-      {/* AI Recommendations */}
+      {/* AI Suggestions Header Block */}
+      <AISuggestionGrid 
+        context="growth"
+        summary="Wachstums-Strategie Q1"
+        text="Analyse der aktuellen Kampagnen-Performance und Lead-Generierung."
+      />
+
+      {/* AI Insights Section */}
       <div>
         <h2 className="text-sm font-semibold text-[var(--ak-color-text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
             <SparklesIcon className="w-4 h-4 text-[var(--ak-color-accent)]" />

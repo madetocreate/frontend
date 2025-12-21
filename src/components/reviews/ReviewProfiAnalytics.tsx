@@ -12,7 +12,8 @@ import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 export function ReviewProfiAnalytics() {
   const [period, setPeriod] = useState<'7d' | '30d' | '90d' | 'all'>('30d')
 
-  // TODO: Load from backend
+  // TODO: Load from backend endpoint /api/reviews/analytics
+  // For now, using mock data
   const analytics = useMemo(() => ({
     ratingDistribution: {
       5: 856,

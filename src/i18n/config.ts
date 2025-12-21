@@ -21,12 +21,37 @@ const resources = {
   it: { translation: it }
 }
 
+// Load language from localStorage or use browser language, fallback to 'de'
+const getInitialLanguage = (): string => {
+  if (typeof window === 'undefined') return 'de'
+  
+  const stored = localStorage.getItem('language')
+  if (stored && ['de', 'en', 'es', 'fr', 'it'].includes(stored)) {
+    return stored
+  }
+  
+  // Try browser language
+  const browserLang = navigator.language.split('-')[0]
+  if (['de', 'en', 'es', 'fr', 'it'].includes(browserLang)) {
+    return browserLang
+  }
+  
+  return 'de'
+}
+
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'de', // default language
-    fallbackLng: 'en',
+    lng: getInitialLanguage(),
+    fallbackLng: {
+      'fr': ['en', 'de'],
+      'it': ['en', 'de'],
+      'es': ['en', 'de'],
+      'en': ['de'],
+      'de': ['en'],
+      'default': ['en', 'de']
+    },
     interpolation: {
       escapeValue: false // React already escapes values
     },

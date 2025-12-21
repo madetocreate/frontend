@@ -94,6 +94,34 @@ export async function startRealtimeVoiceSession(
     })
 
     if (!response.ok) {
+      // Try fallback to /api/v1/realtime/session if main endpoint returns 404
+      if (response.status === 404) {
+        const fallbackResponse = await fetch(`${PY_BACKEND_URL}/api/v1/realtime/session`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
+        })
+        if (fallbackResponse.ok) {
+          const data = await fallbackResponse.json()
+          const { session_id, client_secret, model } = data
+          if (!client_secret || !session_id) {
+            throw new Error('Invalid realtime session response (missing client_secret/session_id)')
+          }
+          if (!model || typeof model !== 'string') {
+            throw new Error('Invalid realtime session response (missing model)')
+          }
+          realtimeClient.sessionId = session_id
+          realtimeClient.transport = transport
+          realtimeClient.context = context || null
+          realtimeClient.onTextDelta = callbacks?.onTextDelta
+          realtimeClient.onAudioDelta = callbacks?.onAudioDelta
+          realtimeClient.onResponseDone = callbacks?.onResponseDone
+          realtimeClient.onUserTranscript = callbacks?.onUserTranscript
+          return
+        }
+      }
       const errorText = await response.text()
       throw new Error(`Failed to create session: ${response.statusText} - ${errorText}`)
     }

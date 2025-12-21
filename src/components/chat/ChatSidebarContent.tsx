@@ -3,13 +3,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import clsx from 'clsx'
 import { 
-  ArchiveBoxIcon, 
-  EllipsisHorizontalIcon, 
-  PencilSquareIcon, 
-  TrashIcon, 
   ChatBubbleLeftIcon,
-  MagnifyingGlassIcon,
-  InformationCircleIcon
+  EllipsisHorizontalIcon, 
+  TrashIcon, 
+  PlusIcon
 } from '@heroicons/react/24/outline'
 import { 
   ensureSeedChatThread, 
@@ -17,15 +14,23 @@ import {
   writeChatThreads, 
   setActiveThreadId,
   createChatThread,
+  updateChatThread,
+  archiveChatThread,
+  unarchiveChatThread,
   type ChatThread 
 } from '@/lib/chatThreadsStore'
+import { AkListRow } from '@/components/ui/AkListRow'
+import { AkButton } from '@/components/ui/AkButton'
+import { DrawerSectionTitle } from '@/components/ui/drawer-kit'
+import { SidebarHeader } from '@/components/ui/SidebarHeader'
 
-export function ChatSidebarContent() {
+export function ChatSidebarContent({ onToggleInspector }: { onToggleInspector?: () => void }) {
+  const isClient = typeof window !== 'undefined'
   const { threads, activeThreadId } = useChatThreads()
   const [query, setQuery] = useState('')
   const [openKebabId, setOpenKebabId] = useState<string | null>(null)
-
-  const effectiveActiveThreadId = activeThreadId
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingTitle, setEditingTitle] = useState<string>("")
 
   useEffect(() => {
     ensureSeedChatThread()
@@ -40,7 +45,6 @@ export function ChatSidebarContent() {
     })
   }, [threads, query])
 
-  // Group threads by date
   const groupedThreads = useMemo(() => {
     const groups: Record<string, ChatThread[]> = {
       'Heute': [],
@@ -57,236 +61,175 @@ export function ChatSidebarContent() {
     const last30Days = today - 30 * 86400000
 
     filtered.forEach(thread => {
-      const tDate = thread.lastMessageAt || 0 // Fallback if missing
-      if (tDate >= today) {
-        groups['Heute'].push(thread)
-      } else if (tDate >= yesterday) {
-        groups['Gestern'].push(thread)
-      } else if (tDate >= last7Days) {
-        groups['Vorherige 7 Tage'].push(thread)
-      } else if (tDate >= last30Days) {
-        groups['Vorherige 30 Tage'].push(thread)
-      } else {
-        groups['Älter'].push(thread)
-      }
+      const tDate = thread.lastMessageAt || 0
+      if (tDate >= today) groups['Heute'].push(thread)
+      else if (tDate >= yesterday) groups['Gestern'].push(thread)
+      else if (tDate >= last7Days) groups['Vorherige 7 Tage'].push(thread)
+      else if (tDate >= last30Days) groups['Vorherige 30 Tage'].push(thread)
+      else groups['Älter'].push(thread)
     })
 
     return groups
   }, [filtered])
 
   const handleThreadSelect = (threadId: string) => {
-    if (document.startViewTransition) {
-      document.startViewTransition(() => {
-        setActiveThreadId(threadId)
-      })
-    } else {
-      setActiveThreadId(threadId)
-    }
-    
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('aklow-select-thread', { detail: { threadId } }))
-    }
+    setActiveThreadId(threadId)
+    window.dispatchEvent(new CustomEvent('aklow-select-thread', { detail: { threadId } }))
   }
 
   const handleNewChat = useCallback(() => {
     const newThread = createChatThread()
     writeChatThreads([newThread, ...threads])
     setActiveThreadId(newThread.id)
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('aklow-new-chat', { detail: { threadId: newThread.id } }))
-    }
+    window.dispatchEvent(new CustomEvent('aklow-new-chat', { detail: { threadId: newThread.id } }))
   }, [threads])
 
-  const handleDeleteThread = useCallback(
-    (threadId: string) => {
-      const base = threads.filter((t) => t.id !== threadId)
-      if (effectiveActiveThreadId === threadId) {
-        const newThread = createChatThread()
-        writeChatThreads([newThread, ...base])
-        setActiveThreadId(newThread.id)
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('aklow-new-chat', { detail: { threadId: newThread.id } }))
-        }
-      } else {
-        writeChatThreads(base)
-      }
-      setOpenKebabId(null)
-    },
-    [effectiveActiveThreadId, threads]
-  )
-
-  const handleRenameThread = (threadId: string) => {
-    if (typeof window === 'undefined') return
-    const t = threads.find((x) => x.id === threadId)
-    const nextTitle = window.prompt('Neuer Titel', t?.title ?? '')
-    if (!nextTitle) return
-    const next = threads.map((x) => (x.id === threadId ? { ...x, title: nextTitle } : x))
-    writeChatThreads(next)
+  const handleDeleteThread = (id: string) => {
+    writeChatThreads(threads.filter(t => t.id !== id))
+    if (activeThreadId === id) setActiveThreadId(threads[0]?.id || '')
     setOpenKebabId(null)
   }
 
-  const handleArchiveThread = (threadId: string) => {
-      // Implement archive logic if needed, currently just hiding from main list logic in store maybe?
-      // For now, toggle archived property
-      const next = threads.map((x) => (x.id === threadId ? { ...x, archived: !x.archived } : x))
-      writeChatThreads(next)
-      setOpenKebabId(null)
+  const handleRenameStart = (thread: ChatThread) => {
+    setEditingId(thread.id)
+    setEditingTitle(thread.title)
+    setOpenKebabId(null)
   }
 
-  const handleToggleInfo = () => {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('aklow-toggle-chat-info'))
+  const handleRenameCommit = (threadId: string) => {
+    const title = editingTitle.trim()
+    if (title.length > 0) {
+      updateChatThread(threadId, { title, preview: editingTitle })
     }
+    setEditingId(null)
   }
+
+  const handleArchiveToggle = (thread: ChatThread) => {
+    if (thread.archived) {
+      unarchiveChatThread(thread.id)
+    } else {
+      archiveChatThread(thread.id)
+      if (activeThreadId === thread.id) {
+        const fallback = threads.find(t => t.id !== thread.id)?.id || ''
+        setActiveThreadId(fallback)
+      }
+    }
+    setOpenKebabId(null)
+  }
+
+  const handleSaveThread = (threadId: string) => {
+    window.dispatchEvent(new CustomEvent('aklow-save-thread', { detail: { threadId } }))
+    setOpenKebabId(null)
+  }
+
+  if (!isClient) return null
 
   return (
     <div className="flex h-full flex-col bg-transparent">
-      {/* Header Area */}
-      <div className="px-3 pt-4 pb-2 space-y-3">
-        <div className="flex gap-2">
-            <button
-                onClick={handleNewChat}
-                className="flex-1 flex items-center justify-between rounded-lg bg-[var(--ak-color-bg-surface)] px-3 py-2 text-sm font-medium text-[var(--ak-color-text-primary)] shadow-sm border border-[var(--ak-color-border-subtle)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-200 backdrop-blur-sm active:scale-[0.98]"
-            >
-                <div className="flex items-center gap-2">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--ak-color-bg-hover)] text-[var(--ak-color-text-primary)]">
-                        <ChatBubbleLeftIcon className="h-3.5 w-3.5" />
-                    </div>
-                    <span>Neuer Chat</span>
-                </div>
-                <div className="flex h-5 w-5 items-center justify-center rounded bg-[var(--ak-color-bg-surface-muted)] text-xs text-[var(--ak-color-text-muted)]">
-                    +
-                </div>
-            </button>
-            <button
-                onClick={handleToggleInfo}
-                className="flex h-[42px] w-[42px] items-center justify-center rounded-lg bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] shadow-sm border border-[var(--ak-color-border-subtle)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-200 backdrop-blur-sm active:scale-[0.98]"
-                title="Chat Informationen"
-            >
-                <InformationCircleIcon className="h-5 w-5" />
-            </button>
-        </div>
+      <SidebarHeader 
+        title="Chat" 
+        onSearch={setQuery} 
+        onToggleInspector={onToggleInspector}
+      />
 
-        {/* Search */}
-        <div className="relative group">
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-[var(--ak-color-text-muted)] group-focus-within:text-[var(--ak-color-accent)] transition-colors" />
-            <input
-                type="text"
-                placeholder="Suche..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="w-full rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)]/50 py-2 pl-9 pr-3 text-sm placeholder-[var(--ak-color-text-muted)] focus:bg-[var(--ak-color-bg-surface)] focus:border-[var(--ak-color-accent)]/50 focus:outline-none focus:ring-4 focus:ring-[var(--ak-color-accent)]/10 transition-all shadow-sm"
-            />
-        </div>
+      <div className="px-4 pt-4 pb-2">
+        <AkButton 
+          size="sm" 
+          variant="secondary" 
+          className="w-full justify-center text-xs font-semibold !rounded-xl bg-gradient-to-b from-[var(--ak-color-bg-surface)] to-[var(--ak-color-bg-surface-muted)]/50 border-[var(--ak-color-border-subtle)] text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-surface)] hover:shadow-md hover:-translate-y-0.5 shadow-sm transition-all duration-200 gap-2"
+          leftIcon={<PlusIcon className="h-4 w-4" />}
+          onClick={handleNewChat}
+        >
+          Neuer Chat
+        </AkButton>
       </div>
 
-      {/* Threads List */}
-      <div className="flex-1 overflow-y-auto px-2 pb-4 scrollbar-thin scrollbar-thumb-gray-200/50 hover:scrollbar-thumb-gray-300/50">
-        <div className="space-y-6 pt-2">
-          {Object.entries(groupedThreads).map(([label, groupThreads]) => {
-            if (groupThreads.length === 0) return null
-            return (
-              <div key={label}>
-                <div className="sticky top-0 z-10 bg-[var(--ak-color-bg-sidebar)] px-2 pb-2 pt-1">
-                    <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ak-color-text-muted)]/90">{label}</h3>
-                </div>
-                <div className="space-y-0.5">
-                  {groupThreads.map((thread) => (
-                    <div
-                      key={thread.id}
-                      className={clsx(
-                        "group relative flex items-center gap-3 rounded-lg px-2 py-2 transition-all",
-                        thread.id === effectiveActiveThreadId 
-                          ? "bg-[var(--ak-color-graphite-soft)]" 
-                          : "hover:bg-[var(--ak-color-bg-hover)]"
-                      )}
-                    >
-                        {/* Selection Indicator */}
-                        {thread.id === effectiveActiveThreadId && (
-                            <div className="absolute left-0 h-4 w-1 rounded-r-full bg-[var(--ak-color-graphite-base)]" />
+      <div className="flex-1 overflow-y-auto ak-scrollbar px-2 pb-4 mt-2">
+        {Object.entries(groupedThreads).map(([label, groupThreads]) => {
+          if (groupThreads.length === 0) return null
+          return (
+            <div key={label} className="mb-6 last:mb-0">
+              <DrawerSectionTitle className="px-3">{label}</DrawerSectionTitle>
+              <ul className="flex flex-col gap-0.5">
+                {groupThreads.map((thread) => {
+                  const isActive = thread.id === activeThreadId
+                  const isEditing = editingId === thread.id
+                  return (
+                    <li key={thread.id} className="group relative">
+                      <AkListRow
+                        accent="graphite"
+                        selected={isActive}
+                        title={
+                          isEditing ? (
+                            <input
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault()
+                                  handleRenameCommit(thread.id)
+                                } else if (e.key === 'Escape') {
+                                  setEditingId(null)
+                                }
+                              }}
+                              onBlur={() => handleRenameCommit(thread.id)}
+                              autoFocus
+                              className="text-[14px] font-medium bg-transparent border border-[var(--ak-color-border-subtle)] rounded-lg px-2.5 py-1.5 w-full focus:outline-none focus:ring-2 focus:ring-[var(--ak-color-accent-soft)]"
+                            />
+                          ) : (
+                            <span className="text-[14px] font-medium truncate">{thread.title}</span>
+                          )
+                        }
+                        subtitle={thread.archived ? <span className="text-[11px] text-[var(--ak-color-text-muted)] italic">Archiviert</span> : undefined}
+                        className={clsx(
+                          "transition-all duration-200 py-3",
+                          isActive 
+                            ? "bg-[var(--ak-color-bg-surface)] shadow-[0_2px_8px_rgba(0,0,0,0.04)] border-l-2 border-l-[var(--ak-color-accent)]" 
+                            : "hover:bg-[var(--ak-color-bg-hover)] border-l-2 border-l-transparent"
                         )}
-
-                        <button
-                            className="flex-1 overflow-hidden text-left"
-                            onClick={() => handleThreadSelect(thread.id)}
-                        >
-                            <span className={clsx(
-                                "block truncate text-sm font-medium transition-colors",
-                                thread.id === effectiveActiveThreadId 
-                                  ? "text-[var(--ak-color-text-primary)]" 
-                                  : "text-[var(--ak-color-text-secondary)] group-hover:text-[var(--ak-color-text-primary)]"
-                            )}>
-                                {thread.title}
-                            </span>
-                        </button>
-
-                        <div className="relative">
+                        leading={<ChatBubbleLeftIcon className={clsx("h-5 w-5 transition-colors", isActive ? "text-[var(--ak-color-accent)]" : "text-[var(--ak-color-text-muted)]")} />}
+                        onClick={() => handleThreadSelect(thread.id)}
+                        trailing={
+                          <div className="flex items-center">
                             <button
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    setOpenKebabId(openKebabId === thread.id ? null : thread.id)
-                                }}
-                                className={clsx(
-                                    "flex h-6 w-6 items-center justify-center rounded transition-colors hover:bg-[var(--ak-color-bg-hover)]",
-                                    openKebabId === thread.id ? "opacity-100 bg-[var(--ak-color-bg-hover)]" : "opacity-0 group-hover:opacity-100"
-                                )}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setOpenKebabId(openKebabId === thread.id ? null : thread.id)
+                              }}
+                              className={clsx(
+                                "p-1 rounded hover:bg-[var(--ak-color-bg-hover)] transition-all",
+                                openKebabId === thread.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                              )}
                             >
-                                <EllipsisHorizontalIcon className="h-4 w-4 text-[var(--ak-color-text-muted)]" />
+                              <EllipsisHorizontalIcon className="h-4 w-4 text-[var(--ak-color-text-muted)]" />
                             </button>
-
-                            {/* Dropdown Menu */}
-                            {openKebabId === thread.id && (
-                                <>
-                                    <div 
-                                        className="fixed inset-0 z-20" 
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            setOpenKebabId(null)
-                                        }} 
-                                    />
-                                    <div className="absolute right-0 top-full z-30 mt-1 w-32 origin-top-right rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-1 shadow-lg ring-1 ring-black/5 focus:outline-none animate-in fade-in zoom-in-95 duration-100">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                handleRenameThread(thread.id)
-                                            }}
-                                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)]"
-                                        >
-                                            <PencilSquareIcon className="h-3.5 w-3.5" />
-                                            Umbenennen
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                handleArchiveThread(thread.id)
-                                            }}
-                                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)]"
-                                        >
-                                            <ArchiveBoxIcon className="h-3.5 w-3.5" />
-                                            Archivieren
-                                        </button>
-                                        <div className="my-1 h-px bg-[var(--ak-color-border-fine)]" />
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                handleDeleteThread(thread.id)
-                                            }}
-                                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs text-red-600 hover:bg-red-50"
-                                        >
-                                            <TrashIcon className="h-3.5 w-3.5" />
-                                            Löschen
-                                        </button>
-                                    </div>
-                                </>
-                            )}
+                          </div>
+                        }
+                      />
+                      {openKebabId === thread.id && (
+                        <div className="absolute right-2 top-10 z-30 w-40 rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-1 shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-100 space-y-0.5">
+                          <button onClick={() => handleRenameStart(thread)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-[var(--ak-color-bg-hover)]">
+                            <ChatBubbleLeftIcon className="h-3.5 w-3.5" /> Umbenennen
+                          </button>
+                          <button onClick={() => handleArchiveToggle(thread)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-[var(--ak-color-bg-hover)]">
+                            <TrashIcon className="h-3.5 w-3.5" /> {thread.archived ? 'Wiederherstellen' : 'Archivieren'}
+                          </button>
+                          <button onClick={() => handleSaveThread(thread.id)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-[var(--ak-color-bg-hover)]">
+                            <EllipsisHorizontalIcon className="h-3.5 w-3.5" /> Speichern
+                          </button>
+                          <button onClick={() => handleDeleteThread(thread.id)} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs text-red-600 hover:bg-red-50">
+                            <TrashIcon className="h-3.5 w-3.5" /> Löschen
+                          </button>
                         </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

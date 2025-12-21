@@ -159,6 +159,54 @@
     "error": "Error",
     "success": "Success",
     "warning": "Warning",
-    "info": "Information"
+    "info": "Information",
+    "copy": "Copy",
+    "saved": "Saved"
+  },
+  "chat": {
+    "edit": "Edit",
+    "copy": "Copy",
+    "retry": "Resend",
+    "readAloud": "Read aloud",
+    "stopReadAloud": "Stop reading",
+    "save": "Save",
+    "saved": "Saved",
+    "feedback": {
+      "good": "Good",
+      "bad": "Bad"
+    },
+    "quickActions": "Quick actions",
+    "regenerate": "Regenerate",
+    "showThinking": "Show thinking",
+    "thinking": "Thinking...",
+    "jumpToBottom": "Jump to bottom",
+    "closeHint": "Close hint",
+    "openMenu": "Open menu",
+    "microphone": "Microphone",
+    "send": "Send",
+    "stopGenerating": "Stop",
+    "errorSending": "Error sending"
+  },
+  "workspace": {
+    "addons": "Add-ons",
+    "dashboards": "Dashboards",
+    "wizards": "Wizards",
+    "onboardings": "Onboardings",
+    "wizardsAndOnboardings": "Wizards & Onboardings",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "showDashboard": "Show dashboard",
+    "collapsePanel": "Collapse panel",
+    "resize": "Resize",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "allDashboards": "All Dashboards",
+    "allWizards": "Wizards",
+    "allOnboardings": "Onboardings",
+    "showAll": "Show all"
+  },
+  "news": {
+    "loading": "Loading personal news…",
+    "noRecommendations": "No recommendations yet – start a conversation so I can learn your interests better."
   }
 }

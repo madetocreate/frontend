@@ -59,28 +59,18 @@ export function CalendarSystem() {
   const loadEvents = async () => {
     setLoading(true)
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/v1/calendar/events?account_id=${accountId}&days=30`)
-      // const data = await response.json()
-      // setEvents(data.events || [])
-      
-      // Mock data for now
-      setEvents([
-        {
-          id: '1',
-          title: 'Team Meeting',
-          start_time: new Date().toISOString(),
-          end_time: new Date(Date.now() + 30 * 60000).toISOString(),
-          location: 'Zoom',
-          attendees: ['John', 'Jane'],
-          priority: 'medium',
-          status: 'confirmed',
-          source: 'google',
-          reminders: [15]
-        }
-      ])
+      const response = await fetch('/api/calendar/events')
+      if (response.ok) {
+        const data = await response.json()
+        setEvents(data.events || [])
+      } else {
+        // Fallback to empty array if API fails
+        console.warn('Failed to load calendar events, using empty array')
+        setEvents([])
+      }
     } catch (error) {
       console.error('Failed to load events:', error)
+      setEvents([])
     } finally {
       setLoading(false)
     }

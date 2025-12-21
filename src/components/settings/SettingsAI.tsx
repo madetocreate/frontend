@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   CpuChipIcon, 
   SparklesIcon, 
@@ -11,6 +11,8 @@ import {
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
 import { SettingsSection, SettingsRow, SettingsSelect, SettingsInput, SettingsToggle } from './SettingsSection'
+import { loadSettings, saveSettings } from '@/lib/settingsClient'
+import { useDebounce } from '@/hooks/useDebounce'
 
 type SettingsMode = 'simple' | 'expert'
 
@@ -21,6 +23,44 @@ export function SettingsAI({ mode }: { mode: SettingsMode }) {
   const [maxTokens, setMaxTokens] = useState('2000')
   const [streaming, setStreaming] = useState(true)
   const [apiKeyVisible, setApiKeyVisible] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_saving, setSaving] = useState(false)
+
+  // Debounced save function
+  const debouncedSave = useDebounce(async (settings: { ai: { model: string; temperature: number; max_tokens: number } }) => {
+    setSaving(true)
+    await saveSettings(settings)
+    setSaving(false)
+  }, 1000)
+
+  const [hasLoaded, setHasLoaded] = useState(false)
+
+  // Load settings on mount
+  useEffect(() => {
+    const load = async () => {
+      const settings = await loadSettings()
+      if (settings?.ai) {
+        setDefaultModel(settings.ai.model || 'gpt-4o-mini')
+        setTemperature(String(settings.ai.temperature || 0.7))
+        setMaxTokens(String(settings.ai.max_tokens || 2000))
+      }
+      setHasLoaded(true)
+    }
+    void load()
+  }, [])
+
+  // Save when settings change (only after initial load)
+  useEffect(() => {
+    if (hasLoaded) {
+      void debouncedSave({
+        ai: {
+          model: defaultModel,
+          temperature: parseFloat(temperature) || 0.7,
+          max_tokens: parseInt(maxTokens) || 2000
+        }
+      })
+    }
+  }, [defaultModel, temperature, maxTokens, hasLoaded, debouncedSave])
 
   const models = [
     { value: 'gpt-4o', label: 'GPT-4o' },

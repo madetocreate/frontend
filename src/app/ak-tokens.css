@@ -143,7 +143,19 @@
   /* Wachstum */
   --ak-accent-growth: #ff9500;
   --ak-accent-growth-soft: rgba(255, 149, 0, 0.1);
-  
+
+  /* Shield */
+  --ak-accent-shield: #10b981;
+  --ak-accent-shield-soft: rgba(16, 185, 129, 0.1);
+
+  /* Phone */
+  --ak-accent-phone: #f43f5e;
+  --ak-accent-phone-soft: rgba(244, 63, 94, 0.1);
+
+  /* Website */
+  --ak-accent-website: #8b5cf6;
+  --ak-accent-website-soft: rgba(139, 92, 246, 0.1);
+
   /* ============================================
      COLORS - Semantic
      ============================================ */

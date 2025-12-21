@@ -63,7 +63,7 @@ export function dispatchAction(payload: ActionPayload) {
  * Quick Actions Handlers
  */
 function handleQuickAction(payload: ActionPayload) {
-  const { actionId, context, data } = payload
+  const { actionId, context: _context, data } = payload // eslint-disable-line @typescript-eslint/no-unused-vars
 
   switch (actionId) {
     // Inbox Actions
@@ -77,18 +77,24 @@ function handleQuickAction(payload: ActionPayload) {
       break
 
     case 'quick-archive':
-      if (data?.itemId) {
-        // Archive item
-        console.log('Archive item:', data.itemId)
-        // TODO: API call
+      if (data?.itemId || data?.id) {
+        const itemId = data.itemId || data.id
+        // Archive via API
+        fetch(`/api/inbox/${itemId}/archive`, { method: 'POST' })
+          .then(() => {
+            window.dispatchEvent(new CustomEvent('aklow-archive-item', { detail: { id: itemId } }))
+          })
+          .catch((error) => {
+            console.error('Failed to archive item:', error)
+          })
       }
       break
 
     case 'quick-forward':
-      if (data?.itemId) {
-        // Forward item
-        console.log('Forward item:', data.itemId)
-        // TODO: API call
+      if (data?.itemId || data?.id) {
+        const itemId = data.itemId || data.id
+        // Forward via API (placeholder - implement when backend endpoint is available)
+        window.dispatchEvent(new CustomEvent('aklow-forward-item', { detail: { id: itemId } }))
       }
       break
 
@@ -172,45 +178,35 @@ function handleQuickAction(payload: ActionPayload) {
       // TODO: Open event creation
       break
 
-    // Practice Actions
-    case 'quick-appointment':
-      if (context === 'practice') {
-        window.dispatchEvent(new CustomEvent('aklow-open-module', { detail: { module: 'practice' } }))
-        // TODO: Open appointment creation
-      }
-      break
-
-    // Real Estate Actions
-    case 'quick-expose':
-      if (data?.propertyId) {
-        window.location.href = `/real-estate/expose-editor/${data.propertyId}`
-      }
-      break
-
-    case 'quick-viewing':
-      if (data?.propertyId) {
-        window.location.href = `/real-estate/calendar?property=${data.propertyId}`
-      }
-      break
-
-    // Hotel Actions
-    case 'quick-booking':
-      if (context === 'hotel') {
-        window.dispatchEvent(new CustomEvent('aklow-open-module', { detail: { module: 'hotel' } }))
-        // TODO: Open booking creation
-      }
-      break
-
-    case 'quick-checkin':
-      if (data?.bookingId) {
-        // TODO: Open check-in modal
-        dispatchAction({
-          type: 'modal',
-          actionId: 'checkin-guest',
-          data: { bookingId: data.bookingId }
-        })
-      }
-      break
+    // Profession-specific actions moved to archive
+    // Practice Actions - archived
+    // case 'quick-appointment':
+    //   if (context === 'practice') {
+    //     window.dispatchEvent(new CustomEvent('aklow-open-module', { detail: { module: 'practice' } }))
+    //   }
+    //   break
+    
+    // Real Estate Actions - archived
+    // case 'quick-expose':
+    //   if (data?.propertyId) {
+    //     window.location.href = `/real-estate/expose-editor/${data.propertyId}`
+    //   }
+    //   break
+    // case 'quick-viewing':
+    //   if (data?.propertyId) {
+    //     window.location.href = `/real-estate/calendar?property=${data.propertyId}`
+    //   }
+    //   break
+    
+    // Hotel Actions - archived
+    // case 'quick-booking':
+    //   if (context === 'hotel') {
+    //     window.dispatchEvent(new CustomEvent('aklow-open-module', { detail: { module: 'hotel' } }))
+    //   }
+    //   break
+    
+    // Hotel check-in - archived
+    // case 'quick-checkin': ...
 
     default:
       console.warn('[Action] Unknown quick action:', actionId)
@@ -286,29 +282,85 @@ function handleNavigation(payload: ActionPayload) {
 /**
  * Form Submit Handlers
  */
-function handleFormSubmit(payload: ActionPayload) {
+async function handleFormSubmit(payload: ActionPayload) {
   const { actionId, data } = payload
+  const backendUrl = process.env.NEXT_PUBLIC_ORCHESTRATOR_API_URL || 'http://localhost:4000'
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
 
   switch (actionId) {
     case 'save-settings':
-      // TODO: API call to save settings
-      console.log('Save settings:', data)
+      try {
+        const response = await fetch(`${backendUrl}/settings`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(data),
+        })
+        if (!response.ok) throw new Error('Failed to save settings')
+        console.log('Settings saved successfully')
+      } catch (error) {
+        console.error('Failed to save settings:', error)
+      }
       break
 
     case 'create-item':
-      // TODO: API call to create item
-      console.log('Create item:', data)
+      try {
+        const response = await fetch(`${backendUrl}/items`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(data),
+        })
+        if (!response.ok) throw new Error('Failed to create item')
+        const result = await response.json()
+        console.log('Item created:', result)
+        // Dispatch success event
+        window.dispatchEvent(new CustomEvent('aklow-item-created', { detail: result }))
+      } catch (error) {
+        console.error('Failed to create item:', error)
+      }
       break
 
     case 'update-item':
-      // TODO: API call to update item
-      console.log('Update item:', data)
+      try {
+        if (!data?.id) {
+          console.error('Update item: missing id')
+          break
+        }
+        const response = await fetch(`${backendUrl}/items/${data.id}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(data),
+        })
+        if (!response.ok) throw new Error('Failed to update item')
+        const result = await response.json()
+        console.log('Item updated:', result)
+        // Dispatch success event
+        window.dispatchEvent(new CustomEvent('aklow-item-updated', { detail: result }))
+      } catch (error) {
+        console.error('Failed to update item:', error)
+      }
       break
 
     case 'delete-item':
       if (data?.id && confirm('Wirklich löschen?')) {
-        // TODO: API call to delete
-        console.log('Delete item:', data.id)
+        try {
+          const response = await fetch(`${backendUrl}/items/${data.id}`, {
+            method: 'DELETE',
+            headers,
+          })
+          if (!response.ok) throw new Error('Failed to delete item')
+          console.log('Item deleted:', data.id)
+          // Dispatch success event
+          window.dispatchEvent(new CustomEvent('aklow-item-deleted', { detail: { id: data.id } }))
+        } catch (error) {
+          console.error('Failed to delete item:', error)
+        }
       }
       break
 
