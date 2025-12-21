@@ -101,7 +101,6 @@ export function MemorySidebarWidget({ onCategoryClick }: MemorySidebarWidgetProp
               <AkListRow
                 accent="default"
                 selected={isActive}
-                accentBar={isActive}
                 title={category.label}
                 subtitle={category.subtitle}
                 leading={

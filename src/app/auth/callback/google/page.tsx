@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_CONTROL_PLANE_URL || 'http://localhost:4051'
 
 function GoogleCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { login } = useAuth()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -57,7 +59,7 @@ function GoogleCallbackContent() {
         setError(err.message || 'Authentication failed')
         setTimeout(() => router.push('/auth/login'), 3000)
       })
-  }, [searchParams, router])
+  }, [searchParams, router, login])
 
   if (error) {
     return (

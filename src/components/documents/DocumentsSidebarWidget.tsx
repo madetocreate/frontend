@@ -50,7 +50,7 @@ export function DocumentsSidebarWidget({
                 return (
                   <li key={view.id}>
                     <AkListRow
-                      accent="neutral"
+                      accent="documents"
                       selected={isActive}
                       title={view.label}
                       leading={

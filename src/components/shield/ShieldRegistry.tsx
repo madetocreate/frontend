@@ -81,7 +81,10 @@ export function ShieldRegistry() {
                                 trailing={
                                     <div className="flex items-center gap-2">
                                         <span className={`text-xs px-2 py-1 rounded-full border ${server.preset === 'read_only' ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'}`}>
-                                            {server.preset || 'read_only'}
+                                            {(() => {
+                                              const preset = (server as { preset?: unknown }).preset
+                                              return typeof preset === 'string' ? preset : 'read_only'
+                                            })()}
                                         </span>
                                     </div>
                                 }

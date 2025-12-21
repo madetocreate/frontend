@@ -115,6 +115,7 @@ export type ChatStreamCallbacks = {
   onStepUpdate?: (data: { stepId: string; status: string }) => void;
   onEnd?: (data: { content: string; steps?: OrchestratorStep[]; uiMessages?: UIMessage[] }) => void;
   onError?: (error: { message: string }) => void;
+  onAbort?: () => void;
 };
 
 export async function sendChatMessageStream(
@@ -124,9 +125,10 @@ export async function sendChatMessageStream(
     tenantId?: string
     sessionId?: string
     channel?: string
+    signal?: AbortSignal
   },
 ): Promise<void> {
-  const tenantId = options?.tenantId ?? 'demo'
+  const tenantId = options?.tenantId ?? 'aklow-main'
   const sessionId = options?.sessionId ?? 'default'
   const channel = options?.channel ?? 'default'
 
@@ -136,6 +138,7 @@ export async function sendChatMessageStream(
       'content-type': 'application/json',
     },
     credentials: 'include',
+    signal: options?.signal,
     body: JSON.stringify({
       tenantId,
       sessionId,
@@ -267,6 +270,12 @@ export async function sendChatMessageStream(
     if (currentData) {
       dispatch(currentEvent, currentData)
     }
+  } catch (err) {
+    if ((err as Error).name === 'AbortError') {
+      callbacks.onAbort?.();
+      return;
+    }
+    throw err;
   } finally {
     try {
       reader.releaseLock()

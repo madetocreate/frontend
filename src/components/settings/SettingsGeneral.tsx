@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useTheme } from 'next-themes'
 import { 
   GlobeAltIcon, 
   ClockIcon, 
@@ -16,14 +17,32 @@ import { SettingsSection, SettingsRow, SettingsSelect, SettingsToggle } from './
 type SettingsMode = 'simple' | 'expert'
 
 export function SettingsGeneral({ mode }: { mode: SettingsMode }) {
+  const [mounted, setMounted] = useState(false)
+  const { theme, setTheme, resolvedTheme } = useTheme()
   const [timezone, setTimezone] = useState('Europe/Berlin')
   const [language, setLanguage] = useState('de')
   const [notifications, setNotifications] = useState(true)
-  const [theme, setTheme] = useState('system')
+
+  // Avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null // or a placeholder
+  }
+
+  const currentThemeIcon = theme === 'light' ? (
+    <SunIcon className="h-5 w-5" />
+  ) : theme === 'dark' ? (
+    <MoonIcon className="h-5 w-5" />
+  ) : (
+    <ComputerDesktopIcon className="h-5 w-5" />
+  )
 
   return (
     <div className="p-6 space-y-6">
-      {/* App Information - Always visible */}
+      {/* ... existing App Information ... */}
       <SettingsSection 
         title="App-Informationen" 
         description="Grundlegende Informationen über Ihre Installation"
@@ -33,7 +52,7 @@ export function SettingsGeneral({ mode }: { mode: SettingsMode }) {
           title="Umgebung"
           subtitle="Aktuelle Laufzeitumgebung"
           leading={<GlobeAltIcon className="h-5 w-5" />}
-          trailing={<span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">development</span>}
+          trailing={<span className="text-sm font-mono bg-[var(--ak-color-bg-surface-muted)] px-2 py-1 rounded text-[var(--ak-color-text-primary)] border border-[var(--ak-color-border-fine)]">development</span>}
           mode={mode}
         />
         <SettingsRow
@@ -48,13 +67,13 @@ export function SettingsGeneral({ mode }: { mode: SettingsMode }) {
             title="Service Name"
             subtitle="SERVICE_NAME"
             leading={<GlobeAltIcon className="h-5 w-5" />}
-            trailing={<span className="text-sm font-mono bg-[var(--ak-color-bg-surface-muted)] px-2 py-1 rounded">backend</span>}
+            trailing={<span className="text-sm font-mono bg-[var(--ak-color-bg-surface-muted)] px-2 py-1 rounded text-[var(--ak-color-text-primary)]">backend</span>}
             mode={mode}
           />
         )}
       </SettingsSection>
 
-      {/* Localization - Simple mode shows basic, expert shows all */}
+      {/* ... existing Localization ... */}
       <SettingsSection 
         title="Lokalisierung" 
         description="Sprache, Zeitzone und regionale Einstellungen"
@@ -89,44 +108,26 @@ export function SettingsGeneral({ mode }: { mode: SettingsMode }) {
           onChange={setTimezone}
           mode={mode}
         />
-        {mode === 'expert' && (
-          <>
-            <SettingsRow
-              title="Datumsformat"
-              subtitle="Format für Datumsanzeige"
-              leading={<ClockIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">DD.MM.YYYY</span>}
-              mode={mode}
-            />
-            <SettingsRow
-              title="Zahlenformat"
-              subtitle="Dezimaltrennzeichen und Tausenderzeichen"
-              leading={<ClockIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-[var(--ak-color-text-secondary)]">1.234,56</span>}
-              mode={mode}
-            />
-          </>
-        )}
       </SettingsSection>
 
       {/* Appearance - Simple mode only */}
       {mode === 'simple' && (
         <SettingsSection 
           title="Erscheinungsbild" 
-          description="Anpassen Sie das Aussehen der Anwendung"
+          description="Anpassen des Aussehens der Anwendung"
           mode={mode}
         >
           <SettingsSelect
             title="Design"
-            subtitle="Hell, Dunkel oder System"
-            leading={theme === 'light' ? <SunIcon className="h-5 w-5" /> : theme === 'dark' ? <MoonIcon className="h-5 w-5" /> : <ComputerDesktopIcon className="h-5 w-5" />}
-            value={theme}
+            subtitle={`Aktuell: ${theme === 'system' ? `System (${resolvedTheme === 'dark' ? 'Dunkel' : 'Hell'})` : theme === 'dark' ? 'Dunkel' : 'Hell'}`}
+            leading={currentThemeIcon}
+            value={theme || 'system'}
             options={[
               { value: 'light', label: 'Hell' },
               { value: 'dark', label: 'Dunkel' },
               { value: 'system', label: 'System' }
             ]}
-            onChange={setTheme}
+            onChange={(val) => setTheme(val)}
             mode={mode}
           />
         </SettingsSection>
@@ -162,42 +163,14 @@ export function SettingsGeneral({ mode }: { mode: SettingsMode }) {
               title="Node Environment"
               subtitle="NODE_ENV"
               leading={<GlobeAltIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">development</span>}
+              trailing={<span className="text-sm font-mono bg-[var(--ak-color-bg-surface-muted)] px-2 py-1 rounded text-[var(--ak-color-text-primary)]">development</span>}
               mode={mode}
             />
             <SettingsRow
               title="Log Level"
               subtitle="LOG_LEVEL"
               leading={<EyeIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">info</span>}
-              mode={mode}
-            />
-            <SettingsRow
-              title="Alert Webhook URL"
-              subtitle="ALERT_WEBHOOK_URL"
-              leading={<BellIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-400">Nicht konfiguriert</span>}
-              mode={mode}
-            />
-          </SettingsSection>
-
-          <SettingsSection 
-            title="Performance & Caching" 
-            description="Optimierungseinstellungen für bessere Performance"
-            mode={mode}
-          >
-            <SettingsRow
-              title="Cache aktiviert"
-              subtitle="Redis-basiertes Caching"
-              leading={<GlobeAltIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-green-600 font-medium">Aktiv</span>}
-              mode={mode}
-            />
-            <SettingsRow
-              title="Cache TTL"
-              subtitle="Time-to-Live für Cache-Einträge"
-              leading={<ClockIcon className="h-5 w-5" />}
-              trailing={<span className="text-sm text-gray-600">3600s</span>}
+              trailing={<span className="text-sm font-mono bg-[var(--ak-color-bg-surface-muted)] px-2 py-1 rounded text-[var(--ak-color-text-primary)]">info</span>}
               mode={mode}
             />
           </SettingsSection>
@@ -206,3 +179,4 @@ export function SettingsGeneral({ mode }: { mode: SettingsMode }) {
     </div>
   )
 }
+

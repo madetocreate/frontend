@@ -14,7 +14,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (token: string, userData: User) => void
+  login: (token: string, userData: User, refreshToken?: string) => void
   logout: () => void
   isAuthenticated: boolean
 }

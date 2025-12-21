@@ -16,7 +16,7 @@ interface Customer {
   email: string
   phone: string
   preferences: {
-    type: ('Wohnung' | 'Haus' | 'Gewerbe')[]
+    type: ('Wohnung' | 'Haus' | 'Gewerbe' | 'Grundstück')[]
     minRooms?: number
     maxRooms?: number
     minArea?: number
@@ -32,7 +32,7 @@ interface Customer {
 interface Property {
   id: string
   title: string
-  type: 'Wohnung' | 'Haus' | 'Gewerbe'
+  type: 'Wohnung' | 'Haus' | 'Gewerbe' | 'Grundstück'
   rooms?: number
   area: number
   price: number

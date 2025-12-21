@@ -1,13 +1,13 @@
 'use client'
 
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import clsx from 'clsx'
-import { MagneticButton } from '@/components/ui/MagneticButton'
+import { MagneticButton, type MagneticButtonProps } from '@/components/ui/MagneticButton'
 
-export type AkIconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
+export type AkIconButtonProps = Omit<MagneticButtonProps, 'children' | 'isActive'> & {
   children: ReactNode
   size?: 'sm' | 'md'
-  variant?: 'surface' | 'glass' | 'ghost'
+  variant?: 'surface' | 'glass' | 'ghost' | 'graphite'
   selected?: boolean
 }
 
@@ -30,11 +30,17 @@ export function AkIconButton({
       ? 'bg-transparent border-transparent'
       : variant === 'glass'
         ? 'bg-[var(--ak-color-bg-surface)]/60 border-[var(--ak-color-border-fine)]'
-        : 'bg-[var(--ak-color-bg-surface)] border-[var(--ak-color-border-subtle)]'
+        : variant === 'graphite'
+          ? 'bg-[var(--ak-color-graphite-base)] border-[var(--ak-color-graphite-border)] text-[var(--ak-color-graphite-text)] hover:bg-[var(--ak-color-graphite-hover)]'
+          : 'bg-[var(--ak-color-bg-surface)] border-[var(--ak-color-border-subtle)]'
 
   const state = selected
-    ? 'bg-[var(--ak-color-bg-selected)] border-[var(--ak-color-border-strong)] text-[var(--ak-color-text-primary)]'
-    : 'text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]'
+    ? variant === 'graphite'
+      ? 'bg-[var(--ak-color-graphite-soft)] border-[var(--ak-color-graphite-border)] text-[var(--ak-color-graphite-text)]'
+      : 'bg-[var(--ak-color-bg-selected)] border-[var(--ak-color-border-strong)] text-[var(--ak-color-text-primary)]'
+    : variant === 'graphite'
+      ? ''
+      : 'text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]'
 
   return (
     <MagneticButton

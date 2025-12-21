@@ -29,6 +29,7 @@ const ACCENT_VAR: Record<AkAccent, string> = {
   news: 'var(--ak-accent-news, var(--ak-color-accent))',
   telephony: 'var(--ak-accent-telephony, var(--ak-color-accent))',
   automation: 'var(--ak-accent-automation, var(--ak-color-accent))',
+  graphite: 'var(--ak-color-graphite-base)',
 }
 
 export function AkListRow({
@@ -75,7 +76,9 @@ export function AkListRow({
           ? 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-control-accent-soft)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ak-color-bg-sidebar)]'
           : '',
         selected
-          ? 'bg-[var(--ak-color-bg-selected)] border-[var(--ak-color-border-strong)]'
+          ? accent === 'graphite'
+            ? 'bg-[var(--ak-color-graphite-soft)] border-[var(--ak-color-graphite-border)] text-[var(--ak-color-text-primary)]'
+            : 'bg-[var(--ak-color-bg-selected)] border-[var(--ak-color-border-strong)]'
           : 'bg-transparent border-transparent hover:bg-[var(--ak-color-bg-hover)] hover:border-[var(--ak-color-border-subtle)]',
         className,
       )}

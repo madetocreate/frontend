@@ -1,8 +1,9 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { createPttController, PttState } from '../lib/realtimePTT'
 
-export type RealtimeVoiceStatus = 'idle' | 'connecting' | 'live' | 'error'
+export type RealtimeVoiceStatus = PttState | 'connecting'
 
 type UseRealtimeVoiceOptions = {
   onStart?: () => void
@@ -13,63 +14,61 @@ type UseRealtimeVoiceOptions = {
 export function useRealtimeVoice(options: UseRealtimeVoiceOptions = {}) {
   const [status, setStatus] = useState<RealtimeVoiceStatus>('idle')
   const [error, setError] = useState<string | null>(null)
+  const ptt = createPttController({
+    onAssistantText: options.onTextDelta,
+    onAssistantDone: options.onStop,
+    onUserTranscript: options.onTextDelta, // surface transcript as text
+  })
 
   const resetError = useCallback(() => {
     setError(null)
-  }, [])
+  }, [setError])
 
-  const toggle = useCallback(async () => {
-    if (typeof window === 'undefined') {
-      return
-    }
-
-    const anyWindow = window as unknown as {
-      startRealtimeVoiceSession?: (callbacks?: {
-        onTextDelta?: (text: string) => void
-        onAudioDelta?: (audio: string) => void
-        onResponseDone?: () => void
-      }) => Promise<void> | void
-      stopRealtimeVoiceSession?: () => Promise<void> | void
-    }
-
+  const press = useCallback(async () => {
     try {
-      if (status === 'idle' || status === 'error') {
-        setError(null)
-        setStatus('connecting')
-
-        if (anyWindow.startRealtimeVoiceSession) {
-          await anyWindow.startRealtimeVoiceSession({
-            onTextDelta: options.onTextDelta,
-          })
-        }
-
-        setStatus('live')
-        if (options.onStart) {
-          options.onStart()
-        }
-      } else {
-        if (anyWindow.stopRealtimeVoiceSession) {
-          await anyWindow.stopRealtimeVoiceSession()
-        }
-
-        setStatus('idle')
-        if (options.onStop) {
-          options.onStop()
-        }
-      }
+      setError(null)
+      setStatus('connecting')
+      await ptt.press()
+      setStatus('holding')
+      options.onStart?.()
     } catch (err) {
-      console.error('Realtime voice error', err)
+      console.error('Realtime voice press error', err)
       setError('Realtime-Audio konnte nicht gestartet werden.')
       setStatus('error')
     }
-  }, [options, status])
+  }, [options, ptt, setError, setStatus])
+
+  const release = useCallback(async () => {
+    try {
+      await ptt.release()
+      setStatus('assistant')
+    } catch (err) {
+      console.error('Realtime voice release error', err)
+      setError('Realtime-Audio konnte nicht abgeschlossen werden.')
+      setStatus('error')
+    }
+  }, [ptt, setError, setStatus])
+
+  const stopAll = useCallback(async () => {
+    try {
+      await ptt.stopAll()
+      setStatus('idle')
+      options.onStop?.()
+    } catch (err) {
+      console.error('Realtime voice stop error', err)
+      setError('Session konnte nicht gestoppt werden.')
+      setStatus('error')
+    }
+  }, [options, ptt, setError, setStatus])
 
   return {
     status,
-    isLive: status === 'live',
+    isLive: status === 'holding' || status === 'assistant',
     isConnecting: status === 'connecting',
     error,
-    toggle,
+    press,
+    release,
+    stopAll,
     resetError,
   }
 }

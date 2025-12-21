@@ -11,15 +11,21 @@ import {
   MagnifyingGlassIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline'
-import { ensureSeedChatThread, useChatThreads, writeChatThreads, type ChatThread } from '@/lib/chatThreadsStore'
+import { 
+  ensureSeedChatThread, 
+  useChatThreads, 
+  writeChatThreads, 
+  setActiveThreadId,
+  createChatThread,
+  type ChatThread 
+} from '@/lib/chatThreadsStore'
 
 export function ChatSidebarContent() {
-  const threads = useChatThreads()
-  const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
+  const { threads, activeThreadId } = useChatThreads()
   const [query, setQuery] = useState('')
   const [openKebabId, setOpenKebabId] = useState<string | null>(null)
 
-  const effectiveActiveThreadId = activeThreadId ?? (threads[0]?.id ?? null)
+  const effectiveActiveThreadId = activeThreadId
 
   useEffect(() => {
     ensureSeedChatThread()
@@ -69,50 +75,44 @@ export function ChatSidebarContent() {
   }, [filtered])
 
   const handleThreadSelect = (threadId: string) => {
-    setActiveThreadId(threadId)
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        setActiveThreadId(threadId)
+      })
+    } else {
+      setActiveThreadId(threadId)
+    }
+    
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('aklow-select-thread', { detail: { threadId } }))
     }
   }
 
-  const buildNewChat = useCallback((base: ChatThread[]) => {
-    const now = Date.now()
-    const newId = `thread-${now}`
-    const newThread: ChatThread = {
-      id: newId,
-      title: 'Neuer Chat',
-      lastMessageAt: now,
-      preview: '',
-    }
-    const next = [newThread, ...base].slice(0)
-    return { newId, next }
-  }, [])
-
   const handleNewChat = useCallback(() => {
-    const built = buildNewChat(threads)
-    writeChatThreads(built.next)
-    setActiveThreadId(built.newId)
+    const newThread = createChatThread()
+    writeChatThreads([newThread, ...threads])
+    setActiveThreadId(newThread.id)
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('aklow-new-chat', { detail: { threadId: built.newId } }))
+      window.dispatchEvent(new CustomEvent('aklow-new-chat', { detail: { threadId: newThread.id } }))
     }
-  }, [buildNewChat, threads])
+  }, [threads])
 
   const handleDeleteThread = useCallback(
     (threadId: string) => {
       const base = threads.filter((t) => t.id !== threadId)
       if (effectiveActiveThreadId === threadId) {
-        const built = buildNewChat(base)
-        writeChatThreads(built.next)
-        setActiveThreadId(built.newId)
+        const newThread = createChatThread()
+        writeChatThreads([newThread, ...base])
+        setActiveThreadId(newThread.id)
         if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('aklow-new-chat', { detail: { threadId: built.newId } }))
+          window.dispatchEvent(new CustomEvent('aklow-new-chat', { detail: { threadId: newThread.id } }))
         }
       } else {
         writeChatThreads(base)
       }
       setOpenKebabId(null)
     },
-    [buildNewChat, effectiveActiveThreadId, threads]
+    [effectiveActiveThreadId, threads]
   )
 
   const handleRenameThread = (threadId: string) => {
@@ -146,21 +146,21 @@ export function ChatSidebarContent() {
         <div className="flex gap-2">
             <button
                 onClick={handleNewChat}
-                className="flex-1 flex items-center justify-between rounded-lg bg-white/50 px-3 py-2 text-sm font-medium text-gray-700 shadow-sm border border-gray-200/60 hover:bg-white hover:shadow-md transition-all duration-200 backdrop-blur-sm active:scale-[0.98]"
+                className="flex-1 flex items-center justify-between rounded-lg bg-[var(--ak-color-bg-surface)] px-3 py-2 text-sm font-medium text-[var(--ak-color-text-primary)] shadow-sm border border-[var(--ak-color-border-subtle)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-200 backdrop-blur-sm active:scale-[0.98]"
             >
                 <div className="flex items-center gap-2">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-black/5 text-black">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--ak-color-bg-hover)] text-[var(--ak-color-text-primary)]">
                         <ChatBubbleLeftIcon className="h-3.5 w-3.5" />
                     </div>
                     <span>Neuer Chat</span>
                 </div>
-                <div className="flex h-5 w-5 items-center justify-center rounded bg-white/50 text-xs text-gray-400">
+                <div className="flex h-5 w-5 items-center justify-center rounded bg-[var(--ak-color-bg-surface-muted)] text-xs text-[var(--ak-color-text-muted)]">
                     +
                 </div>
             </button>
             <button
                 onClick={handleToggleInfo}
-                className="flex h-[42px] w-[42px] items-center justify-center rounded-lg bg-white/50 text-gray-600 shadow-sm border border-gray-200/60 hover:bg-white hover:shadow-md transition-all duration-200 backdrop-blur-sm active:scale-[0.98]"
+                className="flex h-[42px] w-[42px] items-center justify-center rounded-lg bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-secondary)] shadow-sm border border-[var(--ak-color-border-subtle)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-200 backdrop-blur-sm active:scale-[0.98]"
                 title="Chat Informationen"
             >
                 <InformationCircleIcon className="h-5 w-5" />
@@ -169,13 +169,13 @@ export function ChatSidebarContent() {
 
         {/* Search */}
         <div className="relative group">
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+            <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-[var(--ak-color-text-muted)] group-focus-within:text-[var(--ak-color-accent)] transition-colors" />
             <input
                 type="text"
                 placeholder="Suche..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-200/60 bg-white/40 py-2 pl-9 pr-3 text-sm placeholder-gray-400 focus:bg-white focus:border-indigo-500/50 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-sm"
+                className="w-full rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)]/50 py-2 pl-9 pr-3 text-sm placeholder-[var(--ak-color-text-muted)] focus:bg-[var(--ak-color-bg-surface)] focus:border-[var(--ak-color-accent)]/50 focus:outline-none focus:ring-4 focus:ring-[var(--ak-color-accent)]/10 transition-all shadow-sm"
             />
         </div>
       </div>
@@ -187,18 +187,23 @@ export function ChatSidebarContent() {
             if (groupThreads.length === 0) return null
             return (
               <div key={label}>
-                <div className="sticky top-0 z-10 bg-gradient-to-b from-[#F3F5F7] via-[#F3F5F7] to-transparent px-2 pb-2 pt-1">
-                    <h3 className="text-[11px] font-semibold uppercase tracking-wider text-gray-400/90">{label}</h3>
+                <div className="sticky top-0 z-10 bg-[var(--ak-color-bg-sidebar)] px-2 pb-2 pt-1">
+                    <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ak-color-text-muted)]/90">{label}</h3>
                 </div>
                 <div className="space-y-0.5">
                   {groupThreads.map((thread) => (
                     <div
                       key={thread.id}
-                      className="group relative flex items-center gap-3 rounded-lg px-2 py-2 transition-all hover:bg-black/5"
+                      className={clsx(
+                        "group relative flex items-center gap-3 rounded-lg px-2 py-2 transition-all",
+                        thread.id === effectiveActiveThreadId 
+                          ? "bg-[var(--ak-color-graphite-soft)]" 
+                          : "hover:bg-[var(--ak-color-bg-hover)]"
+                      )}
                     >
                         {/* Selection Indicator */}
                         {thread.id === effectiveActiveThreadId && (
-                            <div className="absolute left-0 h-4 w-1 rounded-r-full bg-black/80" />
+                            <div className="absolute left-0 h-4 w-1 rounded-r-full bg-[var(--ak-color-graphite-base)]" />
                         )}
 
                         <button
@@ -207,7 +212,9 @@ export function ChatSidebarContent() {
                         >
                             <span className={clsx(
                                 "block truncate text-sm font-medium transition-colors",
-                                thread.id === effectiveActiveThreadId ? "text-black" : "text-gray-600 group-hover:text-gray-900"
+                                thread.id === effectiveActiveThreadId 
+                                  ? "text-[var(--ak-color-text-primary)]" 
+                                  : "text-[var(--ak-color-text-secondary)] group-hover:text-[var(--ak-color-text-primary)]"
                             )}>
                                 {thread.title}
                             </span>
@@ -220,11 +227,11 @@ export function ChatSidebarContent() {
                                     setOpenKebabId(openKebabId === thread.id ? null : thread.id)
                                 }}
                                 className={clsx(
-                                    "flex h-6 w-6 items-center justify-center rounded transition-colors hover:bg-black/10",
-                                    openKebabId === thread.id ? "opacity-100 bg-black/10" : "opacity-0 group-hover:opacity-100"
+                                    "flex h-6 w-6 items-center justify-center rounded transition-colors hover:bg-[var(--ak-color-bg-hover)]",
+                                    openKebabId === thread.id ? "opacity-100 bg-[var(--ak-color-bg-hover)]" : "opacity-0 group-hover:opacity-100"
                                 )}
                             >
-                                <EllipsisHorizontalIcon className="h-4 w-4 text-gray-500" />
+                                <EllipsisHorizontalIcon className="h-4 w-4 text-[var(--ak-color-text-muted)]" />
                             </button>
 
                             {/* Dropdown Menu */}
@@ -237,13 +244,13 @@ export function ChatSidebarContent() {
                                             setOpenKebabId(null)
                                         }} 
                                     />
-                                    <div className="absolute right-0 top-full z-30 mt-1 w-32 origin-top-right rounded-lg border border-gray-200 bg-white p-1 shadow-lg ring-1 ring-black/5 focus:outline-none animate-in fade-in zoom-in-95 duration-100">
+                                    <div className="absolute right-0 top-full z-30 mt-1 w-32 origin-top-right rounded-lg border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface)] p-1 shadow-lg ring-1 ring-black/5 focus:outline-none animate-in fade-in zoom-in-95 duration-100">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation()
                                                 handleRenameThread(thread.id)
                                             }}
-                                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+                                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)]"
                                         >
                                             <PencilSquareIcon className="h-3.5 w-3.5" />
                                             Umbenennen
@@ -253,12 +260,12 @@ export function ChatSidebarContent() {
                                                 e.stopPropagation()
                                                 handleArchiveThread(thread.id)
                                             }}
-                                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+                                            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)]"
                                         >
                                             <ArchiveBoxIcon className="h-3.5 w-3.5" />
                                             Archivieren
                                         </button>
-                                        <div className="my-1 h-px bg-gray-100" />
+                                        <div className="my-1 h-px bg-[var(--ak-color-border-fine)]" />
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation()

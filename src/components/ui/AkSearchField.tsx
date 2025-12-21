@@ -16,7 +16,8 @@ export type AkSearchFieldAccent =
   | "marketing"
   | "telephony"
   | "settings"
-  | "chat";
+  | "chat"
+  | "graphite";
 
 export type AkSearchFieldSize = "sm" | "md" | "lg";
 export type AkSearchFieldTone = "default" | "subtle";
@@ -53,6 +54,7 @@ const accentClass: Record<AkSearchFieldAccent, string> = {
   telephony: "focus:ring-[var(--ak-color-telephony)]/20 focus:border-[var(--ak-color-telephony)]/40",
   settings: "focus:ring-[var(--ak-color-settings)]/20 focus:border-[var(--ak-color-settings)]/40",
   chat: "focus:ring-[var(--ak-color-chat)]/20 focus:border-[var(--ak-color-chat)]/40",
+  graphite: "focus:ring-[var(--ak-color-graphite-base)]/20 focus:border-[var(--ak-color-graphite-base)]/40",
 };
 
 export function AkSearchField({

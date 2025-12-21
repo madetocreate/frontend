@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_CONTROL_PLANE_URL || 'http://localhost:4051'
+const ADMIN_KEY = process.env.CONTROL_PLANE_ADMIN_KEY || process.env.AI_SHIELD_ADMIN_KEY || ''
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
     const filter = searchParams.get('filter') || 'all'
     const unreadOnly = searchParams.get('unread_only') === 'true'
 
-    const adminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || ''
+    const adminKey = ADMIN_KEY
     
     const response = await fetch(`${API_BASE_URL}/v1/notifications?tenant_id=${tenantId}&filter=${filter}&unread_only=${unreadOnly}`, {
       method: 'GET',
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { action, notification_id, tenant_id } = body
 
-    const adminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || ''
+    const adminKey = ADMIN_KEY
 
     let endpoint = ''
     if (action === 'mark-read') {

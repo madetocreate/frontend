@@ -76,7 +76,7 @@ export function ShieldPolicies() {
                 {preset.rules.read ? (
                     <AkBadge tone="success">Erlaubt</AkBadge>
                 ) : (
-                    <AkBadge tone="critical">Blockiert</AkBadge>
+                    <AkBadge tone="danger">Blockiert</AkBadge>
                 )}
               </div>
               <div className="flex justify-between items-center text-sm">
@@ -84,7 +84,7 @@ export function ShieldPolicies() {
                 {preset.rules.write ? (
                     <AkBadge tone="success">Erlaubt</AkBadge>
                 ) : (
-                    <AkBadge tone="critical">Blockiert</AkBadge>
+                    <AkBadge tone="danger">Blockiert</AkBadge>
                 )}
               </div>
               <div className="flex justify-between items-center text-sm">
@@ -92,7 +92,7 @@ export function ShieldPolicies() {
                 {preset.rules.dangerous ? (
                     <AkBadge tone="warning">Warnung</AkBadge>
                 ) : (
-                    <AkBadge tone="critical">Blockiert</AkBadge>
+                    <AkBadge tone="danger">Blockiert</AkBadge>
                 )}
               </div>
               <div className="flex justify-between items-center text-sm">
@@ -115,7 +115,7 @@ export function ShieldPolicies() {
                 title="Global Block: 'delete_database'"
                 subtitle="Verhindert das Löschen von Datenbanken auf allen Ebenen"
                 leading={<LockClosedIcon className="h-5 w-5 text-red-500" />}
-                trailing={<AkBadge tone="critical">Active</AkBadge>}
+                trailing={<AkBadge tone="danger">Active</AkBadge>}
             />
             <AkListRow
                 title="PII Masking: Email & Phone"

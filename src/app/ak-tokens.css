@@ -38,6 +38,19 @@
   --ak-glass-shadow-dark: 0 4px 20px rgba(0, 0, 0, 0.5);
   
   /* ============================================
+     GRAPHITE ACCENTS (System-wide)
+     ============================================ */
+  --ak-color-graphite-base: #1f2937;
+  --ak-color-graphite-hover: #111827;
+  --ak-color-graphite-soft: rgba(31, 41, 55, 0.08);
+  --ak-color-graphite-text: #ffffff;
+  --ak-color-graphite-border: rgba(31, 41, 55, 0.12);
+  --ak-color-graphite-selected: rgba(31, 41, 55, 0.1);
+  --ak-color-graphite-surface: #1f2937;
+  --ak-color-graphite-surface-muted: #374151;
+  --ak-color-graphite-elevated: #2d3748; /* slate-800 lifted */
+
+  /* ============================================
      SPACING (4pt Grid)
      ============================================ */
   --ak-space-1: 4px;
@@ -198,5 +211,16 @@
   --ak-text-secondary: var(--ak-text-secondary-dark);
   --ak-text-muted: var(--ak-text-muted-dark);
   --ak-text-low-white: var(--ak-text-low-white-dark);
+
+  /* Graphite in Dark Mode - slightly lifted for contrast */
+  --ak-color-graphite-base: #374151; /* Slate-700 */
+  --ak-color-graphite-hover: #4b5563; /* Slate-600 */
+  --ak-color-graphite-soft: rgba(255, 255, 255, 0.1);
+  --ak-color-graphite-text: #f9fafb;
+  --ak-color-graphite-border: rgba(255, 255, 255, 0.15);
+  --ak-color-graphite-selected: rgba(255, 255, 255, 0.15);
+  --ak-color-graphite-surface: #111827; /* Very dark graphite */
+  --ak-color-graphite-surface-muted: #1f2937;
+  --ak-color-graphite-elevated: #374151;
 }
 

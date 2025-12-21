@@ -24,9 +24,14 @@ export type HotelView =
 
 type HotelDashboardProps = {
   view: HotelView
+  enabledViews?: string[]
 }
 
-export function HotelDashboard({ view }: HotelDashboardProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function HotelDashboard({ view, enabledViews }: HotelDashboardProps) {
+  // If view is not enabled and enabledViews is provided, one could redirect or show empty state.
+  // But DashboardProShell handles redirect. This prop is just for internal filtering if needed.
+
   return (
     <div className="h-full w-full overflow-y-auto bg-[var(--ak-color-bg-app)]">
       <header className="sticky top-0 z-10 flex h-16 items-center border-b border-[var(--ak-color-border-hairline)] bg-[var(--ak-glass-bg)] px-6 backdrop-blur-[var(--ak-glass-blur)]">

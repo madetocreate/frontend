@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+const BACKEND_URL = process.env.AGENT_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json();
@@ -17,8 +17,9 @@ export async function POST(
       );
     }
 
+    const resolvedParams = await params;
     const response = await fetch(
-      `${BACKEND_URL}/approval-flows/${params.id}/deny`,
+      `${BACKEND_URL}/approval-flows/${resolvedParams.id}/deny`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

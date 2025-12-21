@@ -175,7 +175,6 @@ export function CalendarSystem() {
 
   const goToToday = () => {
     setCurrentDate(new Date())
-    setSelectedDate(new Date())
   }
 
   const getPriorityColor = (priority: string) => {
@@ -259,7 +258,7 @@ export function CalendarSystem() {
 
             {/* New Event Button */}
             <button
-              onClick={() => setShowEventModal(true)}
+              onClick={() => setShowNLPModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
             >
               <PlusIcon className="h-5 w-5" />

@@ -18,7 +18,10 @@ export function PWARegister() {
       // Handle install prompt
       window.addEventListener("beforeinstallprompt", (e: Event) => {
         e.preventDefault();
-        deferredPrompt = e;
+        // Store the event for a custom "Install" button if needed later.
+        // (We intentionally keep this local to avoid leaking globals.)
+        const deferredPrompt = e;
+        void deferredPrompt;
         // You can show a custom install button here
       });
     }

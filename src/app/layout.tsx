@@ -11,6 +11,7 @@ import { KeyboardShortcutsProvider } from "../components/KeyboardShortcutsProvid
 import { QueryProvider } from "../lib/queryClient";
 import { PWARegister } from "../components/PWARegister";
 import { AuthProvider } from "../contexts/AuthContext";
+import { ThemeProvider } from "../components/ui/ThemeProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -39,20 +40,22 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="de" className={inter.variable}>
+    <html lang="de" className={inter.variable} suppressHydrationWarning>
       <body className="bg-transparent text-[var(--ak-color-text-primary)] antialiased font-sans">
-        <QueryProvider>
-          <AuthProvider>
-            <I18nProvider>
-              {/* AuthTokenRefresh temporarily disabled */}
-              <PWARegister />
-              <RealtimeVoiceClientScript />
-              <KeyboardShortcutsProvider>
-                {children}
-              </KeyboardShortcutsProvider>
-            </I18nProvider>
-          </AuthProvider>
-        </QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <I18nProvider>
+                {/* AuthTokenRefresh temporarily disabled */}
+                <PWARegister />
+                <RealtimeVoiceClientScript />
+                <KeyboardShortcutsProvider>
+                  {children}
+                </KeyboardShortcutsProvider>
+              </I18nProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

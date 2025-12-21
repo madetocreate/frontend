@@ -399,8 +399,6 @@ const PROVIDERS: ProviderInfo[] = [
 const CATEGORIES = ['All', 'Productivity', 'Communication', 'E-Commerce', 'CRM', 'Hotel', 'Real Estate', 'Health', 'Apple', 'Reviews'] as const
 type Category = typeof CATEGORIES[number]
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_CONTROL_PLANE_URL || 'http://localhost:4051'
-
 export default function IntegrationsDashboard() {
   const [connections, setConnections] = useState<Connection[]>([])
   const [loading, setLoading] = useState(true)
@@ -413,23 +411,13 @@ export default function IntegrationsDashboard() {
     try {
       setLoading(true)
       setError(null)
-      
-      const adminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || ''
-      if (!adminKey) {
-        console.warn('NEXT_PUBLIC_ADMIN_KEY nicht gesetzt - verwende Mock-Daten')
-        setConnections([])
-        setLoading(false)
-        return
-      }
-      
-      const response = await fetch(`${API_BASE_URL}/v1/integrations/`, {
+
+      const response = await fetch(`/api/shield/v1/integrations/`, {
         method: 'GET',
         headers: {
           'x-tenant-id': tenantId,
-          'x-ai-shield-admin-key': adminKey,
           'Content-Type': 'application/json',
         },
-        mode: 'cors',
       })
 
       if (!response.ok) {
@@ -456,19 +444,12 @@ export default function IntegrationsDashboard() {
   const handleConnect = async (provider: string) => {
     try {
       setError(null)
-      
-      const adminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || ''
-      if (!adminKey) {
-        throw new Error('NEXT_PUBLIC_ADMIN_KEY nicht gesetzt')
-      }
-      
-      const response = await fetch(`${API_BASE_URL}/v1/integrations/${provider}/connect`, {
+
+      const response = await fetch(`/api/shield/v1/integrations/${provider}/connect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-ai-shield-admin-key': adminKey,
         },
-        mode: 'cors',
         body: JSON.stringify({
           tenant_id: tenantId,
           provider: provider,
@@ -501,21 +482,14 @@ export default function IntegrationsDashboard() {
 
     try {
       setError(null)
-      
-      const adminKey = process.env.NEXT_PUBLIC_ADMIN_KEY || ''
-      if (!adminKey) {
-        throw new Error('NEXT_PUBLIC_ADMIN_KEY nicht gesetzt')
-      }
-      
+
       const response = await fetch(
-        `${API_BASE_URL}/v1/integrations/${provider}/disconnect?tenant_id=${tenantId}`,
+        `/api/shield/v1/integrations/${provider}/disconnect?tenant_id=${tenantId}`,
         {
           method: 'POST',
           headers: {
-            'x-ai-shield-admin-key': adminKey,
             'Content-Type': 'application/json',
           },
-          mode: 'cors',
         }
       )
 

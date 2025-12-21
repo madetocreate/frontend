@@ -67,6 +67,7 @@ function getDayLabel(): string {
 export function CalendarDetailPanel() {
   const { t } = useTranslation()
   const [events, setEvents] = useState<CalendarEvent[]>([])
+  const [loading, setLoading] = useState(false)
   const [focusSlots, setFocusSlots] = useState<FocusSlot[]>([])
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
   const [daySummary] = useState<DaySummary | null>(null)
@@ -77,6 +78,7 @@ export function CalendarDetailPanel() {
   }, [])
 
   const loadTodayEvents = async () => {
+    setLoading(true)
     try {
       const accountId = 'default' // TODO: Get from auth context
       const today = new Date().toISOString().split('T')[0]
@@ -206,6 +208,11 @@ export function CalendarDetailPanel() {
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto">
       <div className="apple-card flex flex-1 flex-col rounded-2xl border border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-elevated)] p-6 text-sm shadow-[var(--ak-shadow-sm)]">
+        {loading && (
+          <div className="mb-3 text-xs text-[var(--ak-color-text-secondary)]">
+            {t('calendar.loading', 'Lade Termine…')}
+          </div>
+        )}
         {/* AI Actions & Quick Actions - direkt unter Header */}
         <div className="mb-4 space-y-2">
           <AIActions context="calendar" />

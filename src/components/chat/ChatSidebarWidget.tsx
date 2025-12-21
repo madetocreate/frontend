@@ -63,8 +63,8 @@ export const ChatSidebarWidget: FC<ChatSidebarWidgetProps> = ({
               className={clsx(
                 'group flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)]',
                 isActive
-                  ? 'bg-[var(--ak-color-accent)] text-white shadow-[0_12px_28px_-16px_var(--ak-color-accent)]'
-                  : 'bg-[var(--ak-color-bg-surface)]/90 text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-surface-muted)]'
+                  ? 'bg-[var(--ak-color-graphite-base)] text-[var(--ak-color-graphite-text)] shadow-sm'
+                  : 'bg-[var(--ak-color-bg-surface)]/90 text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-hover)]'
               )}
             >
               <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-[var(--ak-color-bg-surface-muted)] text-[10px] font-medium text-[var(--ak-color-text-primary)]">
@@ -88,7 +88,7 @@ export const ChatSidebarWidget: FC<ChatSidebarWidgetProps> = ({
                     {conv.lastMessagePreview}
                   </p>
                   {conv.unreadCount ? (
-                    <span className="flex h-4 min-w-[16px] flex-none items-center justify-center rounded-full bg-[var(--ak-color-accent)] text-[9px] font-semibold text-white shadow-[0_10px_24px_-14px_var(--ak-color-accent)]">
+                    <span className="flex h-4 min-w-[16px] flex-none items-center justify-center rounded-full bg-[var(--ak-color-accent)] text-[9px] font-semibold text-white">
                       {conv.unreadCount}
                     </span>
                   ) : null}

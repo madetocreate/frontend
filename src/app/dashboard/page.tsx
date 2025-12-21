@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -19,6 +20,40 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  ResponsiveContainer, 
+  PieChart, 
+  Pie, 
+  Cell,
+  CartesianGrid
+} from 'recharts';
+
+// --- Types ---
+
+interface ChartDataPoint {
+  name: string;
+  value: number;
+}
+
+interface PieDataPoint {
+  name: string;
+  value: number;
+  color: string;
+  [key: string]: unknown;
+}
+
+interface AgentMetrics {
+  dailyRequests?: ChartDataPoint[];
+}
+
+interface FeedbackMetrics {
+  sentimentDistribution?: PieDataPoint[];
+}
 
 // --- Components ---
 
@@ -128,6 +163,47 @@ const QuickLink = ({
 // --- Main Page ---
 
 export default function DashboardPage() {
+  const [agentMetrics, setAgentMetrics] = useState<AgentMetrics | null>(null);
+  const [feedbackMetrics, setFeedbackMetrics] = useState<FeedbackMetrics | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [agentRes, feedbackRes] = await Promise.all([
+          fetch('/api/agent-monitoring/metrics').catch(() => null),
+          fetch('/api/feedback/metrics').catch(() => null)
+        ]);
+
+        if (agentRes?.ok) {
+          setAgentMetrics(await agentRes.json());
+        }
+        if (feedbackRes?.ok) {
+          setFeedbackMetrics(await feedbackRes.json());
+        }
+      } catch (e) {
+        console.error("Failed to fetch dashboard data", e);
+      }
+    }
+    fetchData();
+  }, []);
+
+  // Mock data if fetch fails or during loading for preview
+  const chartData = agentMetrics?.dailyRequests || [
+    { name: 'Mo', value: 400 },
+    { name: 'Di', value: 300 },
+    { name: 'Mi', value: 550 },
+    { name: 'Do', value: 450 },
+    { name: 'Fr', value: 600 },
+    { name: 'Sa', value: 350 },
+    { name: 'So', value: 200 },
+  ];
+
+  const pieData = feedbackMetrics?.sentimentDistribution || [
+    { name: 'Positiv', value: 65, color: '#10B981' },
+    { name: 'Neutral', value: 25, color: '#F59E0B' },
+    { name: 'Negativ', value: 10, color: '#EF4444' },
+  ];
+
   return (
     <div className="min-h-screen bg-[#F5F5F7] p-6 md:p-8 font-sans">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -233,33 +309,42 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            {/* Chart Placeholder (Simulated) */}
+            {/* Main Chart */}
             <section className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-[#1D1D1F]">System Auslastung</h3>
+                <h3 className="text-lg font-semibold text-[#1D1D1F]">System Auslastung & Requests</h3>
                 <Button variant="ghost" size="icon" className="rounded-full">
                   <MoreHorizontal className="w-5 h-5 text-gray-400" />
                 </Button>
               </div>
-              <div className="h-64 flex items-end justify-between gap-2 px-2">
-                {[40, 65, 45, 80, 55, 70, 40, 60, 50, 75, 85, 60].map((h, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ height: 0 }}
-                    animate={{ height: `${h}%` }}
-                    transition={{ duration: 1, delay: i * 0.05 }}
-                    className="w-full bg-blue-50 rounded-t-lg relative group"
-                  >
-                    <div className="absolute bottom-0 left-0 right-0 bg-blue-500 rounded-t-lg transition-all duration-500 group-hover:bg-blue-600" style={{ height: `${h}%` }} />
-                  </motion.div>
-                ))}
-              </div>
-              <div className="flex justify-between mt-4 text-xs text-gray-400">
-                <span>00:00</span>
-                <span>06:00</span>
-                <span>12:00</span>
-                <span>18:00</span>
-                <span>23:59</span>
+              <div className="h-80 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#6B7280', fontSize: 12 }}
+                      dy={10}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#6B7280', fontSize: 12 }}
+                    />
+                    <Tooltip 
+                      cursor={{ fill: '#F3F4F6' }}
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                    />
+                    <Bar 
+                      dataKey="value" 
+                      fill="#3B82F6" 
+                      radius={[6, 6, 0, 0]} 
+                      barSize={40}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </section>
           </div>
@@ -267,6 +352,45 @@ export default function DashboardPage() {
           {/* Sidebar Area */}
           <div className="space-y-8">
             
+            {/* Feedback / Sentiment Chart */}
+            <section className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100">
+                <h3 className="text-lg font-semibold text-[#1D1D1F] mb-6">User Feedback</h3>
+                <div className="h-64 w-full relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie
+                                data={pieData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={80}
+                                paddingAngle={5}
+                                dataKey="value"
+                            >
+                                {pieData.map((entry: PieDataPoint, index: number) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color || '#E5E7EB'} />
+                                ))}
+                            </Pie>
+                            <Tooltip />
+                        </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="text-center">
+                            <span className="text-3xl font-bold text-gray-900">92%</span>
+                            <p className="text-xs text-gray-500">Positiv</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="mt-4 flex justify-center gap-4">
+                    {pieData.map((entry: PieDataPoint, i: number) => (
+                        <div key={i} className="flex items-center gap-2 text-xs">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                            <span className="text-gray-600">{entry.name}</span>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
             {/* Recent Activity */}
             <section className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100">
               <h3 className="text-lg font-semibold text-[#1D1D1F] mb-6">Letzte Aktivitäten</h3>
@@ -294,12 +418,6 @@ export default function DashboardPage() {
                   title="System Update"
                   desc="Maintenance Patch 4.0"
                   time="3h"
-                />
-                <ActivityItem
-                  icon={BarChart3}
-                  title="Weekly Report"
-                  desc="Generated automatically"
-                  time="5h"
                 />
               </div>
               <Button variant="ghost" className="w-full mt-4 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
@@ -331,15 +449,6 @@ export default function DashboardPage() {
                     <div className="h-full bg-blue-500 w-[62%]" />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-gray-400">
-                    <span>Storage</span>
-                    <span>28%</span>
-                  </div>
-                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-purple-500 w-[28%]" />
-                  </div>
-                </div>
               </div>
               <div className="mt-6 pt-6 border-t border-gray-800 flex items-center justify-between">
                 <span className="text-sm text-gray-400">All systems operational</span>
@@ -348,7 +457,6 @@ export default function DashboardPage() {
                 </div>
               </div>
             </section>
-
           </div>
         </div>
       </div>

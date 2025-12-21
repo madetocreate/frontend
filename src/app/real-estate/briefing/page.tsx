@@ -75,6 +75,17 @@ export default function MorningBriefingPage() {
     );
   }
 
+  if (!data) {
+    return (
+      <div className="container mx-auto p-6">
+        <h1 className="text-2xl font-semibold">Briefing</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Keine Daten verfügbar.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-8 bg-slate-50 min-h-screen">
       {/* Header */}

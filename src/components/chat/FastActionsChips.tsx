@@ -17,6 +17,7 @@ export const FastActionsChips: FC<Props> = ({ suggestions, onSelect, className }
   return (
     <div className={cls}>
       {suggestions.map((s) => (
+        // payload kommt als unknown-Record; wir rendern nur, wenn es wirklich ein string ist.
         <button
           key={s.id}
           type="button"
@@ -26,9 +27,9 @@ export const FastActionsChips: FC<Props> = ({ suggestions, onSelect, className }
           <span className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
           {s.label}
           </span>
-          {s.payload?.text && (
+          {typeof (s.payload as Record<string, unknown> | undefined)?.text === "string" && (
             <span className="text-xs text-gray-500 line-clamp-2">
-              {s.payload.text}
+              {(s.payload as Record<string, unknown>).text as string}
             </span>
           )}
         </button>

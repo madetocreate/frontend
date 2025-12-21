@@ -98,6 +98,11 @@ AKLOW follows an Apple-inspired "Quiet Power" design philosophy:
 - `/api/audio/tts` - Text-to-Speech streaming
 - `/api/realtime/session` - Ephemeral session generation for OpenAI Realtime
 
+
+## 🚩 Feature Flags
+
+- See `docs/FEATURE_FLAGS.md` (UI gating for Gastro; default-off).
+
 ## 📚 Documentation
 
 - [GETTING_STARTED.md](./GETTING_STARTED.md) - Complete setup guide

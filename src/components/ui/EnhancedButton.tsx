@@ -1,10 +1,10 @@
 'use client'
 
-import { ReactNode, ButtonHTMLAttributes } from 'react'
+import type { ReactNode } from 'react'
 import clsx from 'clsx'
-import { motion } from 'framer-motion'
+import { motion, type HTMLMotionProps } from 'framer-motion'
 
-type EnhancedButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+type EnhancedButtonProps = Omit<HTMLMotionProps<'button'>, 'children'> & {
   children: ReactNode
   variant?: 'primary' | 'secondary' | 'ghost'
   size?: 'sm' | 'md' | 'lg'

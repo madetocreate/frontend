@@ -8,6 +8,7 @@ import {
   ClockIcon
 } from '@heroicons/react/24/outline'
 import { calendarService, CalendarEvent } from '../../services/calendarService'
+import { useTranslation } from '../../i18n'
 
 interface NLPSchedulerProps {
   onClose: () => void

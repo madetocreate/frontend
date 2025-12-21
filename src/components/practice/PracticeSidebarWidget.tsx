@@ -63,7 +63,7 @@ export function PracticeSidebarWidget({
                 return (
                   <li key={view.id}>
                     <AkListRow
-                      accent="neutral"
+                      accent="default"
                       selected={isActive}
                       title={view.label}
                       leading={

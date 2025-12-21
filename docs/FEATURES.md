@@ -5,20 +5,27 @@
 ### Real-Time Voice Conversations
 - **OpenAI Realtime API**: Direkte Browser-zu-OpenAI Verbindung
 - **Ephemeral Sessions**: Backend generiert temporäre Session-Tokens
-- **WebSocket**: Direkte Verbindung ohne Backend-Proxy
+- **WebRTC (empfohlen)**: Niedrige Latenz/Jitter, Audio läuft direkt Browser↔OpenAI (Hot-Pass)
+- **WebSocket (Fallback)**: Als Fallback möglich
 - **Audio Format**: PCM16 für Input/Output
 - **Voice**: `nova` (hochwertige OpenAI-Stimme)
 - **Transcription**: Whisper-1 für Live-Transkription
 
-**Aktivierung**: Mikrofon-Button 3 Sekunden gedrückt halten → Real-time Mode aktiviert
+**UX (PTT Pflicht)**:
+- Press/Hold: sprechen
+- Release: Turn committen → Assistant antwortet (Audio + Text)
+- Barge-in: während Assistant spricht erneut drücken → `response.cancel`
 
 **UI-Indikatoren**:
 - Roter Hintergrund im Composer
 - "Real time on" Tooltip
 - Audio-Wellen-Visualisierung
 
+**Tools im Realtime-Modus**:
+- Tool-Calls können während eines Voice-Turns ausgelöst werden; Ausführung serverseitig (Registry) über `/realtime/tools/:tool`.
+
 ### Text-to-Speech (TTS)
-- **OpenAI TTS API**: Streaming TTS mit `tts-1-hd`
+- **OpenAI TTS API**: Streaming TTS (Model serverseitig über Policy, Default: `gpt-4o-mini-tts`)
 - **Voice**: `nova` (Standard)
 - **Streaming**: Audio wird sofort abgespielt (64KB Buffer)
 - **Integration**: Button in Assistant-Messages ("Read Aloud")

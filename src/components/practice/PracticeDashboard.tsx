@@ -24,9 +24,11 @@ export type PracticeView =
 
 type PracticeDashboardProps = {
   view: PracticeView
+  enabledViews?: string[]
 }
 
-export function PracticeDashboard({ view }: PracticeDashboardProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function PracticeDashboard({ view, enabledViews }: PracticeDashboardProps) {
   return (
     <div className="h-full w-full overflow-y-auto bg-[var(--ak-color-bg-app)]">
       <header className="sticky top-0 z-10 flex h-16 items-center border-b border-[var(--ak-color-border-hairline)] bg-[var(--ak-glass-bg)] px-6 backdrop-blur-[var(--ak-glass-blur)]">

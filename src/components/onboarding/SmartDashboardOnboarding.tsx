@@ -14,7 +14,7 @@ import {
   CheckCircleIcon
 } from '@heroicons/react/24/outline'
 import { AppleCard, AppleButton, AppleBadge } from '../ui/AppleDesignSystem'
-import { UniversalDashboardConfigurator, DashboardType } from '../dashboard/UniversalDashboardConfigurator'
+import { UniversalDashboardConfigurator, type DashboardLayout, DashboardType } from '../dashboard/UniversalDashboardConfigurator'
 import { useTranslation } from '../../i18n'
 
 interface OnboardingStep {
@@ -40,8 +40,9 @@ export function SmartDashboardOnboarding({
 }: SmartDashboardOnboardingProps) {
   const { t } = useTranslation()
   const [currentStep, setCurrentStep] = useState(0)
+  const [, setSkippedSteps] = useState<Set<number>>(new Set())
   const [showConfigurator, setShowConfigurator] = useState(false)
-  const [dashboardConfig, setDashboardConfig] = useState<Record<string, unknown> | null>(null)
+  const [dashboardConfig, setDashboardConfig] = useState<DashboardLayout[] | null>(null)
 
   const steps: OnboardingStep[] = [
     {
@@ -98,7 +99,7 @@ export function SmartDashboardOnboarding({
 
   const handleComplete = () => {
     if (onComplete) {
-      onComplete(dashboardConfig)
+      onComplete({ layouts: dashboardConfig ?? [] })
     }
   }
 
@@ -202,11 +203,12 @@ export function SmartDashboardOnboarding({
 // Step Components
 function WelcomeStep({ dashboardType }: { dashboardType: DashboardType }) {
   const { t } = useTranslation()
-  const dashboardNames = {
+  const dashboardNames: Record<DashboardType, string> = {
     hotel: 'Hotel',
     practice: t('onboarding.dashboard'),
     realestate: 'Immobilien',
-    general: 'Allgemein'
+    general: 'Allgemein',
+    gastronomie: 'Gastronomie',
   }
 
   return (
@@ -229,10 +231,13 @@ function WelcomeStep({ dashboardType }: { dashboardType: DashboardType }) {
 }
 
 function DashboardConfigStep({ 
+  dashboardType,
   onConfigure 
 }: { 
+  dashboardType: DashboardType
   onConfigure: () => void
 }) {
+  void dashboardType
   return (
     <div className="space-y-4">
       <AppleCard glass padding="lg">
@@ -259,7 +264,8 @@ function DashboardConfigStep({
   )
 }
 
-function PreferencesStep() {
+function PreferencesStep({ dashboardType }: { dashboardType: DashboardType }) {
+  void dashboardType
   return (
     <div className="space-y-4">
       <AppleCard glass padding="lg">
@@ -288,7 +294,8 @@ function PreferencesStep() {
   )
 }
 
-function CompleteStep() {
+function CompleteStep({ dashboardType }: { dashboardType: DashboardType }) {
+  void dashboardType
   const { t } = useTranslation()
   return (
     <div className="space-y-4">

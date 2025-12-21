@@ -16,6 +16,7 @@ import { Loader2, Save } from "lucide-react";
 // In a real implementation, use something like Tiptap or Slate.js
 
 export default function ExposeEditorPage({}: { params: { propertyId: string } }) {
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [content, setContent] = useState({
     headline: "",
@@ -65,6 +66,13 @@ export default function ExposeEditorPage({}: { params: { propertyId: string } })
           Speichern
         </Button>
       </div>
+
+      {loading && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Lade Exposé…
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Editor Column */}

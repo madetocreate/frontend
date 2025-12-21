@@ -12,28 +12,29 @@ import {
 
 export function RealEstateAnalytics() {
   const [period, setPeriod] = useState<'week' | 'month' | 'year'>('month')
+  type Trend = 'up' | 'down'
 
   // TODO: Load from backend
   const analytics = useMemo(() => ({
     views: {
       total: 1248,
       change: 12.5,
-      trend: 'up' as const
+      trend: 'up' as Trend
     },
     inquiries: {
       total: 89,
       change: -5.2,
-      trend: 'down' as const
+      trend: 'down' as Trend
     },
     viewings: {
       total: 23,
       change: 8.3,
-      trend: 'up' as const
+      trend: 'up' as Trend
     },
     conversions: {
       total: 5,
       change: 25.0,
-      trend: 'up' as const
+      trend: 'up' as Trend
     },
     topProperties: [
       { id: '1', title: 'Moderne 3-Zimmer-Wohnung', views: 342, inquiries: 12 },

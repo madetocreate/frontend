@@ -1,8 +1,25 @@
 "use client";
 
-import { useState, FormEvent, useRef, useEffect, useCallback } from "react";
+import { useState, FormEvent, useRef, useEffect, useCallback, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import clsx from "clsx";
-import { RectangleStackIcon, ClipboardDocumentIcon, BookmarkIcon, ArrowPathIcon, SpeakerWaveIcon, PencilSquareIcon, SparklesIcon, HandThumbUpIcon, HandThumbDownIcon, EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
+import { 
+  ClipboardDocumentIcon, 
+  BookmarkIcon, 
+  ArrowPathIcon, 
+  SpeakerWaveIcon, 
+  PencilSquareIcon, 
+  SparklesIcon, 
+  HandThumbUpIcon, 
+  HandThumbDownIcon, 
+  EllipsisHorizontalIcon,
+  CloudArrowUpIcon,
+  GlobeAltIcon,
+  ChevronRightIcon,
+  DocumentIcon,
+  XMarkIcon
+} from "@heroicons/react/24/outline";
 import { WidgetRenderer } from "./chat/WidgetRenderer";
 import { sendChatMessageStream, ChatResponse } from "../lib/chatClient";
 import { fetchFastActions, type FastActionSuggestion } from "../lib/fastActionsClient";
@@ -11,10 +28,13 @@ import { useDictation } from "../hooks/useDictation";
 import { useRealtimeVoice } from "../hooks/useRealtimeVoice";
 import { useSpeechSynthesis } from "../hooks/useSpeechSynthesis";
 import { ThinkingStepsDrawer } from "./chat/ThinkingStepsDrawer";
-import { ChatInfoDrawer } from "./chat/ChatInfoDrawer";
 import { ChatMarkdown } from "./chat/markdown/ChatMarkdown";
+import { normalizeChatMarkdown } from "./chat/markdown/normalizeChatMarkdown";
 import { FastActionsChips } from "./chat/FastActionsChips";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import { useChatThreads, setActiveThreadId, updateChatThread } from "../lib/chatThreadsStore";
+import { useSearchParams } from "next/navigation";
+import { currentIndustry } from "../lib/featureFlags";
 
 type ChatMessage = {
   id: string;
@@ -27,10 +47,13 @@ type ThinkingStep = {
   id: string;
   label: string;
   status: "pending" | "active" | "done";
+  details?: string;
 };
 
 export function ChatShell() {
-  const [tenantId] = useState<string>("demo-tenant");
+  const searchParams = useSearchParams();
+  const [tenantId] = useState<string>("aklow-main");
+  const [hostname, setHostname] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -40,7 +63,30 @@ export function ChatShell() {
   const [thinkingNote, setThinkingNote] = useState<string | null>(null);
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
   const [isStepsOpen, setIsStepsOpen] = useState(false);
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  
+  useEffect(() => {
+    // Ensure SSR/CSR initial render matches; hostname is only known on the client.
+    setHostname(typeof window !== "undefined" ? window.location.hostname : null);
+  }, []);
+
+  const [showPromptStarters] = useState(true);
+  const isGastroTenant =
+    currentIndustry === "gastronomie" ||
+    tenantId.includes("gastro") ||
+    (hostname ? hostname.includes("gastro") : false);
+  
+  const PROMPT_STARTERS = isGastroTenant ? [
+    { title: "Speisekarte", text: "Zeig mir die aktuelle Speisekarte", icon: "🍴" },
+    { title: "Reservierung", text: "Ich möchte einen Tisch reservieren", icon: "📅" },
+    { title: "Getränke", text: "Welche Weine empfehlt ihr?", icon: "🍷" },
+    { title: "Öffnungszeiten", text: "Wann habt ihr heute offen?", icon: "🕒" },
+  ] : [
+    { title: "E-Mail schreiben", text: "Schreibe eine professionelle E-Mail an einen Kunden...", icon: "✉️" },
+    { title: "Code analysieren", text: "Analysiere diesen Code-Schnipsel auf Fehler...", icon: "💻" },
+    { title: "Strategie planen", text: "Erstelle eine Marketing-Strategie für ein neues Produkt...", icon: "📈" },
+    { title: "Text zusammenfassen", text: "Fasse den folgenden Text kurz und prägnant zusammen...", icon: "📝" },
+  ];
+
   const [hoveredTooltip, setHoveredTooltip] = useState<{ messageId: string; icon: string } | null>(null);
   const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hoverMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -53,12 +99,108 @@ export function ChatShell() {
   const [fastActionsByMessageId, setFastActionsByMessageId] = useState<Record<string, FastActionSuggestion[]>>({});
   const [feedbackStatus, setFeedbackStatus] = useState<Record<string, "thumbs_up" | "thumbs_down">>({});
   const [expandedActions, setExpandedActions] = useState<Record<string, boolean>>({});
+  const [showThinkingInline, setShowThinkingInline] = useState<Record<string, boolean>>({});
+  
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isLongPressRef = useRef(false);
-  const currentThreadRef = useRef<string | null>(null);
-  const [activeThreadId, setActiveThreadId] = useState<string>("thread-default");
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [attachments, setAttachments] = useState<{ id: string; name: string; type: string }[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounter = useRef(0);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current += 1;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounter.current = 0;
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      const newAttachments = files.map(file => ({
+        id: crypto.randomUUID(),
+        name: file.name,
+        type: file.type
+      }));
+      setAttachments(prev => [...prev, ...newAttachments]);
+    }
+  }, []);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const newAttachment = {
+        id: crypto.randomUUID(),
+        name: file.name,
+        type: file.type
+      };
+      setAttachments(prev => [...prev, newAttachment]);
+    }
+    e.target.value = "";
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments(prev => prev.filter(a => id !== a.id));
+  };
+
+  const isDebug = typeof window !== "undefined" && (window.location.search.includes("debug=1") || localStorage.getItem("aklow-debug") === "1");
+
+  const { threads, activeThreadId: storeActiveThreadId } = useChatThreads();
+  const [activeThreadId, setActiveThreadIdLocal] = useState<string>(storeActiveThreadId || "thread-default");
+  
+  // Ambient Mode based on content
+  const ambientColor = useMemo(() => {
+    const lastMsg = messages.length > 0 ? messages[messages.length - 1] : null;
+    if (!lastMsg) return "bg-white"; // Default neutral
+    
+    const text = lastMsg.text.toLowerCase();
+    if (text.includes("code") || text.includes("function") || text.includes("api")) return "bg-indigo-50/30";
+    if (text.includes("marketing") || text.includes("text") || text.includes("email")) return "bg-purple-50/30";
+    if (text.includes("error") || text.includes("bug") || text.includes("fix")) return "bg-red-50/30";
+    if (text.includes("data") || text.includes("chart") || text.includes("analysis")) return "bg-emerald-50/30";
+    
+    return "bg-white";
+  }, [messages]);
+
+  // Latest refs for stable event listeners
+  const messagesRef = useRef<ChatMessage[]>([]);
+  const isSendingRef = useRef(false);
+  const activeThreadIdRef = useRef(activeThreadId);
+  const inputLatestRef = useRef("");
+
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { isSendingRef.current = isSending; }, [isSending]);
+  useEffect(() => { activeThreadIdRef.current = activeThreadId; }, [activeThreadId]);
+  useEffect(() => { inputLatestRef.current = input; }, [input]);
+
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
+  const [showJumpToBottom, setShowJumpToBottom] = useState(false);
+  const isNearBottomRef = useRef(true);
+
+  const currentThreadRef = useRef<string | null>(storeActiveThreadId || "thread-default");
+  
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const { supported: ttsSupported, speakingId, toggle: toggleTts, stop: stopTts } =
@@ -80,10 +222,14 @@ export function ChatShell() {
   const [fakeWaveLevels, setFakeWaveLevels] = useState<number[]>(Array(20).fill(0.3));
   const fakeWaveIntervalRef = useRef<number | null>(null);
 
-  const { status: realtimeStatus, toggle: toggleRealtime } = useRealtimeVoice({
+  const {
+    status: realtimeStatus,
+    press: pressRealtime,
+    release: releaseRealtime,
+    stopAll: stopRealtimeAll,
+  } = useRealtimeVoice({
     onStart: () => {
       console.log("Real-time Audio gestartet");
-      // Starte echte Audio-Level-Messung
       startAudioLevelMeasurement();
     },
     onStop: () => {
@@ -93,13 +239,13 @@ export function ChatShell() {
     },
     onTextDelta: (text: string) => {
       console.log("Realtime delta:", text);
+      // Optional: könnte in QuickHint landen, aktuell nur Log
     },
   });
 
   // Funktion zum Starten der Audio-Level-Messung
   const startAudioLevelMeasurement = useCallback(async () => {
     try {
-      // Verwende bereits vorhandenen Stream, falls verfügbar
       let stream = audioStreamRef.current;
       if (!stream) {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -110,43 +256,42 @@ export function ChatShell() {
       audioContextRef.current = audioContext;
       const source = audioContext.createMediaStreamSource(stream);
       const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.8;
+      analyser.fftSize = 128; // Smaller for more responsive visuals
+      analyser.smoothingTimeConstant = 0.4; // Less smoothing for sharper movement
       
       source.connect(analyser);
       audioAnalyserRef.current = analyser;
       const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(new ArrayBuffer(bufferLength));
+      const dataArray = new Uint8Array(bufferLength);
       audioDataArrayRef.current = dataArray;
       
       const measureAudio = () => {
         if (audioAnalyserRef.current && audioDataArrayRef.current) {
-          // @ts-expect-error - TypeScript strict mode issue with Web Audio API types
-          audioAnalyserRef.current.getByteFrequencyData(audioDataArrayRef.current);
+          audioAnalyserRef.current.getByteFrequencyData(
+            audioDataArrayRef.current as unknown as Uint8Array<ArrayBuffer>
+          );
           
-          // Berechne durchschnittliche Amplitude
           let sum = 0;
           for (let i = 0; i < audioDataArrayRef.current.length; i++) {
             sum += audioDataArrayRef.current[i];
           }
           const average = sum / audioDataArrayRef.current.length;
-          const normalizedLevel = average / 255; // Normalisiere auf 0-1
+          const normalizedLevel = average / 255;
           
           setAudioLevel(normalizedLevel);
 
-          // Berechne 20 Bänder für die Visualisierung und speichere sie im State
           const bands: number[] = [];
+          const data = audioDataArrayRef.current;
           for (let i = 0; i < 20; i++) {
-            const idx = Math.floor((i / 20) * audioDataArrayRef.current.length);
-            bands.push(audioDataArrayRef.current[idx] / 255);
+            // Focus on lower frequencies for speech (indices 0-30 usually)
+            const freqIndex = Math.floor((i / 20) * (data.length * 0.6));
+            bands.push(data[freqIndex] / 255);
           }
           setAudioBands(bands);
           
-          // Prüfe ob Mikrofon noch aktiv ist
           const stillActive = dictationStatus === "recording" || 
                               dictationStatus === "transcribing" || 
-                              realtimeStatus === "live" || 
-                              realtimeStatus === "connecting";
+                              realtimeStatus === "holding" || realtimeStatus === "assistant" || realtimeStatus === "connecting";
           
           if (stillActive) {
             audioLevelIntervalRef.current = requestAnimationFrame(measureAudio);
@@ -175,8 +320,7 @@ export function ChatShell() {
     // Stoppe Stream nur wenn nicht mehr benötigt
     const stillActive = dictationStatus === "recording" || 
                         dictationStatus === "transcribing" || 
-                        realtimeStatus === "live" || 
-                        realtimeStatus === "connecting";
+                        realtimeStatus === "holding" || realtimeStatus === "assistant" || realtimeStatus === "connecting";
     if (audioStreamRef.current && !stillActive) {
       audioStreamRef.current.getTracks().forEach(track => track.stop());
       audioStreamRef.current = null;
@@ -186,11 +330,20 @@ export function ChatShell() {
   const isMicrophoneActive =
     dictationStatus === "recording" ||
     dictationStatus === "transcribing" ||
-    realtimeStatus === "live" ||
+    realtimeStatus === "holding" ||
+    realtimeStatus === "assistant" ||
     realtimeStatus === "connecting";
   
-  const isRealtimeActive = realtimeStatus === "live" || realtimeStatus === "connecting";
-  const shouldHideInput = isMicrophoneActive || isRealtimeActive;
+  const isRealtimeActive =
+    realtimeStatus === "holding" ||
+    realtimeStatus === "assistant" ||
+    realtimeStatus === "connecting";
+  // Do not lock the text input while the realtime client is merely "connecting" (otherwise the chat becomes unusable if backend/permissions fail).
+  const shouldHideInput =
+    dictationStatus === "recording" ||
+    dictationStatus === "transcribing" ||
+    realtimeStatus === "holding" ||
+    realtimeStatus === "assistant";
   
   // Audio-Level für Diktat-Mode
   useEffect(() => {
@@ -237,52 +390,121 @@ export function ChatShell() {
     };
   }, [isMicrophoneActive]);
 
-  const threadStorageKey = (threadId: string) => `aklow_thread_${threadId}`;
+  const threadStorageKey = useCallback((threadId: string) => `aklow_thread_${threadId}`, []);
 
-  const loadMessages = useCallback((threadId: string) => {
-    if (typeof window === "undefined") return [];
-    try {
-      const raw = localStorage.getItem(threadStorageKey(threadId));
-      if (!raw) return [];
-      const parsed = JSON.parse(raw) as ChatMessage[];
-      if (!Array.isArray(parsed)) return [];
-      return parsed;
-    } catch {
-      return [];
+  const loadMessages = useCallback(
+    (threadId: string): ChatMessage[] => {
+      if (typeof window === "undefined") return [];
+      try {
+        const raw = localStorage.getItem(threadStorageKey(threadId));
+        if (!raw) return [];
+        const parsed = JSON.parse(raw) as ChatMessage[];
+        if (!Array.isArray(parsed)) return [];
+        return parsed;
+      } catch {
+        return [];
+      }
+    },
+    [threadStorageKey]
+  );
+
+  // Sync local activeThreadId with store and URL
+  useEffect(() => {
+    const urlThreadId = searchParams.get("thread");
+    if (urlThreadId && urlThreadId !== activeThreadId) {
+      if (document.startViewTransition) {
+        document.startViewTransition(() => {
+          setActiveThreadId(urlThreadId);
+        });
+      } else {
+        setActiveThreadId(urlThreadId);
+      }
+      return;
     }
+
+    if (storeActiveThreadId && storeActiveThreadId !== activeThreadId) {
+      if (document.startViewTransition) {
+        document.startViewTransition(() => {
+          setActiveThreadIdLocal(storeActiveThreadId);
+          currentThreadRef.current = storeActiveThreadId;
+          const loaded = loadMessages(storeActiveThreadId);
+          setMessages(loaded);
+        });
+      } else {
+        setActiveThreadIdLocal(storeActiveThreadId);
+        currentThreadRef.current = storeActiveThreadId;
+        const loaded = loadMessages(storeActiveThreadId);
+        setMessages(loaded);
+      }
+      
+      // Update URL without full reload
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set("thread", storeActiveThreadId);
+      window.history.replaceState(null, "", newUrl.toString());
+    }
+  }, [storeActiveThreadId, activeThreadId, loadMessages, searchParams]);
+
+  // Scroll handling with Virtuoso
+  const scrollToBottom = useCallback((smooth = true) => {
+    if (virtuosoRef.current) {
+      virtuosoRef.current.scrollToIndex({
+        index: messages.length,
+        behavior: smooth ? "smooth" : "auto",
+        align: "end",
+      });
+      isNearBottomRef.current = true;
+      setShowJumpToBottom(false);
+    }
+  }, [messages.length]);
+
+  const atBottomStateChange = useCallback((atBottom: boolean) => {
+    isNearBottomRef.current = atBottom;
+    setShowJumpToBottom(!atBottom);
   }, []);
 
-  const saveMessages = useCallback((threadId: string, list: ChatMessage[]) => {
-    try {
-      localStorage.setItem(threadStorageKey(threadId), JSON.stringify(list));
-    } catch (e) {
-      console.warn("Konnte Messages nicht speichern", e);
+  // Autoscroll on messages change
+  useEffect(() => {
+    if (isNearBottomRef.current) {
+      scrollToBottom(messages.length > 0);
     }
-  }, []);
+  }, [messages, scrollToBottom]);
 
-  const makeTitle = (text: string) => {
+  const saveTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
+
+  const saveMessages = useCallback((threadId: string, list: ChatMessage[], debounce = false) => {
+    if (debounce) {
+      if (saveTimeoutRef.current[threadId]) {
+        clearTimeout(saveTimeoutRef.current[threadId]);
+      }
+      saveTimeoutRef.current[threadId] = setTimeout(() => {
+        try {
+          localStorage.setItem(threadStorageKey(threadId), JSON.stringify(list));
+        } catch (e) {
+          console.warn("Konnte Messages nicht speichern", e);
+        }
+      }, 500);
+    } else {
+      try {
+        localStorage.setItem(threadStorageKey(threadId), JSON.stringify(list));
+      } catch (e) {
+        console.warn("Konnte Messages nicht speichern", e);
+      }
+    }
+  }, [threadStorageKey]);
+
+  const makeTitle = useCallback((text: string) => {
     const clean = text.replace(/\s+/g, " ").trim();
     const sentences = clean.split(/(?<=[.!?])\s+/).filter(Boolean);
     const firstTwo = sentences.slice(0, 2).join(" ");
     const base = firstTwo || clean;
     return base.length > 80 ? base.slice(0, 77) + "…" : base || "Neuer Chat";
-  };
+  }, []);
 
   useEffect(() => {
     const handleSelect = (e: Event) => {
       const detail = (e as CustomEvent).detail as { threadId?: string } | undefined;
       if (!detail?.threadId) return;
-      currentThreadRef.current = detail.threadId;
       setActiveThreadId(detail.threadId);
-      const loaded = loadMessages(detail.threadId);
-      setMessages(loaded);
-      setInput("");
-      setFollowUpSuggestions([]);
-      setThinkingSteps([]);
-      setThinkingNote(null);
-      setIsStepsOpen(false);
-      stopTts();
-      inputRef.current?.focus();
     };
 
     const handleNew = (e: Event) => {
@@ -294,27 +516,21 @@ export function ChatShell() {
         return `thread-${performance.now()}-${Math.random().toString(36).slice(2)}`;
       };
       const newId = detail?.threadId || generateThreadId();
-      currentThreadRef.current = newId;
       setActiveThreadId(newId);
-      const loaded = loadMessages(newId);
-      setMessages(loaded);
-      setInput("");
-      setFollowUpSuggestions([]);
-      setThinkingSteps([]);
-      setThinkingNote(null);
-      setIsStepsOpen(false);
-      stopTts();
-      inputRef.current?.focus();
     };
 
-    const handleToggleInfo = () => {
-      console.log("ChatShell: toggling info drawer");
-      setIsInfoOpen(prev => !prev);
+    const handleThinkingSteps = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.open !== undefined) {
+        setIsStepsOpen(detail.open);
+      } else {
+        setIsStepsOpen(prev => !prev);
+      }
     };
 
     window.addEventListener("aklow-select-thread", handleSelect as EventListener);
     window.addEventListener("aklow-new-chat", handleNew as EventListener);
-    window.addEventListener("aklow-toggle-chat-info", handleToggleInfo as EventListener);
+    window.addEventListener("aklow-toggle-thinking-steps", handleThinkingSteps as EventListener);
 
     // Command Palette Event Handlers
     const handleToggleDictation = () => {
@@ -326,7 +542,11 @@ export function ChatShell() {
     };
 
     const handleToggleRealtime = () => {
-      toggleRealtime();
+      if (realtimeStatus === "idle" || realtimeStatus === "error") {
+        void pressRealtime();
+      } else {
+        void stopRealtimeAll();
+      }
     };
 
     const handleStopTts = () => {
@@ -334,14 +554,14 @@ export function ChatShell() {
     };
 
     const handleCopyMessage = () => {
-      const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
+      const lastAssistantMessage = [...messagesRef.current].reverse().find((m) => m.role === "assistant");
       if (lastAssistantMessage?.text) {
         navigator.clipboard.writeText(lastAssistantMessage.text);
       }
     };
 
     const handleEditMessage = () => {
-      const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+      const lastUserMessage = [...messagesRef.current].reverse().find((m) => m.role === "user");
       if (lastUserMessage) {
         setEditingMessageId(lastUserMessage.id);
         setEditingText(lastUserMessage.text);
@@ -349,7 +569,7 @@ export function ChatShell() {
     };
 
     const handleSaveMessage = async () => {
-      const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
+      const lastAssistantMessage = [...messagesRef.current].reverse().find((m) => m.role === "assistant");
       if (lastAssistantMessage?.text) {
         try {
           const response = await fetch("/api/memory/save", {
@@ -372,7 +592,7 @@ export function ChatShell() {
     };
 
     const handleUpdateMessage = () => {
-      const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+      const lastUserMessage = [...messagesRef.current].reverse().find((m) => m.role === "user");
       if (lastUserMessage?.text) {
         setInput(lastUserMessage.text);
         inputRef.current?.focus();
@@ -380,7 +600,7 @@ export function ChatShell() {
     };
 
     const handleReadMessage = () => {
-      const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
+      const lastAssistantMessage = [...messagesRef.current].reverse().find((m) => m.role === "assistant");
       if (lastAssistantMessage?.text) {
         toggleTts({ id: lastAssistantMessage.id, text: lastAssistantMessage.text, lang: "de-DE" });
       }
@@ -388,7 +608,7 @@ export function ChatShell() {
 
     const handleOpenQuickActions = () => {
       // Trigger quick actions menu - find last assistant message and trigger quick actions
-      const lastAssistantMessage = [...messages].reverse().find((m) => m.role === "assistant");
+      const lastAssistantMessage = [...messagesRef.current].reverse().find((m) => m.role === "assistant");
       if (lastAssistantMessage) {
         // Simulate click on quick actions button for last message
         const quickActionsButton = document.querySelector(`[data-message-id="${lastAssistantMessage.id}"] [aria-label="Schnellaktionen"]`) as HTMLButtonElement;
@@ -432,7 +652,7 @@ export function ChatShell() {
     return () => {
       window.removeEventListener("aklow-select-thread", handleSelect as EventListener);
       window.removeEventListener("aklow-new-chat", handleNew as EventListener);
-      window.removeEventListener("aklow-toggle-chat-info", handleToggleInfo as EventListener);
+      window.removeEventListener("aklow-toggle-thinking-steps", handleThinkingSteps as EventListener);
       window.removeEventListener("aklow-toggle-dictation", handleToggleDictation as EventListener);
       window.removeEventListener("aklow-toggle-realtime", handleToggleRealtime as EventListener);
       window.removeEventListener("aklow-stop-tts", handleStopTts as EventListener);
@@ -444,14 +664,14 @@ export function ChatShell() {
       window.removeEventListener("aklow-open-quick-actions", handleOpenQuickActions as EventListener);
       window.removeEventListener("aklow-send-quick-action", handleQuickAction as EventListener);
     };
-  }, [loadMessages, stopTts, dictationStatus, startRecording, stopRecording, toggleRealtime, toggleTts, messages, setInput, tenantId]);
+  }, [stopTts, dictationStatus, startRecording, stopRecording, toggleTts, tenantId, pressRealtime, stopRealtimeAll, realtimeStatus]);
 
   // Initial load messages on mount if thread is already selected
   useEffect(() => {
-    if (!currentThreadRef.current && messages.length === 0) {
-      const defaultThreadId = "thread-default";
-      currentThreadRef.current = defaultThreadId;
-      const loaded = loadMessages(defaultThreadId);
+    if (currentThreadRef.current) return;
+    const defaultThreadId = "thread-default";
+    currentThreadRef.current = defaultThreadId;
+    const loaded = loadMessages(defaultThreadId);
       // Remove duplicates based on message id and role
       const uniqueMessages = loaded.filter((msg, index, self) => {
         const firstIndex = self.findIndex((m) => m.id === msg.id);
@@ -462,16 +682,11 @@ export function ChatShell() {
         }
         return index === firstIndex;
       });
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setMessages(uniqueMessages);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    setMessages(uniqueMessages);
+  }, [loadMessages]);
 
   useEffect(() => {
     return () => {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-      }
       stopTts();
     };
   }, [stopTts]);
@@ -479,10 +694,14 @@ export function ChatShell() {
   const lastAssistantMessage = messages.filter((m) => m.role === "assistant").slice(-1)[0];
   const isLastAssistantMessage = (msg: ChatMessage) => msg.id === lastAssistantMessage?.id;
 
+  const pinnedToBottom = isNearBottomRef.current;
   const showThinking = isSending && (thinkingSteps.length > 0 || !!thinkingNote);
 
   const sendMessage = useCallback(async (trimmed: string) => {
     if (!trimmed || isSending) return;
+    
+    abortControllerRef.current = new AbortController();
+
     const threadId = currentThreadRef.current || "thread-default";
     setActiveThreadId(threadId);
     stopTts();
@@ -496,18 +715,25 @@ export function ChatShell() {
 
     const userMessageId = `user-${generateId()}`;
 
+    // Add attachments to text if any
+    const attachmentText = attachments.map(a => `[Anhang: ${a.name}]`).join(" ");
+    const fullText = trimmed + (attachmentText ? "\n\n" + attachmentText : "");
+
     const userMessage: ChatMessage = {
       id: userMessageId,
       role: "user",
-      text: trimmed,
+      text: fullText,
     };
 
+    // Optimistic UI Update
     setMessages((prev) => {
       const next = [...prev, userMessage];
-      saveMessages(threadId, next);
+      saveMessages(threadId, next, false);
       return next;
     });
+    
     setInput("");
+    setAttachments([]); // Clear attachments after sending
     setIsSending(true);
     setQuickHint("");
     setFollowUpSuggestions([]);
@@ -524,13 +750,10 @@ export function ChatShell() {
     };
 
     setMessages((prev) => {
-      // Check if assistant message with this ID already exists to prevent duplicates
-      const exists = prev.some(msg => msg.id === assistantMessageId);
-      if (exists) {
-        return prev;
-      }
+      // Check if assistant message with this ID already exists
+      if (prev.some(msg => msg.id === assistantMessageId)) return prev;
       const next = [...prev, assistantMessage];
-      saveMessages(threadId, next);
+      saveMessages(threadId, next, false);
       return next;
     });
 
@@ -567,7 +790,7 @@ export function ChatShell() {
               const updated = prev.map((msg) =>
                 msg.id === assistantMessageId ? { ...msg, text: fullContent } : msg
               );
-              saveMessages(threadId, updated);
+              saveMessages(threadId, updated, true); // Use debounce for chunks
               return updated;
             });
           },
@@ -609,7 +832,7 @@ export function ChatShell() {
                 return true;
               });
               
-              saveMessages(threadId, finalMessages);
+              saveMessages(threadId, finalMessages, false); // Save immediately on end
               return finalMessages;
             });
 
@@ -627,22 +850,29 @@ export function ChatShell() {
               setFollowUpSuggestions([]);
             }
 
-            if (typeof window !== "undefined") {
-              const title = makeTitle(trimmed);
-              window.dispatchEvent(
-                new CustomEvent("aklow-thread-preview", {
-                  detail: {
-                    threadId,
-                    title,
-                    preview: finalContent.slice(0, 120) || trimmed,
-                    lastMessageAt: Date.now(),
-                  },
-                })
-              );
+            const title = makeTitle(trimmed);
+            const currentThread = threads.find(t => t.id === threadId);
+            const needsAutoNaming = currentThread && (currentThread.title === "Neuer Chat" || currentThread.title === "Willkommen!");
+            
+            updateChatThread(threadId, {
+              title: needsAutoNaming ? title : currentThread?.title,
+              preview: finalContent.slice(0, 120) || trimmed,
+              lastMessageAt: Date.now(),
+            });
+
+            // Detect Artifacts (e.g. large code blocks)
+            if (finalContent.includes("```") && finalContent.length > 500) {
+              window.dispatchEvent(new CustomEvent('aklow-open-artifact', { 
+                detail: { 
+                  content: finalContent,
+                  threadId 
+                } 
+              }));
             }
 
             setThinkingNote(null);
             setIsSending(false);
+            abortControllerRef.current = null;
           },
           onError: (error) => {
             const errorText = error.message || "Unbekannter Fehler im Chat";
@@ -655,12 +885,19 @@ export function ChatShell() {
             });
             setThinkingNote("Fehler beim Streamen");
             setIsSending(false);
+            abortControllerRef.current = null;
           },
+          onAbort: () => {
+            setThinkingNote("Antwort gestoppt.");
+            setIsSending(false);
+            abortControllerRef.current = null;
+          }
         },
         {
           tenantId,
           sessionId: threadId,
           channel: "web_chat",
+          signal: abortControllerRef.current.signal
         }
       );
     } catch (err) {
@@ -675,14 +912,14 @@ export function ChatShell() {
       setThinkingNote("Fehler beim Streamen");
       setIsSending(false);
     }
-  }, [isSending, tenantId, stopTts, saveMessages]);
+  }, [isSending, tenantId, stopTts, saveMessages, attachments, threads, makeTitle]);
 
   const handleQuickCardClick = useCallback(async (text: string) => {
     setFollowUpSuggestions([]);
     await sendMessage(text);
   }, [sendMessage, setFollowUpSuggestions]);
 
-  const renderMessage = (message: ChatMessage) => {
+  function renderMessage(message: ChatMessage) {
     const isUser = message.role === "user";
 
     if (isUser) {
@@ -795,7 +1032,7 @@ export function ChatShell() {
             
             {/* Action Row (User) */}
             <div 
-              className={`${hoveredUserMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-0.5 mt-1`}
+              className={`${hoveredUserMessageId === message.id ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-in-out flex items-center gap-1 mt-1`}
             >
               {/* Edit */}
               <div className="relative">
@@ -810,7 +1047,7 @@ export function ChatShell() {
                   <PencilSquareIcon className="h-4 w-4" />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'edit' && (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
                     Bearbeiten
                   </span>
                 )}
@@ -829,7 +1066,7 @@ export function ChatShell() {
                   <ClipboardDocumentIcon className="h-4 w-4" />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'copy' && (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
                     Kopieren
                   </span>
                 )}
@@ -996,6 +1233,9 @@ export function ChatShell() {
       }
     };
 
+    const isLast = isLastAssistantMessage(message);
+    const hasThinking = thinkingSteps.length > 0 && isLast;
+
     return (
       <div
         key={message.id}
@@ -1021,20 +1261,51 @@ export function ChatShell() {
       >
         <div className="flex w-full items-start">
           <div className="flex w-full flex-col gap-3" style={{ alignItems: "flex-start" }}>
+            
+            {/* Inline Thinking UI (ChatGPT style) */}
+            {hasThinking && (
+              <div className="mb-2 w-full max-w-2xl">
+                <button 
+                  onClick={() => setShowThinkingInline(prev => ({ ...prev, [message.id]: !prev[message.id] }))}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-xs font-medium text-gray-500 hover:bg-gray-100 transition-colors group/think"
+                >
+                  <SparklesIcon className={clsx("h-3.5 w-3.5 transition-transform duration-500", isSending && "animate-spin text-indigo-500")} />
+                  <span>{isSending ? "Überlegt..." : "Gedankengang anzeigen"}</span>
+                  <ChevronRightIcon className={clsx("h-3 w-3 ml-1 transition-transform", showThinkingInline[message.id] && "rotate-90")} />
+                </button>
+                
+                <AnimatePresence>
+                  {showThinkingInline[message.id] && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden mt-2 ml-4 pl-4 border-l-2 border-gray-100"
+                    >
+                      <div className="space-y-3 py-2">
+                        {thinkingSteps.map((step) => (
+                          <div key={step.id} className="flex items-start gap-3">
+                            <div className={clsx(
+                              "mt-1.5 h-1.5 w-1.5 rounded-full flex-none",
+                              step.status === "done" ? "bg-green-500" : step.status === "active" ? "bg-indigo-500 animate-pulse" : "bg-gray-300"
+                            )} />
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium text-gray-700">{step.label}</p>
+                              {step.details && <p className="text-[10px] text-gray-400 mt-0.5">{step.details}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
             <div className="flex w-full items-start justify-between gap-3">
               <div className="flex-1 min-w-0 text-black font-medium antialiased">
-                <ChatMarkdown content={message.text} />
+                <ChatMarkdown content={normalizeChatMarkdown(message.text)} />
               </div>
-                {thinkingSteps.length > 0 && isLastAssistantMessage(message) ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsStepsOpen(true)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-transparent text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ak-color-accent)]/25 active:scale-90"
-                    aria-label="Orchestrator anzeigen"
-                  >
-                    <RectangleStackIcon className="h-5 w-5" aria-hidden="true" />
-                  </button>
-                ) : null}
             </div>
 
             {/* Audio Player für Vorlesen-Modus */}
@@ -1062,7 +1333,7 @@ export function ChatShell() {
             )}
 
             {/* Action Row (Inline Expansion) */}
-            <div className="flex items-center gap-0.5 mt-1.5 opacity-100 transition-opacity duration-200 relative">
+            <div className="flex items-center gap-1 mt-1.5 opacity-100 transition-opacity duration-200 relative">
               {/* 1. Copy */}
               <div className="relative">
                 <button
@@ -1076,7 +1347,7 @@ export function ChatShell() {
                   <ClipboardDocumentIcon className="h-4 w-4" />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'copy' && (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
                     Kopieren
                   </span>
                 )}
@@ -1098,7 +1369,7 @@ export function ChatShell() {
                   <HandThumbUpIcon className="h-4 w-4" />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'thumbs_up' && (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
                     Gut
                   </span>
                 )}
@@ -1120,7 +1391,7 @@ export function ChatShell() {
                   <HandThumbDownIcon className="h-4 w-4" />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'thumbs_down' && (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
                     Schlecht
                   </span>
                 )}
@@ -1142,7 +1413,7 @@ export function ChatShell() {
                   <SparklesIcon className="h-4 w-4" />
                 </button>
                 {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'quick' && (
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
                     Schnellaktionen
                   </span>
                 )}
@@ -1164,7 +1435,7 @@ export function ChatShell() {
                       <ArrowPathIcon className="h-4 w-4" />
                     </button>
                     {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'update' && (
-                      <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
                         Neu generieren
                       </span>
                     )}
@@ -1187,7 +1458,7 @@ export function ChatShell() {
                       <SpeakerWaveIcon className="h-4 w-4" />
                     </button>
                     {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'read' && (
-                      <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
                         {ttsActive ? "Stoppen" : "Vorlesen"}
                       </span>
                     )}
@@ -1209,7 +1480,7 @@ export function ChatShell() {
                       <BookmarkIcon className="h-4 w-4" />
                     </button>
                     {hoveredTooltip?.messageId === message.id && hoveredTooltip?.icon === 'save' && (
-                      <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap z-50 pointer-events-none">
                         {savedMessageId === message.id ? "Gespeichert" : "Speichern"}
                       </span>
                     )}
@@ -1264,20 +1535,20 @@ export function ChatShell() {
 
 
             {isLastAssistantMessage(message) && followUpSuggestions.length > 0 && (
-              <div className="mt-4 flex flex-col gap-2 items-start animate-[fadeInUp_0.3s_var(--ak-motion-ease)]">
+              <div className="mt-4 flex flex-wrap gap-2 animate-[fadeInUp_0.3s_var(--ak-motion-ease)]">
                 {followUpSuggestions.slice(0, 3).map((suggestion, index) => (
                   <button
                     key={`suggestion-${index}`}
                     type="button"
                     onClick={() => handleQuickCardClick(suggestion)}
-                    className="ak-body text-left text-[var(--ak-color-accent)] hover:text-[var(--ak-color-accent-strong)] hover:underline transition-colors cursor-pointer"
+                    className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 active:scale-95 transition-all shadow-sm"
                     style={{
                       animationDelay: `${index * 50}ms`,
                       animation: "fadeInUp 0.3s var(--ak-motion-ease) forwards",
                       opacity: 0,
                     }}
                   >
-                    {suggestion}
+                    {suggestion} <span className="text-gray-400 ml-1">→</span>
                   </button>
                 ))}
               </div>
@@ -1286,14 +1557,65 @@ export function ChatShell() {
         </div>
       </div>
     );
+  }
+
+  // Memoized message renderer to prevent unnecessary re-renders during streaming
+  const renderMessageMemo = useCallback(
+    (message: ChatMessage) => {
+      return (
+        <motion.div
+          key={message.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+          className="w-full"
+        >
+          {renderMessage(message)}
+        </motion.div>
+      );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      feedbackStatus,
+      editingMessageId,
+      editingText,
+      savedMessageId,
+      hoveredUserMessageId,
+      hoveredTooltip,
+      fastActionsOpenMessageId,
+      fastActionsByMessageId,
+      expandedActions,
+      speakingId,
+      ttsSupported,
+      thinkingSteps,
+      messages.length,
+    ]
+  );
+
+  const handleStopGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
   };
 
   async function handleSend(e?: FormEvent<HTMLFormElement>) {
     e?.preventDefault();
     const trimmed = input.trim();
-    if (!trimmed) return;
+    if (!trimmed && attachments.length === 0) return;
+    
+    if (typeof window !== "undefined" && window.navigator.vibrate) {
+      window.navigator.vibrate(10);
+    }
+    
     await sendMessage(trimmed);
   }
+
+  const handleEditMessage = () => {
+    const lastUserMessage = [...messagesRef.current].reverse().find((m) => m.role === "user");
+    if (!lastUserMessage) return;
+    setEditingMessageId(lastUserMessage.id);
+    setEditingText(lastUserMessage.text);
+  };
 
   // Keyboard Shortcuts für Chat
   useKeyboardShortcuts({
@@ -1322,8 +1644,48 @@ export function ChatShell() {
 
   return (
     <div
-      className="flex h-full min-h-0 w-full max-w-full flex-col gap-4 px-4 pt-4 pb-2 relative overflow-hidden"
+      suppressHydrationWarning
+      className={clsx(
+        "flex h-full min-h-0 w-full max-w-full flex-col gap-4 px-4 pt-4 pb-2 relative overflow-hidden transition-colors duration-1000 ease-in-out",
+        ambientColor
+      )}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
+      {/* Ambient Glow Orbs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
+        <div className={clsx(
+          "absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] opacity-40 transition-colors duration-1000",
+          ambientColor === "bg-white" ? "bg-blue-100/20" : ambientColor.replace("/30", "")
+        )} />
+        <div className={clsx(
+          "absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] opacity-40 transition-colors duration-1000",
+          ambientColor === "bg-white" ? "bg-purple-100/20" : ambientColor.replace("/30", "")
+        )} />
+      </div>
+
+      {/* Drag Overlay */}
+      <AnimatePresence>
+        {isDragging && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[9999] bg-indigo-600/10 backdrop-blur-sm border-2 border-indigo-600 border-dashed m-4 rounded-3xl flex items-center justify-center pointer-events-none"
+          >
+            <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center gap-3">
+              <div className="h-16 w-16 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600">
+                <CloudArrowUpIcon className="h-8 w-8" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Dateien hier ablegen</h3>
+              <p className="text-sm text-gray-500">Zum Chat hinzufügen</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <style jsx>{`
         @keyframes thinking-dot-blink {
           0%, 100% {
@@ -1353,6 +1715,19 @@ export function ChatShell() {
             opacity: 1;
           }
         }
+        .ak-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .ak-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .ak-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(0,0,0,0.1);
+          border-radius: 10px;
+        }
+        .ak-scrollbar-dark::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.1);
+        }
       `}</style>
 
       <ThinkingStepsDrawer
@@ -1362,167 +1737,233 @@ export function ChatShell() {
         note={thinkingNote}
       />
 
-      <ChatInfoDrawer
-        open={isInfoOpen}
-        onClose={() => setIsInfoOpen(false)}
-      />
-
-      <div className="flex-1 min-h-0 overflow-y-auto space-y-6 px-4 py-2 w-full max-w-full">
-        {messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center gap-6 opacity-0 animate-[fadeIn_0.5s_ease-out_forwards]">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
-              <svg 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="1.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className="h-8 w-8 text-gray-900"
-              >
-                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
-                <path d="M12 6v6l4 2" />
-              </svg>
+      <div className="flex-1 min-h-0 w-full max-w-full relative">
+        <Virtuoso
+          ref={virtuosoRef}
+          data={messages}
+          atBottomStateChange={atBottomStateChange}
+          followOutput="auto"
+          initialTopMostItemIndex={messages.length - 1}
+          className="ak-scrollbar"
+          itemContent={(index, msg) => (
+            <div className="mx-auto max-w-3xl w-full px-4 py-2">
+              {renderMessageMemo(msg)}
             </div>
-            <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">
-              Was kann ich für dich tun?
-            </h2>
-          </div>
-        ) : (
-          <>
-            {messages.map(renderMessage)}
-            {showThinking && (
-              <div className="flex justify-start relative px-[5%]">
-                <div className="flex items-center gap-1 relative">
-                  <span
-                    className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400"
-                    style={{ 
-                      animation: "thinking-dot-blink 1.2s ease-in-out infinite", 
-                      animationDelay: "0ms"
-                    }}
-                  />
-                  <span
-                    className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400"
-                    style={{ 
-                      animation: "thinking-dot-blink 1.2s ease-in-out infinite", 
-                      animationDelay: "400ms"
-                    }}
-                  />
-                  <span
-                    className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400"
-                    style={{ 
-                      animation: "thinking-dot-blink 1.2s ease-in-out infinite", 
-                      animationDelay: "800ms"
-                    }}
-                  />
-                  <span 
-                    className="ml-3 text-gray-400 text-sm font-light"
-                    style={{ 
-                      animation: "flicker 2s ease-in-out infinite"
-                    }}
+          )}
+          components={{
+            Header: () => (
+              <div className="mx-auto max-w-3xl w-full px-4 py-8">
+                {messages.length === 0 && (
+                  <div className="flex min-h-[60vh] flex-col items-center justify-center gap-12">
+                    <div className="flex flex-col items-center gap-4 opacity-0 animate-[fadeIn_0.5s_ease-out_forwards]">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+                        <SparklesIcon className="h-6 w-6 text-gray-900" />
+                      </div>
+                      <h2 className="text-2xl font-semibold text-gray-900 tracking-tight text-center">
+                        Was kann ich für dich tun?
+                      </h2>
+                    </div>
+
+                    {showPromptStarters && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl opacity-0 animate-[fadeIn_0.5s_ease-out_0.2s_forwards]">
+                        {PROMPT_STARTERS.map((starter) => (
+                          <button
+                            key={starter.title}
+                            onClick={() => sendMessage(starter.text)}
+                            className="flex flex-col gap-1 text-left p-4 rounded-2xl border border-gray-200 bg-white/50 hover:bg-white hover:border-gray-300 hover:shadow-md transition-all active:scale-[0.98] group"
+                          >
+                            <span className="text-xl mb-1">{starter.icon}</span>
+                            <span className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                              {starter.title}
+                            </span>
+                            <span className="text-xs text-gray-500 line-clamp-1 italic">
+                              {starter.text}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ),
+            Footer: () => (
+              <div className="mx-auto max-w-3xl w-full px-4">
+                {showThinking && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="flex justify-start relative px-[5%] mt-4 mb-8"
                   >
-                    Denke nach...
-                  </span>
+                    <div className="flex items-center gap-1 relative">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400" style={{ animation: "thinking-dot-blink 1.2s ease-in-out infinite", animationDelay: "0ms" }} />
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400" style={{ animation: "thinking-dot-blink 1.2s ease-in-out infinite", animationDelay: "400ms" }} />
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400" style={{ animation: "thinking-dot-blink 1.2s ease-in-out infinite", animationDelay: "800ms" }} />
+                      <span className="ml-3 text-gray-400 text-sm font-light animate-[flicker_2s_ease-in-out_infinite]">
+                        Denke nach...
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+                <div className="h-32 w-full flex-none" />
+              </div>
+            )
+          }}
+        />
+      </div>
+
+      {/* Jump to bottom Button */}
+      {showJumpToBottom && (
+        <button
+          onClick={() => scrollToBottom()}
+          className="absolute bottom-36 right-[12%] z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-500 shadow-xl ring-1 ring-black/5 backdrop-blur-md hover:bg-white hover:text-indigo-600 active:scale-90 transition-all animate-in fade-in zoom-in duration-300 pointer-events-auto"
+          aria-label="Nach unten springen"
+        >
+          <svg 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="3" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            className="h-5 w-5"
+          >
+            <path d="m7 10 5 5 5-5" />
+            <path d="m7 15 5 5 5-5" className="opacity-50" />
+          </svg>
+        </button>
+      )}
+
+      {/* Floating Composer Area */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 w-full px-4 pb-6 pt-10 pointer-events-none">
+        {/* Subtitle Gradient for better readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#F3F5F7] via-[#F3F5F7]/80 to-transparent pointer-events-none -z-10" />
+        
+        <div className="mx-auto max-w-3xl w-full pointer-events-auto">
+          {/* Attachment Previews */}
+          <AnimatePresence>
+            {attachments.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="flex flex-wrap gap-2 mb-3 px-2"
+              >
+                {attachments.map((file) => (
+                  <div key={file.id} className="group relative flex items-center gap-2 p-2 bg-white/80 border border-gray-200 rounded-xl shadow-sm backdrop-blur-sm pr-8">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                      <DocumentIcon className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-semibold text-gray-900 truncate max-w-[120px]">{file.name}</span>
+                      <span className="text-[10px] text-gray-500 uppercase">{file.type.split('/')[1] || 'FILE'}</span>
+                    </div>
+                    <button 
+                      onClick={() => removeAttachment(file.id)}
+                      className="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 transition-all"
+                    >
+                      <XMarkIcon className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className={clsx(
+            "relative flex items-center gap-2 rounded-2xl px-5 py-4 transition-all duration-300 ease-[var(--ak-motion-ease)] shadow-[0_10px_40px_rgba(0,0,0,0.08)] border outline-none ring-0",
+            isRealtimeActive 
+              ? "bg-red-500/10 border-red-200/50"
+              : "bg-white/90 border-white/40 backdrop-blur-xl hover:border-white/60 focus-within:bg-white focus-within:shadow-[0_10px_50px_rgba(0,0,0,0.12)] focus-within:border-white/80"
+          )}>
+            {/* Audio-Wellen-Visualisierung */}
+            {isMicrophoneActive && (
+              <div
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-10 w-[32%] min-w-[180px] max-w-[360px] items-end justify-center gap-[2px]"
+              >
+                {/* Points Left */}
+                <div className="flex flex-col justify-between h-6 mr-1 opacity-60">
+                  <div className="h-[3px] w-[3px] rounded-full bg-black" />
+                  <div className="h-[3px] w-[3px] rounded-full bg-black" />
+                </div>
+
+                {/* Waves */}
+                {Array.from({ length: 20 }).map((_, i) => {
+                  let waveHeight: number;
+                  let opacity: number;
+                  
+                  if (audioLevel > 0 && audioBands.length >= 20) {
+                    const frequencyBand = audioBands[i] || 0;
+                    const combinedLevel = (audioLevel * 0.55 + frequencyBand * 0.45);
+                    waveHeight = Math.max(3, combinedLevel * 22);
+                    opacity = 0.5 + combinedLevel * 0.5;
+                  } else {
+                    const fakeLevel = fakeWaveLevels[i] || 0.2;
+                    waveHeight = Math.max(3, fakeLevel * 16);
+                    opacity = 0.4 + fakeLevel * 0.4;
+                  }
+                  
+                  return (
+                    <div
+                      key={i}
+                      className="w-[2px] bg-black rounded-full transition-all duration-140 ease-linear"
+                      style={{
+                        height: `${waveHeight}px`,
+                        opacity: opacity,
+                      }}
+                    />
+                  );
+                })}
+
+                {/* Points Right */}
+                <div className="flex flex-col justify-between h-6 ml-1 opacity-60">
+                  <div className="h-[3px] w-[3px] rounded-full bg-black" />
+                  <div className="h-[3px] w-[3px] rounded-full bg-black" />
                 </div>
               </div>
             )}
-          </>
-        )}
-      </div>
-
-      <div className="w-full max-w-full px-[10%] flex-none pb-4">
-        <div className={clsx(
-          "relative flex items-center gap-2 rounded-2xl px-5 py-4 transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] shadow-[0_20px_45px_rgba(14,23,38,0.2)] focus-within:scale-[1.01] border outline-none ring-0 focus-within:outline-none focus-within:ring-0",
-          isRealtimeActive 
-            ? "bg-red-500/15 border-red-300/50 focus-within:border-red-400/70"
-            : "bg-white/85 border-white/40 backdrop-blur-2xl focus-within:border-white/70"
-        )}>
-          {/* Audio-Wellen-Visualisierung - zentriert, schwarz, doppelt so breit, mit echten Audio-Daten oder zufälliger Animation */}
-          {isMicrophoneActive && (
-            <div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-10 w-[32%] min-w-[180px] max-w-[360px] items-end justify-center gap-[2px]"
-            >
-              {/* Punkte links */}
-              <div className="flex flex-col justify-between h-6 mr-1 opacity-60">
-                <div className="h-[3px] w-[3px] rounded-full bg-black" />
-                <div className="h-[3px] w-[3px] rounded-full bg-black" />
+            {quickHint ? (
+              <div className="absolute left-2 -top-1 translate-y-[-70%] ak-caption font-semibold text-[var(--ak-color-success)] flex items-center gap-1">
+                <span>{quickHint}</span>
+                <button
+                  type="button"
+                  onClick={() => setQuickHint("")}
+                  className="inline-flex h-4 w-4 items-center justify-center rounded-full text-[var(--ak-color-success)] hover:bg-[var(--ak-color-bg-hover)]"
+                  aria-label="Hinweis schließen"
+                >
+                  ×
+                </button>
               </div>
+            ) : null}
 
-              {/* Balken */}
-              {Array.from({ length: 20 }).map((_, i) => {
-                let waveHeight: number;
-                let opacity: number;
-                
-                if (audioLevel > 0 && audioBands.length >= 20) {
-                  const frequencyBand = audioBands[i] || 0;
-                  const combinedLevel = (audioLevel * 0.55 + frequencyBand * 0.45);
-                  waveHeight = Math.max(3, combinedLevel * 22);
-                  opacity = 0.5 + combinedLevel * 0.5;
-                } else {
-                  const fakeLevel = fakeWaveLevels[i] || 0.2;
-                  waveHeight = Math.max(3, fakeLevel * 16);
-                  opacity = 0.4 + fakeLevel * 0.4;
-                }
-                
-                return (
-                  <div
-                    key={i}
-                    className="w-[2px] bg-black rounded-full transition-all duration-140 ease-linear"
-                    style={{
-                      height: `${waveHeight}px`,
-                      opacity: opacity,
-                    }}
-                  />
-                );
-              })}
-
-              {/* Punkte rechts */}
-              <div className="flex flex-col justify-between h-6 ml-1 opacity-60">
-                <div className="h-[3px] w-[3px] rounded-full bg-black" />
-                <div className="h-[3px] w-[3px] rounded-full bg-black" />
-              </div>
-            </div>
-          )}
-          {quickHint ? (
-            <div className="absolute left-2 -top-1 translate-y-[-70%] ak-caption font-semibold text-[var(--ak-color-success)] flex items-center gap-1">
-              <span>{quickHint}</span>
+            <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => setQuickHint("")}
-                className="inline-flex h-4 w-4 items-center justify-center rounded-full text-[var(--ak-color-success)] hover:bg-[var(--ak-color-bg-hover)]"
-                aria-label="Hinweis schließen"
+                onClick={() => setIsPlusMenuOpen(!isPlusMenuOpen)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
+                aria-label="Menü öffnen"
               >
-                ×
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
               </button>
-            </div>
-          ) : null}
-
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setIsPlusMenuOpen(!isPlusMenuOpen)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)]"
-              aria-label="Menü öffnen"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-            </button>
 
             {isPlusMenuOpen && (
               <>
-                <div className="fixed inset-0 z-[9998]" onClick={() => setIsPlusMenuOpen(false)} />
-                <div className="ak-glass absolute bottom-full left-0 z-[9999] mb-2 w-64 origin-bottom-left rounded-xl border shadow-lg">
-                  <div className="py-1">
+                <div className="fixed inset-0 z-[9998] cursor-default pointer-events-auto" onClick={() => setIsPlusMenuOpen(false)} />
+                <div className="ak-glass absolute bottom-full left-0 z-[9999] mb-4 w-72 origin-bottom-left rounded-2xl border border-white/40 shadow-2xl p-1 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="flex flex-col gap-0.5">
                     <button
                       type="button"
                       onClick={() => {
                         setIsPlusMenuOpen(false);
                         fileInputRef.current?.click();
                       }}
-                      className="ak-body w-full px-4 py-3 text-left text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-hover)] transition-colors"
+                      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left text-sm font-medium text-gray-700 hover:bg-black/5 transition-colors"
                     >
+                      <CloudArrowUpIcon className="h-5 w-5 text-gray-400" />
                       Datei oder Foto hochladen
                     </button>
                     <button
@@ -1531,172 +1972,172 @@ export function ChatShell() {
                         setIsPlusMenuOpen(false);
                         setQuickHint("Intensive Internetsuche aktiviert");
                       }}
-                      className="ak-body w-full px-4 py-3 text-left text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-hover)] transition-colors"
+                      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-left text-sm font-medium text-gray-700 hover:bg-black/5 transition-colors"
                     >
+                      <GlobeAltIcon className="h-5 w-5 text-gray-400" />
                       Intensive Internetsuche
                     </button>
                   </div>
                 </div>
               </>
             )}
-          </div>
+            </div>
 
-          <input
-            type="text"
+          <textarea
             value={shouldHideInput ? "" : input}
             onChange={(e) => {
               if (shouldHideInput) return;
               setInput(e.target.value);
+              // Auto-resize
+              e.target.style.height = 'auto';
+              e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 handleSend();
+              } else if (e.key === "ArrowUp" && input.trim() === "" && !attachments.length) {
+                e.preventDefault();
+                handleEditMessage();
               }
             }}
             placeholder={shouldHideInput ? "" : "Schreibe mit Aklow"}
-            ref={inputRef}
+            ref={(el) => {
+              inputRef.current = el;
+            }}
+            rows={1}
             readOnly={shouldHideInput}
             aria-disabled={shouldHideInput}
             className={clsx(
-              "ak-body flex-1 border-none bg-transparent text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-secondary)] focus-visible:outline-none outline-none ring-0",
+              "ak-body flex-1 border-none bg-transparent text-[var(--ak-color-text-primary)] placeholder:text-[var(--ak-color-text-secondary)] focus-visible:outline-none outline-none ring-0 resize-none py-1 max-h-[200px] overflow-y-auto",
               shouldHideInput && "text-transparent placeholder-transparent caret-transparent cursor-not-allowed select-none opacity-80"
             )}
           />
 
-          <button
-            type="button"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              isLongPressRef.current = false;
-              longPressTimerRef.current = setTimeout(() => {
-                isLongPressRef.current = true;
-                if (realtimeStatus === "idle" || realtimeStatus === "error") {
-                  toggleRealtime();
-                }
-              }, 3000);
-            }}
-            onMouseUp={(e) => {
-              e.preventDefault();
-              if (longPressTimerRef.current) {
-                clearTimeout(longPressTimerRef.current);
-                longPressTimerRef.current = null;
-              }
-
-              if (!isLongPressRef.current) {
-                if (realtimeStatus === "live") {
-                  toggleRealtime();
-                } else if (dictationStatus === "recording") {
-                  stopRecording();
-                } else if (dictationStatus === "idle" || dictationStatus === "error") {
-                  startRecording();
-                }
-              }
-              isLongPressRef.current = false;
-            }}
-            onMouseLeave={() => {
-              if (longPressTimerRef.current) {
-                clearTimeout(longPressTimerRef.current);
-                longPressTimerRef.current = null;
-              }
-              if (tooltipTimeoutRef.current) {
-                clearTimeout(tooltipTimeoutRef.current);
-                tooltipTimeoutRef.current = null;
-              }
-              setHoveredTooltip(null);
-            }}
-            onTouchStart={(e) => {
-              e.preventDefault();
-              isLongPressRef.current = false;
-              longPressTimerRef.current = setTimeout(() => {
-                isLongPressRef.current = true;
-                if (realtimeStatus === "idle" || realtimeStatus === "error") {
-                  toggleRealtime();
-                }
-              }, 3000);
-            }}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              if (longPressTimerRef.current) {
-                clearTimeout(longPressTimerRef.current);
-                longPressTimerRef.current = null;
-              }
-
-              if (!isLongPressRef.current) {
-                if (realtimeStatus === "live") {
-                  toggleRealtime();
-                } else if (dictationStatus === "recording") {
-                  stopRecording();
-                } else if (dictationStatus === "idle" || dictationStatus === "error") {
-                  startRecording();
-                }
-              }
-              isLongPressRef.current = false;
-            }}
-            className={clsx(
-              "relative inline-flex h-7 w-7 items-center justify-center rounded-full bg-transparent text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px]",
-              isMicrophoneActive && "ring-2 ring-[var(--ak-color-bg-danger-soft)] ring-offset-2",
-              isRealtimeActive && "bg-red-500/20 text-red-600"
-            )}
-            aria-label="Mikrofon"
-            onMouseEnter={() => {
-              if (isRealtimeActive) {
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                void pressRealtime();
+              }}
+              onMouseUp={(e) => {
+                e.preventDefault();
+                void releaseRealtime();
+              }}
+              onMouseLeave={() => {
                 if (tooltipTimeoutRef.current) {
                   clearTimeout(tooltipTimeoutRef.current);
+                  tooltipTimeoutRef.current = null;
                 }
-                tooltipTimeoutRef.current = setTimeout(() => {
-                  setHoveredTooltip({ messageId: "realtime-tooltip", icon: "realtime" });
-                }, 500);
-              }
-            }}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-              <line x1="12" y1="19" x2="12" y2="23" />
-              <line x1="8" y1="23" x2="16" y2="23" />
-            </svg>
-            {hoveredTooltip?.messageId === "realtime-tooltip" && hoveredTooltip?.icon === "realtime" && (
-              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
-                Real time on
-              </span>
-            )}
-          </button>
+                setHoveredTooltip(null);
+              }}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                void pressRealtime();
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                void releaseRealtime();
+              }}
+              className={clsx(
+                "relative inline-flex h-7 w-7 items-center justify-center rounded-full bg-transparent text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px]",
+                isMicrophoneActive && "ring-2 ring-[var(--ak-color-bg-danger-soft)] ring-offset-2",
+                isRealtimeActive && "bg-red-500/20 text-red-600"
+              )}
+              aria-label="Mikrofon"
+              onMouseEnter={() => {
+                if (isRealtimeActive) {
+                  if (tooltipTimeoutRef.current) {
+                    clearTimeout(tooltipTimeoutRef.current);
+                  }
+                  tooltipTimeoutRef.current = setTimeout(() => {
+                    setHoveredTooltip({ messageId: "realtime-tooltip", icon: "realtime" });
+                  }, 500);
+                }
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+                <line x1="8" y1="23" x2="16" y2="23" />
+              </svg>
+              {hoveredTooltip?.messageId === "realtime-tooltip" && hoveredTooltip?.icon === "realtime" && (
+                <span className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-1.5 py-0.5 text-[10px] text-gray-500 bg-transparent whitespace-nowrap pointer-events-none z-50">
+                  Real time on
+                </span>
+              )}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => handleSend()}
-            disabled={isSending || !input.trim()}
-            className={clsx(
-              "inline-flex h-8 w-8 items-center justify-center rounded-full shadow-[var(--ak-shadow-soft)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px] active:scale-95 border",
-              input.trim()
-                ? "bg-green-500 text-white hover:opacity-90 border-gray-300/40"
-                : "bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-muted)] border-gray-300/40",
-              "disabled:opacity-60"
-            )}
-            aria-label="Senden"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={clsx("h-4 w-4", input.trim() ? "text-white" : "text-[var(--ak-color-text-primary)]")}>
-              <path d="M5 12h14" />
-              <path d="m12 5 7 7-7 7" />
-            </svg>
-          </button>
+            <button
+              type="button"
+              onClick={isSending ? handleStopGeneration : () => handleSend()}
+              disabled={!isSending && !input.trim()}
+              className={clsx(
+                "inline-flex h-8 w-8 items-center justify-center rounded-full shadow-[var(--ak-shadow-soft)] transition-all duration-[var(--ak-motion-duration-fast)] ease-[var(--ak-motion-ease)] hover:translate-y-[-1px] active:translate-y-[0px] active:scale-95 border",
+                isSending 
+                  ? "bg-black text-white hover:bg-gray-800 border-transparent"
+                  : input.trim()
+                    ? "bg-green-500 text-white hover:opacity-90 border-gray-300/40"
+                    : "bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-muted)] border-gray-300/40",
+                "disabled:opacity-60"
+              )}
+              aria-label={isSending ? "Stoppen" : "Senden"}
+            >
+              {isSending ? (
+                <div className="h-3 w-3 bg-white rounded-sm" />
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={clsx("h-4 w-4", input.trim() ? "text-white" : "text-[var(--ak-color-text-primary)]")}>
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              )}
+            </button>
+          </div>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*,application/pdf,audio/*,video/*"
+            onChange={handleFileChange}
+          />
         </div>
-
-        <input
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          accept="image/*,application/pdf,audio/*,video/*"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              setInput((prev) => (prev ? `${prev} [Upload: ${file.name}]` : `[Upload: ${file.name}]`));
-            }
-            e.target.value = "";
-          }}
-        />
       </div>
+
+      {/* Debug HUD */}
+      {isDebug && (
+        <div className="fixed top-4 right-4 z-[10000] p-3 bg-black/80 backdrop-blur-md rounded-xl border border-white/20 text-[10px] font-mono text-green-400 shadow-2xl pointer-events-none select-none max-w-xs space-y-1">
+          <div className="flex justify-between border-b border-white/10 pb-1 mb-1">
+            <span className="text-white font-bold uppercase">Debug HUD</span>
+            <span className="text-gray-400">v1.0</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-gray-400">activeThreadId:</span>
+            <span className="truncate ml-2">{activeThreadId}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-gray-400">pinnedToBottom:</span>
+            <span>{pinnedToBottom ? "TRUE" : "FALSE"}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-gray-400">messages:</span>
+            <span>{messages.length}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-gray-400">isSending:</span>
+            <span className={isSending ? "text-orange-400" : ""}>{isSending ? "STREAMING" : "IDLE"}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-gray-400">tenantId:</span>
+            <span>{tenantId}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span className="text-gray-400">industry:</span>
+            <span>{isGastroTenant ? "GASTRO" : "GENERAL"}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

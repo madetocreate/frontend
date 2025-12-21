@@ -1,8 +1,9 @@
 'use client'
 
 import type { ReactNode, ComponentType, CSSProperties, MouseEvent as ReactMouseEvent } from 'react'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import clsx from 'clsx'
+import { CommandPalette, type Command } from './CommandPalette'
 import {
   ChatBubbleLeftRightIcon,
   PaperAirplaneIcon,
@@ -29,11 +30,11 @@ import {
   RectangleStackIcon,
   SparklesIcon,
   AcademicCapIcon,
-  StarIcon,
-  CakeIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline'
 import { AkDrawerScaffold } from '@/components/ui/AkDrawerScaffold'
 import { AkIconButton } from '@/components/ui/AkIconButton'
+import { DashboardPro } from '@/features/dashboard-pro/DashboardPro'
 import { ChatSidebarContent } from '@/components/chat/ChatSidebarContent'
 import { ChatOverviewWidget } from '@/components/chat/ChatOverviewWidget'
 import { InboxDrawerWidget } from '@/components/InboxDrawerWidget'
@@ -65,74 +66,54 @@ import { GrowthDetailsDrawer } from '@/components/growth/GrowthDetailsDrawer'
 import { DocumentDetailsDrawer } from '@/components/documents/DocumentDetailsDrawer'
 import IntegrationsDashboard from '@/components/integrations/IntegrationsDashboard'
 import MarketplaceDashboard from '@/components/marketplace/MarketplaceDashboard'
-import { PracticeSidebarWidget, type PracticeView } from '@/components/practice/PracticeSidebarWidget'
-import { PracticeDashboard } from '@/components/practice/PracticeDashboard'
-import { RealEstateSidebarWidget, type RealEstateView } from '@/components/realestate/RealEstateSidebarWidget'
-import { RealEstateDashboard } from '@/components/realestate/RealEstateDashboard'
-import { HotelSidebarWidget, type HotelView } from '@/components/hotel/HotelSidebarWidget'
-import { HotelDashboard } from '@/components/hotel/HotelDashboard'
-import { HotelKeyboardShortcuts } from '@/components/hotel/HotelKeyboardShortcuts'
-import { ReviewProfiSidebarWidget } from '@/components/reviews/ReviewProfiSidebarWidget'
-import { ReviewProfiDashboard } from '@/components/reviews/ReviewProfiDashboard'
-import { GastronomieSidebarWidget } from '@/components/gastronomie/GastronomieSidebarWidget'
-import { GastronomieDashboard } from '@/components/gastronomie/GastronomieDashboard'
 import { AIActionWizard } from '@/components/ui/AIActionWizard'
 import type { AIAction, AIActionContext } from '@/components/ui/AIActions'
-
-
+import { ChatMarkdown } from '@/components/chat/markdown/ChatMarkdown'
 
 type WorkspaceModuleToken =
   | 'chat'
-  | 'shield'
-  | 'phone'
-  | 'website'
   | 'inbox'
+  | 'dashboard'
+  | 'integrations'
+  | 'marketplace'
   | 'new1'
   | 'new2'
   | 'automation'
+  | 'shield'
+  | 'phone'
+  | 'website'
   | 'notifications'
   | 'settings'
-  | 'integrations'
-  | 'marketplace'
-  | 'practice'
-  | 'realestate'
-  | 'hotel'
-  | 'reviews'
-  | 'gastronomie'
 
-type ModuleConfig = {
-  id: WorkspaceModuleToken
-  label: string
-  icon: ComponentType<{ className?: string }>
-  href?: string
-}
+type ChatWorkspaceShellProps = { children: ReactNode }
 
-const MODULES: ModuleConfig[] = [
-  { id: 'chat', label: 'Chat', icon: ChatBubbleLeftRightIcon, href: '/' },
-  { id: 'inbox', label: 'Posteingang', icon: PaperAirplaneIcon },
-  { id: 'new2', label: 'Dokumente', icon: DocumentIcon },
-  { id: 'new1', label: 'Wachstum', icon: MegaphoneIcon },
-  { id: 'automation', label: 'Kunden', icon: UserGroupIcon },
-  { id: 'shield', label: 'AI Shield', icon: ShieldCheckIcon },
-  { id: 'website', label: 'Website', icon: GlobeAltIcon },
-  { id: 'phone', label: 'Telefon', icon: PhoneIcon },
-  { id: 'integrations', label: 'Integrationen', icon: Squares2X2Icon, href: '/integrations' },
-  { id: 'marketplace', label: 'Marktplatz', icon: ShoppingBagIcon, href: '/marketplace' },
-  { id: 'practice', label: 'Praxis', icon: HeartIcon },
-  { id: 'realestate', label: 'Immobilien', icon: BuildingOfficeIcon },
-  { id: 'hotel', label: 'Hotel & Gastgewerbe', icon: BuildingOffice2Icon },
-  { id: 'reviews', label: 'Review Profi', icon: StarIcon },
-  { id: 'gastronomie', label: 'Gastronomie', icon: CakeIcon },
-]
-
-// Layout-Konstanten
-// Linker Rail (Icons): 64px (Tailwind w-16)
+const LEFT_DRAWER_WIDTH = '360px'
 const LEFT_RAIL_WIDTH = '64px'
-// Linkes Panel Breite (Pixelgenau für Apple-Style Präzision)
-const LEFT_DRAWER_WIDTH = '320px'
-// Rechtes Panel Breite (Inspector/Drawer)
 const RIGHT_DRAWER_WIDTH = '420px'
 const MIN_INSPECTOR_WIDTH = 320
+
+type ModuleIcon = ComponentType<{ className?: string; 'aria-hidden'?: boolean }>
+type WorkspaceModule = { id: WorkspaceModuleToken; label: string; icon: ModuleIcon }
+
+const MODULES: WorkspaceModule[] = [
+  { id: 'chat', label: 'Chat', icon: ChatBubbleLeftRightIcon },
+  { id: 'inbox', label: 'Inbox', icon: PaperAirplaneIcon },
+  { id: 'dashboard', label: 'Dashboard', icon: ChartBarIcon },
+  { id: 'integrations', label: 'Integrationen', icon: CloudArrowUpIcon },
+  { id: 'marketplace', label: 'Marketplace', icon: ShoppingBagIcon },
+  { id: 'new1', label: 'Growth', icon: MegaphoneIcon },
+  { id: 'new2', label: 'Dokumente', icon: DocumentIcon },
+  { id: 'automation', label: 'Automation', icon: UserGroupIcon },
+  { id: 'shield', label: 'Shield', icon: ShieldCheckIcon },
+  { id: 'phone', label: 'Telefonie', icon: PhoneIcon },
+  { id: 'website', label: 'Website', icon: GlobeAltIcon },
+  { id: 'notifications', label: 'Benachrichtigungen', icon: BellIcon },
+  { id: 'settings', label: 'Einstellungen', icon: Cog6ToothIcon },
+]
+
+function getModuleLabel(token: WorkspaceModuleToken): string {
+  return MODULES.find((m) => m.id === token)?.label ?? token
+}
 
 type AiAction = { title: string; desc: string }
 
@@ -214,7 +195,6 @@ const AIActionStrip = ({
   const [feedback, setFeedback] = useState<string | null>(null)
 
   const handleActionClick = (title: string, desc: string) => {
-    // Frontend-only wiring: no backend call here
     try {
       setFeedback(`Ausgeführt: ${title}`)
       window.dispatchEvent(
@@ -245,43 +225,17 @@ const AIActionStrip = ({
           </button>
         ))}
       </div>
-      {feedback && (
-        <div className="mt-2 px-1 text-[11px] font-semibold text-blue-600">
-          {feedback}
-        </div>
-      )}
+      {feedback && <div className="mt-2 px-1 text-[11px] font-semibold text-blue-600">{feedback}</div>}
     </div>
   )
 }
 
-function getModuleLabel(token: WorkspaceModuleToken): string {
-  const match = MODULES.find((m) => m.id === token)
-  if (match) return match.label
-
-  if (token === 'settings') return 'Einstellungen'
-  if (token === 'shield') return 'AI Shield'
-  if (token === 'phone') return 'Telefon-Assistent'
-  if (token === 'website') return 'Website-Bot'
-  if (token === 'notifications') return 'Benachrichtigungen'
-  if (token === 'new1') return 'Wachstum'
-  if (token === 'new2') return 'Dokumente'
-  if (token === 'integrations') return 'Integrationen'
-  if (token === 'marketplace') return 'Marktplatz'
-  if (token === 'practice') return 'Praxis'
-  if (token === 'realestate') return 'Immobilien'
-  if (token === 'hotel') return 'Hotel & Gastgewerbe'
-  return token
-}
-
-type ChatWorkspaceShellProps = {
-  children: ReactNode
-}
 
 export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const initialModule: WorkspaceModuleToken = 'chat'
+  const [activeModuleToken, setActiveModuleToken] = useState<WorkspaceModuleToken>(initialModule)
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
 
-  const [activeModuleToken, setActiveModuleToken] =
-    useState<WorkspaceModuleToken>(initialModule)
   const [activeShieldView, setActiveShieldView] = useState<ShieldView>('overview')
   const [activeTelephonyView, setActiveTelephonyView] = useState<TelephonyView>('overview')
   const [activeWebsiteView, setActiveWebsiteView] = useState<WebsiteView>('overview')
@@ -289,10 +243,6 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const [activeSettingsView, setActiveSettingsView] = useState<SettingsView>('general')
   const [activeDocumentsView, setActiveDocumentsView] = useState<DocumentsView>('all')
   const [activeCustomersView, setActiveCustomersView] = useState<CustomersView>('all')
-  const [activePracticeView, setActivePracticeView] = useState<PracticeView>('overview')
-  const [activeRealEstateView, setActiveRealEstateView] = useState<RealEstateView>('overview')
-  const [activeHotelView, setActiveHotelView] = useState<HotelView>('overview')
-  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
   const [showDashboardsMenu, setShowDashboardsMenu] = useState(false)
   const [showWizardsMenu, setShowWizardsMenu] = useState(false)
   const [aiActionWizardOpen, setAiActionWizardOpen] = useState(false)
@@ -317,6 +267,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const [showWebsiteOverview, setShowWebsiteOverview] = useState(false)
   const [showChatOverview, setShowChatOverview] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [activeArtifact, setActiveArtifact] = useState<{ content: string; threadId: string } | null>(null)
   const [inspectorExpanded, setInspectorExpanded] = useState(false)
   const [inspectorWidth, setInspectorWidth] = useState<number>(parseFloat(RIGHT_DRAWER_WIDTH))
   const [isResizingInspector, setIsResizingInspector] = useState(false)
@@ -325,12 +276,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   // Apps Menu State
   const [appsMenuOpen, setAppsMenuOpen] = useState(false)
 
-  const closeRightDrawer = () => {
+  const closeRightDrawer = useCallback(() => {
     setRightDrawerOpen(false)
     setInspectorExpanded(false)
-  }
+  }, [])
 
-  const handleModuleClick = (token: WorkspaceModuleToken) => {
+  const handleModuleClick = useCallback((token: WorkspaceModuleToken) => {
     // Notifications öffnen - linke Sidebar öffnen, rechte leer lassen
     if (token === 'notifications') {
       const wasNotifications = activeModuleToken === 'notifications'
@@ -391,9 +342,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setShowShieldOverview(false)
     setShowTelephonyOverview(false)
     setShowWebsiteOverview(false)
-  }
+  }, [activeModuleToken, closeRightDrawer])
 
-  const handleNotificationsInfoClick = () => {
+  const handleNotificationsInfoClick = useCallback(() => {
     // Toggle rechten Drawer für Notifications
     if (rightDrawerOpen && showNotifications) {
       closeRightDrawer()
@@ -417,7 +368,89 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       setShowWebsiteOverview(false)
       setShowNotifications(true)
     }
-  }
+  }, [rightDrawerOpen, showNotifications, closeRightDrawer])
+
+  // Register global Cmd+K shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setIsCommandPaletteOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const allCommands: Command[] = useMemo(() => [
+    {
+      id: 'nav-chat',
+      label: 'Gehe zu Chat',
+      category: 'navigation',
+      icon: ChatBubbleLeftRightIcon,
+      action: () => handleModuleClick('chat'),
+      shortcut: 'G C'
+    },
+    {
+      id: 'nav-inbox',
+      label: 'Gehe zu Posteingang',
+      category: 'navigation',
+      icon: PaperAirplaneIcon,
+      action: () => handleModuleClick('inbox'),
+      shortcut: 'G I'
+    },
+    {
+      id: 'nav-dashboard',
+      label: 'Gehe zu Dashboard',
+      category: 'navigation',
+      icon: ChartBarIcon,
+      action: () => handleModuleClick('dashboard'),
+      shortcut: 'G D'
+    },
+    {
+      id: 'nav-settings',
+      label: 'Einstellungen öffnen',
+      category: 'navigation',
+      icon: Cog6ToothIcon,
+      action: () => handleModuleClick('settings'),
+      shortcut: 'G S'
+    },
+    {
+      id: 'act-new-chat',
+      label: 'Neuer Chat',
+      category: 'action',
+      icon: ChatBubbleLeftRightIcon,
+      action: () => {
+        handleModuleClick('chat')
+        setTimeout(() => window.dispatchEvent(new CustomEvent('aklow-new-chat')), 100)
+      },
+      shortcut: '⌘ N'
+    },
+    {
+      id: 'act-notifications',
+      label: 'Benachrichtigungen',
+      category: 'action',
+      icon: BellIcon,
+      action: () => handleNotificationsInfoClick(),
+      shortcut: '⌘ B'
+    },
+    {
+      id: 'act-toggle-sidebar',
+      label: 'Sidebar umschalten',
+      category: 'action',
+      icon: Squares2X2Icon,
+      action: () => setLeftDrawerOpen(prev => !prev),
+      shortcut: '⌘ \\'
+    },
+    {
+      id: 'act-toggle-drawer',
+      label: 'Info-Panel umschalten',
+      category: 'action',
+      icon: InformationCircleIcon,
+      action: () => setRightDrawerOpen(prev => !prev),
+      shortcut: '⌘ /'
+    }
+  ], [handleModuleClick, handleNotificationsInfoClick])
 
 
   // Event-Listener für Modul-Öffnung von außen (z.B. Bell-Icon)
@@ -491,6 +524,23 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       setActiveModuleToken('inbox')
     }
 
+    const handleToggleChatInfo = () => {
+      if (activeModuleToken !== 'chat') {
+        setActiveModuleToken('chat')
+      }
+      setShowChatOverview((prev) => !prev)
+      setRightDrawerOpen((prev) => !prev)
+    }
+
+    const handleOpenArtifact = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.content) {
+        setActiveArtifact(detail);
+        setRightDrawerOpen(true);
+        setInspectorExpanded(true); // Open wide for artifacts
+      }
+    }
+
     // Quick Actions - switch to chat and forward to ChatShell
     const handleQuickAction = (e: CustomEvent<{ actionId: string }>) => {
       const actionId = e.detail?.actionId
@@ -509,6 +559,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     window.addEventListener('aklow-toggle-sidebar', handleToggleSidebar as EventListener)
     window.addEventListener('aklow-toggle-drawer', handleToggleDrawer as EventListener)
     window.addEventListener('aklow-show-notifications', handleShowNotifications as EventListener)
+    window.addEventListener('aklow-toggle-chat-info', handleToggleChatInfo as EventListener)
+    window.addEventListener('aklow-open-artifact', handleOpenArtifact as EventListener)
     window.addEventListener('aklow-send-quick-action', handleQuickAction as EventListener)
 
     return () => {
@@ -520,6 +572,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
       window.removeEventListener('aklow-toggle-sidebar', handleToggleSidebar as EventListener)
       window.removeEventListener('aklow-toggle-drawer', handleToggleDrawer as EventListener)
       window.removeEventListener('aklow-show-notifications', handleShowNotifications as EventListener)
+      window.removeEventListener('aklow-toggle-chat-info', handleToggleChatInfo as EventListener)
+      window.removeEventListener('aklow-open-artifact', handleOpenArtifact as EventListener)
       window.removeEventListener('aklow-send-quick-action', handleQuickAction as EventListener)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -553,32 +607,6 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showWizardsMenu])
-
-  // Hotel Keyboard Shortcuts (separate useEffect)
-  useEffect(() => {
-    if (activeModuleToken !== 'hotel') return
-
-    const handleHotelShortcuts = (e: KeyboardEvent) => {
-      // Cmd/Ctrl + 1-9 für Navigation
-      if ((e.metaKey || e.ctrlKey) && e.key >= '1' && e.key <= '9') {
-        e.preventDefault()
-        const views: HotelView[] = ['overview', 'reservations', 'rooms', 'restaurant', 'events', 'guests', 'revenue', 'marketing', 'reports']
-        const index = parseInt(e.key) - 1
-        if (views[index]) {
-          setActiveHotelView(views[index])
-        }
-      }
-      
-      // Cmd/Ctrl + / für Shortcuts anzeigen
-      if ((e.metaKey || e.ctrlKey) && e.key === '/') {
-        e.preventDefault()
-        setShowKeyboardShortcuts(true)
-      }
-    }
-
-    window.addEventListener('keydown', handleHotelShortcuts)
-    return () => window.removeEventListener('keydown', handleHotelShortcuts)
-  }, [activeModuleToken, setActiveHotelView, setShowKeyboardShortcuts])
 
   // Listen for AI Action Wizard events
   useEffect(() => {
@@ -668,6 +696,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
     setShowShieldOverview(false)
     setShowTelephonyOverview(false)
     setShowWebsiteOverview(false)
+    setShowChatOverview(false)
+    setActiveArtifact(null)
   }
 
   const handleInboxOverviewToggle = () => {
@@ -795,8 +825,13 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
   const cornerTooltipClasses = "absolute top-full right-0 mt-2 px-2.5 py-1 text-xs font-medium text-white bg-gray-900 rounded shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap"
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#FFFFFF] text-[var(--ak-color-text-primary)]">
-      <aside suppressHydrationWarning className="flex w-16 flex-col items-center py-4 text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] border-r border-white/20 bg-white/40 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.03)] z-50">
+    <div className="flex h-screen w-screen overflow-hidden bg-[var(--ak-color-bg-app)] text-[var(--ak-color-text-primary)]">
+      <CommandPalette 
+        isOpen={isCommandPaletteOpen} 
+        onClose={() => setIsCommandPaletteOpen(false)} 
+        commands={allCommands} 
+      />
+      <aside suppressHydrationWarning className="flex w-16 flex-col items-center py-4 text-[var(--ak-color-text-secondary)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] border-r border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-sidebar)] z-50">
         
         <div suppressHydrationWarning className="flex flex-1 flex-col items-center w-full">
             <div suppressHydrationWarning className="flex flex-col items-center gap-4 w-full">
@@ -818,12 +853,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     className={clsx(
                         'flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 ease-out focus-visible:outline-none active:scale-[0.96]',
                         isActive
-                        ? 'bg-white text-gray-900 shadow-sm ring-1 ring-black/5'
-                        : 'text-gray-500 hover:bg-black/5 hover:text-gray-900'
+                        ? 'bg-[var(--ak-color-graphite-base)] text-[var(--ak-color-graphite-text)] shadow-sm'
+                        : 'text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]'
                     )}
                     >
                     <span className="sr-only">{mod.label}</span>
-                    <Icon className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
+                    <Icon className="h-5 w-5 stroke-[1.5]" aria-hidden={true} />
                     </button>
                     
                     <span className={tooltipClasses}>
@@ -844,12 +879,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 className={clsx(
                     'flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 ease-out focus-visible:outline-none active:scale-[0.96]',
                     appsMenuOpen || isSecondaryActive
-                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-black/5'
-                    : 'text-gray-500 hover:bg-black/5 hover:text-gray-900'
+                    ? 'bg-[var(--ak-color-graphite-base)] text-[var(--ak-color-graphite-text)] shadow-sm'
+                    : 'text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]'
                 )}
                 aria-label="Add-ons"
                 >
-                <Squares2X2Icon className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
+                <Squares2X2Icon className="h-5 w-5 stroke-[1.5]" aria-hidden={true} />
                 </button>
                 
                 {!appsMenuOpen && (
@@ -875,12 +910,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                                     className={clsx(
                                     'flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 ease-out focus-visible:outline-none',
                                         isActive 
-                                        ? 'bg-white text-gray-900 shadow-sm ring-1 ring-black/5'
-                                        : 'text-gray-500 hover:bg-black/5 hover:text-gray-900'
+                                        ? 'bg-[var(--ak-color-graphite-base)] text-[var(--ak-color-graphite-text)] shadow-sm'
+                                        : 'text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]'
                                     )}
                                 >
                                 <span className="sr-only">{mod.label}</span>
-                                <Icon className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
+                                <Icon className="h-5 w-5 stroke-[1.5]" aria-hidden={true} />
                                 </button>
 
                             <span className={tooltipClasses}>
@@ -902,12 +937,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 className={clsx(
                   'flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 ease-out focus-visible:outline-none active:scale-[0.96]',
                   showDashboardsMenu
-                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-black/5'
-                    : 'text-gray-500 hover:bg-black/5 hover:text-gray-900'
+                    ? 'bg-[var(--ak-color-graphite-base)] text-[var(--ak-color-graphite-text)] shadow-sm'
+                    : 'text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]'
                 )}
                 aria-label="Dashboards"
               >
-                <RectangleStackIcon className="h-5 w-5 stroke-[1.5]" aria-hidden="true" />
+                <RectangleStackIcon className="h-5 w-5 stroke-[1.5]" aria-hidden={true} />
               </button>
               
               {!showDashboardsMenu && (
@@ -921,9 +956,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
               {/* Dashboards Dropdown */}
               {showDashboardsMenu && (
-                <div className="absolute left-full ml-3 bottom-0 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50" data-dashboards-menu>
+                <div className="absolute left-full ml-3 bottom-0 w-64 bg-[var(--ak-color-bg-surface)] rounded-xl shadow-2xl border border-[var(--ak-color-border-subtle)] overflow-hidden z-50" data-dashboards-menu>
                   <div className="p-2">
-                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                    <div className="px-3 py-2 text-xs font-semibold text-[var(--ak-color-text-muted)] uppercase tracking-wider mb-1">
                       Alle Dashboards
                     </div>
                     <div className="space-y-1">
@@ -934,9 +969,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                         { id: 'new1', label: 'Wachstum', icon: MegaphoneIcon },
                         { id: 'new2', label: 'Dokumente', icon: DocumentIcon },
                         { id: 'automation', label: 'Kunden', icon: UserGroupIcon },
-                        { id: 'practice', label: 'Praxis', icon: HeartIcon },
-                        { id: 'realestate', label: 'Immobilien', icon: BuildingOfficeIcon },
-                        { id: 'hotel', label: 'Hotel & Gastgewerbe', icon: BuildingOffice2Icon },
+                        { id: 'dashboard', label: 'Dashboard Pro', icon: ChartBarIcon },
                         { id: 'integrations', label: 'Integrationen', icon: Squares2X2Icon },
                         { id: 'marketplace', label: 'Marktplatz', icon: ShoppingBagIcon },
                         { id: 'settings', label: 'Einstellungen', icon: Cog6ToothIcon },
@@ -954,8 +987,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                             className={clsx(
                               'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left',
                               isActive
-                                ? 'bg-blue-50 text-blue-700'
-                                : 'text-gray-700 hover:bg-gray-50'
+                                ? 'bg-[var(--ak-color-graphite-soft)] text-[var(--ak-color-graphite-base)]'
+                                : 'text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)]'
                             )}
                           >
                             <Icon className="h-5 w-5 flex-shrink-0" />
@@ -977,8 +1010,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 className={clsx(
                   'flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 ease-out focus-visible:outline-none active:scale-[0.96]',
                   showWizardsMenu
-                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-black/5'
-                    : 'text-gray-500 hover:bg-black/5 hover:text-gray-900'
+                    ? 'bg-[var(--ak-color-graphite-base)] text-[var(--ak-color-graphite-text)] shadow-sm'
+                    : 'text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]'
                 )}
                 aria-label="Wizards & Onboardings"
               >
@@ -996,10 +1029,10 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
 
               {/* Wizards & Onboardings Dropdown */}
               {showWizardsMenu && (
-                <div className="absolute left-full ml-3 bottom-0 w-72 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50 max-h-[80vh] overflow-y-auto" data-wizards-menu>
+                <div className="absolute left-full ml-3 bottom-0 w-72 bg-[var(--ak-color-bg-surface)] rounded-xl shadow-2xl border border-[var(--ak-color-border-subtle)] overflow-hidden z-50 max-h-[80vh] overflow-y-auto" data-wizards-menu>
                   <div className="p-2">
                     {/* Wizards Section */}
-                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                    <div className="px-3 py-2 text-xs font-semibold text-[var(--ak-color-text-muted)] uppercase tracking-wider mb-1">
                       Wizards
                     </div>
                     <div className="space-y-1 mb-4">
@@ -1051,12 +1084,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                               }
                               setShowWizardsMenu(false)
                             }}
-                            className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg transition-colors text-left hover:bg-gray-50"
+                            className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg transition-colors text-left hover:bg-[var(--ak-color-bg-hover)]"
                           >
-                            <Icon className="h-5 w-5 flex-shrink-0 text-purple-500 mt-0.5" />
+                            <Icon className="h-5 w-5 flex-shrink-0 text-[var(--ak-color-accent)] mt-0.5" />
                             <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-gray-900">{wizard.label}</div>
-                              <div className="text-xs text-gray-500 mt-0.5">{wizard.description}</div>
+                              <div className="text-sm font-medium text-[var(--ak-color-text-primary)]">{wizard.label}</div>
+                              <div className="text-xs text-[var(--ak-color-text-muted)] mt-0.5">{wizard.description}</div>
                             </div>
                           </button>
                         )
@@ -1064,7 +1097,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                     </div>
 
                     {/* Onboardings Section */}
-                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 border-t border-gray-200 pt-3">
+                    <div className="px-3 py-2 text-xs font-semibold text-[var(--ak-color-text-muted)] uppercase tracking-wider mb-1 border-t border-[var(--ak-color-border-fine)] pt-3">
                       Onboardings
                     </div>
                     <div className="space-y-1">
@@ -1109,12 +1142,12 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                               }
                               setShowWizardsMenu(false)
                             }}
-                            className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg transition-colors text-left hover:bg-gray-50"
+                            className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg transition-colors text-left hover:bg-[var(--ak-color-bg-hover)]"
                           >
                             <Icon className="h-5 w-5 flex-shrink-0 text-blue-500 mt-0.5" />
                             <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-gray-900">{onboarding.label}</div>
-                              <div className="text-xs text-gray-500 mt-0.5">{onboarding.description}</div>
+                              <div className="text-sm font-medium text-[var(--ak-color-text-primary)]">{onboarding.label}</div>
+                              <div className="text-xs text-[var(--ak-color-text-muted)] mt-0.5">{onboarding.description}</div>
                             </div>
                           </button>
                         )
@@ -1133,8 +1166,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 className={clsx(
                   'flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 ease-out focus-visible:outline-none active:scale-[0.96]',
                   activeModuleToken === 'settings' && leftDrawerOpen
-                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-black/5'
-                    : 'text-gray-500 hover:bg-black/5 hover:text-gray-900'
+                    ? 'bg-[var(--ak-color-graphite-base)] text-[var(--ak-color-graphite-text)] shadow-sm'
+                    : 'text-[var(--ak-color-text-secondary)] hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]'
                 )}
                 aria-label="Einstellungen"
               >
@@ -1162,8 +1195,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 className={clsx(
                   'flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 ease-out focus-visible:outline-none active:scale-[0.96]',
                   showNotifications
-                    ? 'text-gray-900 bg-black/5'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-black/5'
+                    ? 'bg-[var(--ak-color-graphite-base)] text-[var(--ak-color-graphite-text)]'
+                    : 'text-[var(--ak-color-text-secondary)] hover:text-[var(--ak-color-text-primary)] hover:bg-[var(--ak-color-bg-hover)]'
                 )}
                 aria-label="Benachrichtigungen"
               >
@@ -1202,16 +1235,8 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
               <IntegrationsDashboard />
             ) : activeModuleToken === 'marketplace' ? (
               <MarketplaceDashboard />
-            ) : activeModuleToken === 'practice' ? (
-              <PracticeDashboard view={activePracticeView} />
-            ) : activeModuleToken === 'realestate' ? (
-              <RealEstateDashboard view={activeRealEstateView} />
-            ) : activeModuleToken === 'hotel' ? (
-              <HotelDashboard view={activeHotelView} />
-            ) : activeModuleToken === 'reviews' ? (
-              <ReviewProfiDashboard view={activeReviewProfiView} />
-            ) : activeModuleToken === 'gastronomie' ? (
-              <GastronomieDashboard view={activeGastronomieView} />
+            ) : activeModuleToken === 'dashboard' ? (
+              <DashboardPro />
             ) : (
               children
             )}
@@ -1432,46 +1457,6 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                       if (rightDrawerOpen) closeRightDrawer()
                     }}
                   />
-                ) : activeModuleToken === 'practice' ? (
-                  <PracticeSidebarWidget
-                    activeView={activePracticeView}
-                    onViewSelect={(view) => {
-                      setActivePracticeView(view)
-                      if (rightDrawerOpen) closeRightDrawer()
-                    }}
-                  />
-                ) : activeModuleToken === 'realestate' ? (
-                  <RealEstateSidebarWidget
-                    activeView={activeRealEstateView}
-                    onViewSelect={(view) => {
-                      setActiveRealEstateView(view)
-                      if (rightDrawerOpen) closeRightDrawer()
-                    }}
-                  />
-                ) : activeModuleToken === 'hotel' ? (
-                  <HotelSidebarWidget
-                    activeView={activeHotelView}
-                    onViewSelect={(view) => {
-                      setActiveHotelView(view)
-                      if (rightDrawerOpen) closeRightDrawer()
-                    }}
-                  />
-                ) : activeModuleToken === 'reviews' ? (
-                  <ReviewProfiSidebarWidget
-                    activeView={activeReviewProfiView}
-                    onViewSelect={(view) => {
-                      setActiveReviewProfiView(view)
-                      if (rightDrawerOpen) closeRightDrawer()
-                    }}
-                  />
-                ) : activeModuleToken === 'gastronomie' ? (
-                  <GastronomieSidebarWidget
-                    activeView={activeGastronomieView}
-                    onViewSelect={(view) => {
-                      setActiveGastronomieView(view)
-                      if (rightDrawerOpen) closeRightDrawer()
-                    }}
-                  />
                 ) : activeModuleToken === 'new1' ? (
                   <GrowthSidebarWidget 
                     activeView={activeGrowthView}
@@ -1521,6 +1506,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
             <div
               className={clsx(
                 'ak-inspector-shell pointer-events-auto relative flex h-full flex-col transition-transform duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] overflow-visible',
+                'bg-[var(--ak-color-bg-surface)] dark:bg-[var(--ak-color-graphite-surface)]',
                 showRight ? 'translate-x-0' : 'translate-x-full'
               )}
               ref={inspectorRef}
@@ -1537,17 +1523,20 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 title="Ziehen zum Ändern der Größe"
               >
                 {/* Visual Line */}
-                <div className="w-1.5 h-16 bg-black/20 rounded-full backdrop-blur-sm group-hover:bg-blue-500 group-active:bg-blue-600 transition-colors shadow-sm ring-1 ring-white/50" />
+                <div className="w-1.5 h-16 bg-[var(--ak-color-text-muted)]/20 rounded-full backdrop-blur-sm group-hover:bg-[var(--ak-color-accent)] group-active:bg-[var(--ak-color-accent)] transition-colors shadow-sm ring-1 ring-white/10" />
               </div>
               <AkDrawerScaffold
+                variant="graphite"
                 title={
                   <div className="flex flex-col items-center">
-                    <div className="h-1 w-12 rounded-full bg-gray-300 mb-2 sm:hidden" /> {/* Mobile handle */}
-                    <span className="text-sm font-semibold text-gray-900">
-                      {showNotifications
+                    <div className="h-1 w-12 rounded-full bg-[var(--ak-color-graphite-text)]/20 mb-2 sm:hidden" /> {/* Mobile handle */}
+                    <span className="text-sm font-semibold">
+                      {activeArtifact
+                        ? 'Artifact / Canvas'
+                        : showNotifications
                         ? 'Benachrichtigungen'
                         : showChatOverview
-                          ? 'Chat Übersicht'
+                        ? 'Chat Übersicht'
                         : showInboxOverview
                           ? 'Posteingang'
                           : showGrowthOverview
@@ -1590,7 +1579,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   <div className="flex items-center gap-1">
                     <button
                         onClick={handleCloseDetails}
-                        className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                        className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--ak-color-graphite-text)]/60 hover:bg-[var(--ak-color-graphite-soft)] hover:text-[var(--ak-color-graphite-text)] transition-colors"
                         aria-label="Schließen"
                     >
                         <XMarkIcon className="h-4 w-4" />
@@ -1612,7 +1601,9 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                         }}
                         className={clsx(
                             "flex h-7 w-7 items-center justify-center rounded-full transition-colors",
-                            inspectorExpanded ? "text-blue-600 bg-blue-50" : "text-gray-400 hover:bg-gray-100 hover:text-gray-900"
+                            inspectorExpanded 
+                              ? "text-[var(--ak-color-graphite-text)] bg-[var(--ak-color-graphite-soft)]" 
+                              : "text-[var(--ak-color-graphite-text)]/60 hover:bg-[var(--ak-color-graphite-soft)] hover:text-[var(--ak-color-graphite-text)]"
                         )}
                         aria-label={inspectorExpanded ? "Verkleinern" : "Vergrößern"}
                     >
@@ -1626,7 +1617,26 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 }
                 bodyClassName="ak-scrollbar ak-inspector-body text-sm text-[var(--ak-color-text-secondary)]"
               >
-                {showNotifications ? (
+                {activeArtifact ? (
+                  <div className="flex flex-col h-full bg-[var(--ak-color-bg-surface)]">
+                    <div className="flex-1 overflow-y-auto p-6 ak-scrollbar">
+                      <div className="prose prose-sm max-w-none">
+                        <ChatMarkdown content={activeArtifact.content} />
+                      </div>
+                    </div>
+                    <div className="p-4 border-t border-[var(--ak-color-border-subtle)] bg-[var(--ak-color-bg-surface-muted)]/50 flex justify-between items-center">
+                      <span className="text-[10px] text-[var(--ak-color-text-muted)] font-mono">ID: {activeArtifact.threadId}</span>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(activeArtifact.content);
+                        }}
+                        className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                      >
+                        Inhalt kopieren
+                      </button>
+                    </div>
+                  </div>
+                ) : showNotifications ? (
                   <NotificationsSettingsDrawer
                     onClose={handleCloseDetails}
                     onSave={(settings) => {
@@ -2002,14 +2012,14 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                   </div>
                 ) : activeModuleToken === 'settings' ? (
                   selectedSettingsCategory === 'memory_crm' ? (
-                    <MemoryDetailPanel category={selectedMemoryCategory} />
+                    <MemoryDetailPanel item={null} />
                   ) : (
                     <SettingsDetailPanel category={selectedSettingsCategory} />
                   )
                 ) : activeModuleToken === 'automation' ? (
                   selectedCustomerId ? (
                     <CustomerDetailsDrawer
-                      customerId={selectedCustomerId}
+                      customer={null}
                       onClose={() => {
                         setSelectedCustomerId(null)
                         closeRightDrawer()
@@ -2063,7 +2073,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 ) : activeModuleToken === 'new1' ? (
                   selectedGrowthItemId ? (
                     <GrowthDetailsDrawer
-                      growthItemId={selectedGrowthItemId}
+                      item={null}
                       onClose={() => {
                         setSelectedGrowthItemId(null)
                         closeRightDrawer()
@@ -2079,7 +2089,7 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
                 ) : activeModuleToken === 'new2' ? (
                   selectedDocumentId ? (
                     <DocumentDetailsDrawer
-                      documentId={selectedDocumentId}
+                      document={null}
                       onClose={() => {
                         setSelectedDocumentId(null)
                         closeRightDrawer()
@@ -2112,14 +2122,6 @@ export function ChatWorkspaceShell({ children }: ChatWorkspaceShellProps) {
         </main>
       </div>
       
-      {/* Hotel Keyboard Shortcuts Modal */}
-      {activeModuleToken === 'hotel' && (
-        <HotelKeyboardShortcuts
-          isOpen={showKeyboardShortcuts}
-          onClose={() => setShowKeyboardShortcuts(false)}
-        />
-      )}
-
       {/* AI Action Wizard */}
       {aiActionWizardAction && (
         <AIActionWizard

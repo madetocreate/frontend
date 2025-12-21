@@ -115,15 +115,15 @@ Chat-Interface mit:
 
 ## Voice & Audio Features
 
-### Real-Time Voice (`useRealtimeVoice.ts`)
-- **OpenAI Realtime API**: Direkte Browser-zu-OpenAI Verbindung via WebSocket
-- **Ephemeral Sessions**: Backend generiert Session-Token (`/realtime/session`)
-- **Audio Capture**: Web Audio API für Mikrofon-Input (PCM16)
-- **Audio Playback**: Real-time Audio-Output vom Assistant
-- **Visualization**: Audio-Wellen im Composer (echte Mikrofon-Daten + Fallback-Animation)
+### Real-Time Voice (PTT, WebRTC) (`realtimeVoiceClient.ts`, `usePushToTalkVoice.ts`)
+- **WebRTC (empfohlen)**: Audio läuft direkt Browser↔OpenAI (Hot-Pass) für niedrigste Latenz/Jitter.
+- **Ephemeral Sessions**: Python backend-agents generiert `client_secret` + `model` (`POST /realtime/session`).
+- **PTT Pflicht**: Press/Hold/Release + Barge-in (`response.cancel`).
+- **Conversation Parity**: User-Transcript + Assistant-Text werden als Messages in denselben Thread geschrieben (ChatShell).
+- **Tool Calls**: Realtime Function-Calls werden über `/api/realtime/tools` → Backend `/realtime/tools/:tool` ausgeführt (zod-validierte Registry).
 
 ### Text-to-Speech (`useSpeechSynthesis.ts`)
-- **OpenAI TTS API**: Streaming TTS mit `tts-1-hd` Modell
+- **OpenAI TTS API**: Streaming TTS (Model serverseitig via Policy, Default: `gpt-4o-mini-tts`)
 - **Voice**: `nova` (hochwertige Stimme)
 - **Streaming**: Audio wird gestreamt und sofort abgespielt (64KB Buffer)
 
@@ -156,7 +156,7 @@ Chat-Interface mit:
 - `/api/inbox`: Inbox-Items
 - `/api/audio/transcribe`: Audio-Transkription (Proxy zu Backend)
 - `/api/audio/tts`: TTS-Streaming (Proxy zu Backend)
-- `/api/realtime/*`: Realtime-Tools (Analysis, Research)
+- `/api/realtime/*`: Realtime-Tools (Analysis, Research, Tools Bridge)
 
 ### Backend Communication
 - **Orchestrator**: `ORCHESTRATOR_API_URL` (Port 4000)

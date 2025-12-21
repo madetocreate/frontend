@@ -786,6 +786,35 @@ export default function WizardPage() {
     });
   };
 
+  const renderCurrentStep = () => {
+    if (!currentStep) return null;
+    if (selectedScenario === "real_estate") {
+      const step = currentStep as WizardStep<RealEstateForm>;
+      return (
+        <step.component
+          data={formData as RealEstateForm}
+          update={(section: string, field?: string, value?: unknown) => updateField(section, field, value)}
+        />
+      );
+    }
+    if (selectedScenario === "user_onboarding") {
+      const step = currentStep as WizardStep<UserOnboardingForm>;
+      return (
+        <step.component
+          data={formData as UserOnboardingForm}
+          update={(section: string, field?: string, value?: unknown) => updateField(section, field, value)}
+        />
+      );
+    }
+    const step = currentStep as WizardStep<MarketingCampaignForm>;
+    return (
+      <step.component
+        data={formData as MarketingCampaignForm}
+        update={(section: string, field?: string, value?: unknown) => updateField(section, field, value)}
+      />
+    );
+  };
+
   const handleNext = async () => {
     if (currentStepIndex < scenario.steps.length - 1) {
       setDirection(1);
@@ -901,12 +930,7 @@ export default function WizardPage() {
                     transition={{ duration: 0.3, ease: "easeOut" }}
                     className="h-full"
                   >
-                    {currentStep && (
-                      <currentStep.component
-                        data={formData}
-                        update={(section: string, field?: string, value?: unknown) => updateField(section, field, value)}
-                      />
-                    )}
+                    {renderCurrentStep()}
                   </motion.div>
                 </AnimatePresence>
               </div>

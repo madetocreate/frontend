@@ -11,14 +11,12 @@ import {
   CubeIcon,
   CpuChipIcon,
   BoltIcon,
-  BuildingOfficeIcon,
-  HeartIcon,
-  HomeIcon,
   ChatBubbleLeftRightIcon,
   MegaphoneIcon,
-  CakeIcon,
   ShieldCheckIcon,
-  PhotoIcon
+  PhotoIcon,
+  ChartBarIcon,
+  HeartIcon
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import clsx from "clsx";
@@ -54,104 +52,34 @@ interface Product {
 }
 
 // --- Screenshots Data ---
-// Placeholder for screenshot URLs - can be populated later with actual image URLs
 const SCREENSHOTS: Record<string, string[]> = {};
 
 // --- Products Data ---
 
 const PRODUCTS: Product[] = [
-  // Dashboard Bundles
+  // New Dashboard Pro Product
   {
-    id: "dashboard-hotel",
+    id: "dashboard-pro",
     type: "dashboard",
-    title: "Hotel Dashboard Pro",
+    title: "Dashboard Pro",
     developer: "AI Shield",
-    description: "Vollständiges Hotel-Management-Dashboard mit Reservierungen, Zimmerverwaltung, Restaurant, Events und Revenue-Management.",
-    longDescription: "Das Hotel Dashboard Pro ist Ihre zentrale Kommandozentrale für das gesamte Hotel-Management. Verwalten Sie Reservierungen von allen Plattformen (Booking.com, Airbnb, Expedia) an einem Ort, überwachen Sie Zimmerbelegung in Echtzeit, steuern Sie Restaurant und Bar, planen Sie Events und Feiern, und optimieren Sie Ihre Revenue-Strategie mit intelligenten Pricing-Empfehlungen. Mit integrierter KI für Gästekommunikation, automatischen Upselling-Vorschlägen und umfassenden Analytics.",
-    price: 149,
+    description: "Das ultimative Cockpit für Ihr Unternehmen. Eine Plattform für alle Branchen.",
+    longDescription: "Dashboard Pro vereint alle spezialisierten Branchen-Lösungen in einer einzigen, leistungsstarken Oberfläche. Egal ob Hotel, Gastronomie, Praxis oder Immobilien – Dashboard Pro passt sich intelligent an Ihre Bedürfnisse an. Enthält alle Features der bisherigen Einzel-Dashboards sowie einen neuen, flexiblen Konfigurator, mit dem Sie Ihre Ansicht personalisieren können. Wechseln Sie nahtlos zwischen verschiedenen Branchen-Templates oder bauen Sie Ihr eigenes Traum-Dashboard.",
+    price: 199,
     priceType: "monthly",
-    rating: 4.9,
-    reviewsCount: 342,
-    icon: BuildingOfficeIcon,
-    color: "bg-gradient-to-br from-blue-600 to-blue-500",
-    screenshots: SCREENSHOTS['dashboard-hotel'] || [
-      "bg-gradient-to-br from-blue-100 to-blue-200",
-      "bg-gradient-to-br from-blue-200 to-blue-300",
-      "bg-gradient-to-br from-blue-300 to-blue-400"
-    ],
-    tags: ["Hotel", "Management", "All-in-One"],
-    category: "Dashboards",
-    bundle: true,
-    bundleItems: ["Reservierungen", "Zimmerverwaltung", "Restaurant", "Events", "Revenue", "Marketing", "Analytics"]
-  },
-  {
-    id: "dashboard-practice",
-    type: "dashboard",
-    title: "Praxis Dashboard Pro",
-    developer: "AI Shield",
-    description: "Professionelles Praxis-Management-System mit Patientenverwaltung, Terminplanung, Dokumentenmanagement und Compliance.",
-    longDescription: "Das Praxis Dashboard Pro wurde speziell für medizinische Praxen entwickelt und bietet alles, was Sie für einen reibungslosen Praxisbetrieb benötigen. Verwalten Sie Patienten, planen Sie Termine intelligent, verwalten Sie Dokumente DSGVO-konform, führen Sie Statistiken und Analysen durch, und stellen Sie sicher, dass alle Compliance-Anforderungen erfüllt sind. Mit integrierter AI-Rezeption für 24/7 Telefon-Support, automatischen Erinnerungen und intelligentem No-Show-Management.",
-    price: 149,
-    priceType: "monthly",
-    rating: 4.8,
-    reviewsCount: 287,
-    icon: HeartIcon,
-    color: "bg-gradient-to-br from-emerald-600 to-emerald-500",
-    screenshots: SCREENSHOTS['dashboard-practice'] || [
-      "bg-gradient-to-br from-emerald-100 to-emerald-200",
-      "bg-gradient-to-br from-emerald-200 to-emerald-300",
-      "bg-gradient-to-br from-emerald-300 to-emerald-400"
-    ],
-    tags: ["Praxis", "Healthcare", "DSGVO"],
-    category: "Dashboards",
-    bundle: true,
-    bundleItems: ["Patienten", "Termine", "Dokumente", "Statistiken", "Compliance", "Telefon-Rezeption"]
-  },
-  {
-    id: "dashboard-realestate",
-    type: "dashboard",
-    title: "Immobilien Dashboard Pro",
-    developer: "AI Shield",
-    description: "Umfassendes Immobilien-Management mit Objektverwaltung, Lead-Management, Exposé-Generierung und Kunden-Matching.",
-    longDescription: "Das Immobilien Dashboard Pro revolutioniert Ihr Immobilien-Geschäft. Verwalten Sie alle Ihre Objekte zentral, verfolgen Sie Leads von der ersten Anfrage bis zum Abschluss, generieren Sie professionelle Exposés automatisch aus Fotos mit KI, finden Sie passende Kunden für Ihre Immobilien mit intelligentem Matching, planen Sie Besichtigungen effizient, und analysieren Sie Ihre Performance mit detaillierten Analytics. Mit integrierter KI für automatische Exposé-Erstellung, Kunden-Matching und Marketing-Automation.",
-    price: 149,
-    priceType: "monthly",
-    rating: 4.7,
-    reviewsCount: 198,
-    icon: HomeIcon,
-    color: "bg-gradient-to-br from-amber-600 to-amber-500",
-    screenshots: SCREENSHOTS['dashboard-realestate'] || [
-      "bg-gradient-to-br from-amber-100 to-amber-200",
-      "bg-gradient-to-br from-amber-200 to-amber-300",
-      "bg-gradient-to-br from-amber-300 to-amber-400"
-    ],
-    tags: ["Immobilien", "Real Estate", "AI"],
-    category: "Dashboards",
-    bundle: true,
-    bundleItems: ["Objekte", "Leads", "Exposés", "Besichtigungen", "Analytics", "Marketing"]
-  },
-  {
-    id: "dashboard-gastronomie",
-    type: "dashboard",
-    title: "Gastronomie Dashboard Pro",
-    developer: "AI Shield",
-    description: "Vollständiges Restaurant & Bar Management mit Reservierungen, Speisekarte, Bestellungen, Inventar, Personal und Analytics.",
-    longDescription: "Das Gastronomie Dashboard Pro ist Ihre zentrale Kommandozentrale für Restaurant und Bar. Verwalten Sie Tischreservierungen in Echtzeit, aktualisieren Sie Ihre Speisekarte mit einem Klick, verfolgen Sie Bestellungen vom Eingang bis zur Auslieferung, überwachen Sie Ihr Inventar mit automatischen Low-Stock-Warnungen, planen Sie Schichten für Ihr Personal, verwalten Sie Ihre Bar mit Getränkebeständen, und analysieren Sie Ihre Performance mit detaillierten Reports. Mit integrierter KI für Bestellvorhersagen, automatischen Inventar-Benachrichtigungen, Kunden-CRM und Marketing-Automation.",
-    price: 149,
-    priceType: "monthly",
-    rating: 4.8,
-    reviewsCount: 267,
-    icon: CakeIcon,
-    color: "bg-gradient-to-br from-orange-600 to-red-500",
+    rating: 5.0,
+    reviewsCount: 12,
+    icon: ChartBarIcon,
+    color: "bg-gradient-to-br from-blue-600 to-indigo-600",
     screenshots: [
-      "bg-gradient-to-br from-orange-100 to-red-200",
-      "bg-gradient-to-br from-orange-200 to-red-300",
-      "bg-gradient-to-br from-orange-300 to-red-400"
+      "bg-gradient-to-br from-blue-100 to-indigo-200",
+      "bg-gradient-to-br from-indigo-200 to-purple-300",
+      "bg-gradient-to-br from-purple-300 to-pink-400"
     ],
-    tags: ["Gastronomie", "Restaurant", "Bar", "All-in-One"],
+    tags: ["All-in-One", "Configurable", "Pro"],
     category: "Dashboards",
     bundle: true,
-    bundleItems: ["Reservierungen", "Speisekarte", "Bestellungen", "Inventar", "Personal", "Bar", "Analytics", "Marketing"]
+    bundleItems: ["Hotel & Hospitality", "Gastronomie & Restaurant", "Praxis & Medizin", "Immobilien & Real Estate", "Analytics Suite", "Custom Widgets"]
   },
   // Add-ons
   {
@@ -323,7 +251,7 @@ const ProductCard = ({ product, onClick, isFavorite, onToggleFavorite }: { produ
           <HeartIcon className="w-4 h-4" />
         </button>
         {product.bundle && (
-          <AppleBadge variant="blue" size="sm">{t('marketplace.bundle')}</AppleBadge>
+          <AppleBadge variant="blue" size="sm">{t('marketplace.bundle') || 'Bundle'}</AppleBadge>
         )}
       </div>
       
@@ -365,7 +293,7 @@ const ProductCard = ({ product, onClick, isFavorite, onToggleFavorite }: { produ
               : "bg-[var(--ak-color-accent)] text-white hover:bg-[var(--ak-color-accent-strong)] shadow-[var(--ak-shadow-soft)] hover:shadow-[var(--ak-shadow-md)]"
           )}
         >
-          {product.installed ? t('marketplace.installed') : product.price === 0 ? t('marketplace.free') : `${product.price}€`}
+          {product.installed ? (t('marketplace.installed') || 'Installiert') : product.price === 0 ? (t('marketplace.free') || 'Gratis') : `${product.price}€`}
         </button>
       </div>
     </motion.div>
@@ -380,6 +308,26 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
 
   const handleBuy = async () => {
     if (isProcessing || isPurchased) return;
+    
+    // For Dashboard Pro, we redirect to the dashboard setup
+    if (product.id === 'dashboard-pro') {
+        setIsProcessing(true);
+        // Simulate purchase/entitlement
+        setTimeout(() => {
+            // Set localStorage flag or call API
+            try {
+                localStorage.setItem('dashboard_pro_entitlement', 'true');
+            } catch {}
+            
+            // Redirect using router, not window.location
+            // We need to trigger the Open Module event
+            window.dispatchEvent(new CustomEvent('aklow-open-module', { detail: { module: 'dashboard' } }));
+            onClose();
+            // Optional: router.push('/') if needed, but event should work if handled by layout
+        }, 1000);
+        return;
+    }
+
     setIsProcessing(true);
     try {
       const res = await fetch("/api/checkout", {
@@ -451,7 +399,7 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
               <div className="flex items-center gap-2 mb-2">
                 <h2 className="text-3xl font-bold text-[var(--ak-color-text-primary)] tracking-tight">{product.title}</h2>
                 {product.bundle && (
-                  <AppleBadge variant="blue" size="md">{t('marketplace.bundle')}</AppleBadge>
+                  <AppleBadge variant="blue" size="md">{t('marketplace.bundle') || 'Bundle'}</AppleBadge>
                 )}
               </div>
               <p className="text-lg text-[var(--ak-color-text-secondary)]">{product.developer}</p>
@@ -468,11 +416,11 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
                 ) : isPurchased ? (
                   <>
                     <CheckBadgeIcon className="w-5 h-5" />
-                    {t('common.yes')}
+                    {t('common.yes') || 'Ja'}
                   </>
                 ) : (
                   <>
-                    {product.price === 0 ? t('common.loading') : `${t('common.yes')} ${product.price}€`}
+                    {product.price === 0 ? (t('common.loading') || 'Laden') : product.id === 'dashboard-pro' ? 'Jetzt Testen' : `${t('common.yes') || 'Kaufen'} ${product.price}€`}
                     {product.priceType === 'monthly' && '/Monat'}
                   </>
                 )}
@@ -483,28 +431,28 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
 
           <div className="flex items-center gap-6 mb-8 py-4 border-y border-[var(--ak-color-border-subtle)]">
             <div className="flex flex-col items-center px-4 border-r border-[var(--ak-color-border-subtle)] last:border-0">
-              <div className="text-[var(--ak-color-text-muted)] text-xs font-semibold uppercase mb-1">{t('marketplace.rating')}</div>
+              <div className="text-[var(--ak-color-text-muted)] text-xs font-semibold uppercase mb-1">{t('marketplace.rating') || 'Bewertung'}</div>
               <div className="flex items-center gap-1 font-bold text-[var(--ak-color-text-primary)] text-xl">
                 {product.rating} <StarIconSolid className="w-4 h-4 text-yellow-400" />
               </div>
-              <div className="text-[var(--ak-color-text-muted)] text-xs mt-1">{product.reviewsCount} {t('marketplace.reviews')}</div>
+              <div className="text-[var(--ak-color-text-muted)] text-xs mt-1">{product.reviewsCount} {t('marketplace.reviews') || 'Reviews'}</div>
             </div>
             <div className="flex flex-col items-center px-4 border-r border-[var(--ak-color-border-subtle)] last:border-0">
-              <div className="text-[var(--ak-color-text-muted)] text-xs font-semibold uppercase mb-1">{t('marketplace.category')}</div>
+              <div className="text-[var(--ak-color-text-muted)] text-xs font-semibold uppercase mb-1">{t('marketplace.category') || 'Kategorie'}</div>
               <div className="font-bold text-[var(--ak-color-text-primary)] text-xl capitalize">{product.category || product.type}</div>
               <div className="text-[var(--ak-color-text-muted)] text-xs mt-1">{product.type}</div>
             </div>
             <div className="flex flex-col items-center px-4">
-              <div className="text-[var(--ak-color-text-muted)] text-xs font-semibold uppercase mb-1">{t('marketplace.developer')}</div>
+              <div className="text-[var(--ak-color-text-muted)] text-xs font-semibold uppercase mb-1">{t('marketplace.developer') || 'Entwickler'}</div>
               <div className="font-bold text-[var(--ak-color-text-primary)] text-xl truncate max-w-[100px]">{product.developer}</div>
-              <div className="text-[var(--ak-color-text-muted)] text-xs mt-1">{t('marketplace.verified')}</div>
+              <div className="text-[var(--ak-color-text-muted)] text-xs mt-1">{t('marketplace.verified') || 'Verifiziert'}</div>
             </div>
           </div>
 
           {/* Bundle Items */}
           {product.bundle && product.bundleItems && (
             <div className="mb-6 p-4 apple-glass-enhanced rounded-xl border border-[var(--ak-color-border-subtle)]">
-              <h4 className="text-sm font-semibold text-[var(--ak-color-text-primary)] mb-3">{t('marketplace.inBundle')}</h4>
+              <h4 className="text-sm font-semibold text-[var(--ak-color-text-primary)] mb-3">{t('marketplace.inBundle') || 'Im Bundle enthalten'}</h4>
               <div className="grid grid-cols-2 gap-2">
                 {product.bundleItems.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-2 text-sm text-[var(--ak-color-text-primary)]">
@@ -521,13 +469,7 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
             <div className="flex gap-4 overflow-x-auto pb-6 -mx-8 px-8 mb-6 snap-x scrollbar-hide">
               {product.screenshots.map((screenshot, i) => {
                 const isUrl = typeof screenshot === 'string' && screenshot.startsWith('/');
-                const fallbackGradient = product.id.includes('hotel') ? 'bg-gradient-to-br from-blue-100 to-blue-200' :
-                  product.id.includes('practice') ? 'bg-gradient-to-br from-emerald-100 to-emerald-200' :
-                  product.id.includes('realestate') ? 'bg-gradient-to-br from-amber-100 to-amber-200' :
-                  product.id.includes('review') ? 'bg-gradient-to-br from-purple-100 to-purple-200' :
-                  product.id.includes('marketing') ? 'bg-gradient-to-br from-pink-100 to-pink-200' :
-                  product.id.includes('shield') ? 'bg-gradient-to-br from-indigo-100 to-indigo-200' :
-                  'bg-gradient-to-br from-gray-100 to-gray-200';
+                const fallbackGradient = product.color;
                 
                 return (
                   <div 
@@ -572,23 +514,23 @@ const ProductModal = ({ product, onClose }: { product: Product; onClose: () => v
           </div>
 
           <div className="mt-10 pt-6 border-t border-[var(--ak-color-border-subtle)]">
-            <h3 className="text-lg font-bold text-[var(--ak-color-text-primary)] mb-4">{t('marketplace.information')}</h3>
+            <h3 className="text-lg font-bold text-[var(--ak-color-text-primary)] mb-4">{t('marketplace.information') || 'Informationen'}</h3>
             <div className="grid grid-cols-2 gap-y-4 text-sm">
-              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.provider')}</div>
+              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.provider') || 'Anbieter'}</div>
               <div className="text-[var(--ak-color-text-primary)] font-medium text-right">{product.developer}</div>
               
-              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.price')}</div>
+              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.price') || 'Preis'}</div>
               <div className="text-[var(--ak-color-text-primary)] font-medium text-right">
-                {product.price === 0 ? t('marketplace.free') : `${product.price}€ ${product.priceType === 'monthly' ? `/${t('marketplace.monthly')}` : ''}`}
+                {product.price === 0 ? (t('marketplace.free') || 'Gratis') : `${product.price}€ ${product.priceType === 'monthly' ? `/${t('marketplace.monthly') || 'Monat'}` : ''}`}
               </div>
               
-              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.category')}</div>
+              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.category') || 'Kategorie'}</div>
               <div className="text-[var(--ak-color-text-primary)] font-medium text-right capitalize">{product.category || product.type}</div>
               
-              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.compatibility')}</div>
+              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.compatibility') || 'Kompatibilität'}</div>
               <div className="text-[var(--ak-color-text-primary)] font-medium text-right">AI Shield 2.0+</div>
               
-              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.languages')}</div>
+              <div className="text-[var(--ak-color-text-secondary)]">{t('marketplace.languages') || 'Sprachen'}</div>
               <div className="text-[var(--ak-color-text-primary)] font-medium text-right">DE, EN, ES, FR, IT</div>
             </div>
           </div>
@@ -696,12 +638,12 @@ export default function MarketplaceDashboard() {
       {/* Header */}
       <div className="sticky top-0 z-20 apple-glass-enhanced border-b border-[var(--ak-color-border-subtle)] px-6 py-4 shadow-[var(--ak-shadow-soft)]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h1 className="text-3xl font-bold tracking-tight text-[var(--ak-color-text-primary)]">{t('marketplace.title')}</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-[var(--ak-color-text-primary)]">{t('marketplace.title') || 'Marketplace'}</h1>
           <div className="relative w-full md:w-96">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--ak-color-text-muted)]" />
             <input
               type="text"
-              placeholder={t('marketplace.searchPlaceholder')}
+              placeholder={t('marketplace.searchPlaceholder') || 'Suchen...'}
               ref={searchRef}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
@@ -717,9 +659,9 @@ export default function MarketplaceDashboard() {
         {filter === "all" && !search && (
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">{t('marketplace.premiumDashboards')}</h2>
+              <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">{t('marketplace.premiumDashboards') || 'Premium Dashboards'}</h2>
               <button className="text-sm text-[var(--ak-color-accent)] font-medium hover:underline">
-                {t('marketplace.showAll')}
+                {t('marketplace.showAll') || 'Alle anzeigen'}
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -740,9 +682,9 @@ export default function MarketplaceDashboard() {
         {filter === "all" && !search && (
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">{t('marketplace.popularAddons')}</h2>
+              <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">{t('marketplace.popularAddons') || 'Beliebte Add-ons'}</h2>
               <button className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline">
-                {t('marketplace.showAll')}
+                {t('marketplace.showAll') || 'Alle anzeigen'}
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -763,8 +705,8 @@ export default function MarketplaceDashboard() {
         {recentProducts.length > 0 && (
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">{t('marketplace.recent')}</h2>
-              <span className="text-sm text-[var(--ak-color-text-secondary)]">{recentProducts.length} {t('marketplace.items')}</span>
+              <h2 className="text-2xl font-bold text-[var(--ak-color-text-primary)]">{t('marketplace.recent') || 'Zuletzt angesehen'}</h2>
+              <span className="text-sm text-[var(--ak-color-text-secondary)]">{recentProducts.length} {t('marketplace.items') || 'Elemente'}</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {recentProducts.map((product) => (
@@ -784,13 +726,13 @@ export default function MarketplaceDashboard() {
         <section>
           <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar items-center">
             {[
-              { id: "all", label: t('marketplace.filters.all') },
-              { id: "dashboard", label: t('marketplace.filters.dashboards') },
-              { id: "addon", label: t('marketplace.filters.addons') },
-              { id: "app", label: t('marketplace.filters.apps') },
-              { id: "agent", label: t('marketplace.filters.agents') },
-              { id: "workflow", label: t('marketplace.filters.workflows') },
-              { id: "plugin", label: t('marketplace.filters.plugins') },
+              { id: "all", label: t('marketplace.filters.all') || 'Alle' },
+              { id: "dashboard", label: t('marketplace.filters.dashboards') || 'Dashboards' },
+              { id: "addon", label: t('marketplace.filters.addons') || 'Add-ons' },
+              { id: "app", label: t('marketplace.filters.apps') || 'Apps' },
+              { id: "agent", label: t('marketplace.filters.agents') || 'Agents' },
+              { id: "workflow", label: t('marketplace.filters.workflows') || 'Workflows' },
+              { id: "plugin", label: t('marketplace.filters.plugins') || 'Plugins' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -806,16 +748,16 @@ export default function MarketplaceDashboard() {
               </button>
             ))}
             <div className="ml-auto flex items-center gap-2">
-              <span className="text-sm text-[var(--ak-color-text-secondary)] hidden md:inline">{t('marketplace.sort')}</span>
+              <span className="text-sm text-[var(--ak-color-text-secondary)] hidden md:inline">{t('marketplace.sort') || 'Sortieren'}</span>
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value as SortOption)}
                 className="h-10 rounded-xl apple-glass-enhanced border border-[var(--ak-color-border-subtle)] text-sm px-3 focus:ring-2 focus:ring-[var(--ak-color-accent)]/30 focus:border-[var(--ak-color-accent)] transition-all text-[var(--ak-color-text-primary)]"
               >
-                <option value="relevance">{t('marketplace.sortRelevance')}</option>
-                <option value="price-asc">{t('marketplace.sortPriceAsc')}</option>
-                <option value="price-desc">{t('marketplace.sortPriceDesc')}</option>
-                <option value="rating-desc">{t('marketplace.sortRating')}</option>
+                <option value="relevance">{t('marketplace.sortRelevance') || 'Relevanz'}</option>
+                <option value="price-asc">{t('marketplace.sortPriceAsc') || 'Preis aufsteigend'}</option>
+                <option value="price-desc">{t('marketplace.sortPriceDesc') || 'Preis absteigend'}</option>
+                <option value="rating-desc">{t('marketplace.sortRating') || 'Bewertung'}</option>
               </select>
             </div>
           </div>
@@ -842,8 +784,8 @@ export default function MarketplaceDashboard() {
               <div className="w-16 h-16 bg-[var(--ak-color-bg-surface-muted)] rounded-full flex items-center justify-center mx-auto mb-4 text-[var(--ak-color-text-muted)]">
                 <MagnifyingGlassIcon className="w-8 h-8" />
               </div>
-              <h3 className="text-lg font-semibold text-[var(--ak-color-text-primary)]">{t('marketplace.noResults')}</h3>
-              <p className="text-[var(--ak-color-text-secondary)]">{t('marketplace.noResultsDescription')}</p>
+              <h3 className="text-lg font-semibold text-[var(--ak-color-text-primary)]">{t('marketplace.noResults') || 'Keine Ergebnisse'}</h3>
+              <p className="text-[var(--ak-color-text-secondary)]">{t('marketplace.noResultsDescription') || 'Versuchen Sie es mit anderen Suchbegriffen.'}</p>
             </div>
           )}
         </section>

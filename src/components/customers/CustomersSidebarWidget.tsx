@@ -52,7 +52,7 @@ export function CustomersSidebarWidget({
                 return (
                   <li key={view.id}>
                     <AkListRow
-                      accent="neutral"
+                      accent="customers"
                       selected={isActive}
                       title={view.label}
                       leading={

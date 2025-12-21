@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+const BACKEND_URL = process.env.AGENT_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { documentId: string } }
+  { params }: { params: Promise<{ documentId: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const searchParams = request.nextUrl.searchParams;
     const tenantId = searchParams.get("tenant_id");
 
@@ -18,7 +19,7 @@ export async function GET(
     }
 
     const response = await fetch(
-      `${BACKEND_URL}/documents/${params.documentId}/download?tenant_id=${tenantId}`
+      `${BACKEND_URL}/documents/${resolvedParams.documentId}/download?tenant_id=${tenantId}`
     );
 
     if (!response.ok) {

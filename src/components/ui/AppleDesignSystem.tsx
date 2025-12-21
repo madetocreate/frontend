@@ -58,7 +58,7 @@ export function AppleCard({
 // Apple Button Component
 interface AppleButtonProps {
   children: ReactNode
-  variant?: 'primary' | 'secondary' | 'tertiary' | 'danger'
+  variant?: 'primary' | 'secondary' | 'tertiary' | 'danger' | 'graphite'
   size?: 'sm' | 'md' | 'lg'
   className?: string
   onClick?: () => void
@@ -81,7 +81,8 @@ export function AppleButton({
     primary: 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40',
     secondary: 'bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 text-gray-900 dark:text-white hover:bg-white/80 dark:hover:bg-gray-800/80',
     tertiary: 'bg-gray-100/80 dark:bg-gray-800/80 text-gray-900 dark:text-white hover:bg-gray-200/80 dark:hover:bg-gray-700/80',
-    danger: 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40'
+    danger: 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40',
+    graphite: 'bg-[var(--ak-color-graphite-base)] text-[var(--ak-color-graphite-text)] shadow-lg hover:bg-[var(--ak-color-graphite-hover)]'
   }
 
   const sizeClasses = {
@@ -152,7 +153,7 @@ export function AppleSection({
 // Apple Badge Component
 interface AppleBadgeProps {
   children: ReactNode
-  variant?: 'blue' | 'green' | 'orange' | 'red' | 'purple' | 'gray'
+  variant?: 'blue' | 'green' | 'orange' | 'red' | 'purple' | 'gray' | 'graphite'
   size?: 'sm' | 'md'
   className?: string
 }
@@ -169,7 +170,8 @@ export function AppleBadge({
     orange: 'bg-orange-100/80 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
     red: 'bg-red-100/80 dark:bg-red-900/30 text-red-700 dark:text-red-300',
     purple: 'bg-purple-100/80 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
-    gray: 'bg-gray-100/80 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300'
+    gray: 'bg-gray-100/80 dark:bg-gray-800/60 text-gray-700 dark:text-gray-300',
+    graphite: 'bg-[var(--ak-color-graphite-soft)] text-[var(--ak-color-graphite-base)] border border-[var(--ak-color-graphite-border)]'
   }
 
   const sizeClasses = {

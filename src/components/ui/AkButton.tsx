@@ -14,6 +14,7 @@ export type AkAccent =
   | 'news'
   | 'telephony'
   | 'automation'
+  | 'graphite'
 
 export type AkButtonVariant = 'primary' | 'secondary' | 'ghost'
 export type AkButtonSize = 'sm' | 'md'
@@ -42,6 +43,7 @@ const ACCENT_VAR: Record<AkAccent, string> = {
   news: 'var(--ak-accent-news, var(--ak-color-accent))',
   telephony: 'var(--ak-accent-telephony, var(--ak-color-accent))',
   automation: 'var(--ak-accent-automation, var(--ak-color-accent))',
+  graphite: 'var(--ak-color-graphite-base)',
 }
 
 export function AkButton({
@@ -75,11 +77,17 @@ export function AkButton({
 
   const variants: Record<AkButtonVariant, string> = {
     primary:
-      'bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] border-[var(--ak-color-border-subtle)] shadow-sm hover:bg-[var(--ak-color-bg-hover)] active:bg-[var(--ak-color-bg-active)]',
+      accent === 'graphite'
+        ? 'bg-[var(--ak-color-graphite-base)] text-[var(--ak-color-graphite-text)] border-[var(--ak-color-graphite-border)] shadow-sm hover:bg-[var(--ak-color-graphite-hover)]'
+        : 'bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] border-[var(--ak-color-border-subtle)] shadow-sm hover:bg-[var(--ak-color-bg-hover)] active:bg-[var(--ak-color-bg-active)]',
     secondary:
-      'bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] border-[var(--ak-color-border-subtle)] hover:bg-[var(--ak-color-bg-hover)]',
+      accent === 'graphite'
+        ? 'bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] border-[var(--ak-color-graphite-border)] hover:bg-[var(--ak-color-graphite-soft)]'
+        : 'bg-[var(--ak-color-bg-surface)] text-[var(--ak-color-text-primary)] border-[var(--ak-color-border-subtle)] hover:bg-[var(--ak-color-bg-hover)]',
     ghost:
-      'bg-transparent text-[var(--ak-color-text-secondary)] border-transparent hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]',
+      accent === 'graphite'
+        ? 'bg-transparent text-[var(--ak-color-text-secondary)] border-transparent hover:bg-[var(--ak-color-graphite-soft)] hover:text-[var(--ak-color-graphite-base)]'
+        : 'bg-transparent text-[var(--ak-color-text-secondary)] border-transparent hover:bg-[var(--ak-color-bg-hover)] hover:text-[var(--ak-color-text-primary)]',
   }
 
   const pressedCls =

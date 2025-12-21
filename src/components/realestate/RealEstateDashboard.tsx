@@ -20,9 +20,11 @@ export type RealEstateView =
 
 type RealEstateDashboardProps = {
   view: RealEstateView
+  enabledViews?: string[]
 }
 
-export function RealEstateDashboard({ view }: RealEstateDashboardProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function RealEstateDashboard({ view, enabledViews }: RealEstateDashboardProps) {
   return (
     <div className="h-full w-full overflow-y-auto bg-[var(--ak-color-bg-app)]">
       <header className="sticky top-0 z-10 flex h-16 items-center border-b border-[var(--ak-color-border-hairline)] bg-[var(--ak-glass-bg)] px-6 backdrop-blur-[var(--ak-glass-blur)]">

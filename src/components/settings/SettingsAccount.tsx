@@ -26,7 +26,8 @@ interface Session {
   is_current?: boolean
 }
 
-export function SettingsAccount() {
+export function SettingsAccount({ mode }: { mode?: 'simple' | 'expert' }) {
+  void mode
   const auth = useAuth()
   const { user, fetchWithAuth, logout } = auth
   const [loading, setLoading] = useState(false)

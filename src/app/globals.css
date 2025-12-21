@@ -9,6 +9,35 @@
 
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  
+  --color-graphite: var(--ak-color-graphite-base);
+  --color-graphite-hover: var(--ak-color-graphite-hover);
+  --color-graphite-soft: var(--ak-color-graphite-soft);
+  --color-graphite-text: var(--ak-color-graphite-text);
+  --color-graphite-border: var(--ak-color-graphite-border);
+  --color-graphite-selected: var(--ak-color-graphite-selected);
+  --color-graphite-surface: var(--ak-color-graphite-surface);
+
+  /* shadcn/ui mappings */
+  --color-background: var(--ak-color-bg-app);
+  --color-foreground: var(--ak-color-text-primary);
+  --color-card: var(--ak-color-bg-surface);
+  --color-card-foreground: var(--ak-color-text-primary);
+  --color-popover: var(--ak-color-bg-surface);
+  --color-popover-foreground: var(--ak-color-text-primary);
+  --color-primary: var(--ak-color-accent);
+  --color-primary-foreground: var(--ak-color-text-inverted);
+  --color-secondary: var(--ak-color-bg-surface-muted);
+  --color-secondary-foreground: var(--ak-color-text-secondary);
+  --color-muted: var(--ak-color-bg-surface-muted);
+  --color-muted-foreground: var(--ak-color-text-muted);
+  --color-accent: var(--ak-color-accent-soft);
+  --color-accent-foreground: var(--ak-color-accent);
+  --color-destructive: var(--ak-color-bg-danger-soft);
+  --color-destructive-foreground: #ff3b30;
+  --color-border: var(--ak-color-border-subtle);
+  --color-input: var(--ak-color-border-subtle);
+  --color-ring: var(--ak-color-accent);
 }
 
 /* Standard: Light Mode (White Mode) - ChatGPT/Apple Style */
@@ -20,7 +49,7 @@
   --ak-color-bg-app: var(--ak-color-layer-0);
   --ak-color-bg-surface: var(--ak-color-layer-1);
   --ak-color-bg-surface-muted: #f5f5f5;
-  --ak-color-bg-sidebar: #f7f7f7;
+  --ak-color-bg-sidebar: #f8f9fa; /* Very light graphite-ish tint */
 
   --ak-color-text-primary: #1d1d1f;
   --ak-color-text-secondary: #6e6e73;
@@ -76,7 +105,7 @@
   --ak-color-bg-app: var(--ak-color-layer-0);
   --ak-color-bg-surface: var(--ak-color-layer-1);
   --ak-color-bg-surface-muted: rgba(58, 58, 60, 0.6);
-  --ak-color-bg-sidebar: rgba(28, 28, 30, 0.95);
+  --ak-color-bg-sidebar: #111827; /* Graphite (Slate-950/900) for sidebar in dark mode */
 
   --ak-color-text-primary: #f2f2f7;
   --ak-color-text-secondary: rgba(242, 242, 247, 0.7);

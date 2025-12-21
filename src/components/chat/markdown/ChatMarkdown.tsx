@@ -1,5 +1,4 @@
 'use client'
-
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import clsx from 'clsx'
@@ -38,39 +37,34 @@ export function ChatMarkdown({ content }: ChatMarkdownProps) {
             <li className="ak-body mb-1 pl-1 leading-[1.75] text-[16px] text-gray-800">{children}</li>
           ),
           table: ({ children }) => (
-            <div style={{ overflowX: 'auto', marginBottom: '1rem', marginTop: '0.5rem' }}>
-              <table style={{ 
-                borderCollapse: 'collapse', 
-                width: '100%',
-                border: '1px solid var(--ak-color-border-subtle)',
-                borderRadius: '8px',
-              }}>
+            <div className="my-6 overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+              <table className="min-w-full divide-y divide-gray-200">
                 {children}
               </table>
             </div>
           ),
           thead: ({ children }) => (
-            <thead style={{ backgroundColor: 'var(--ak-color-bg-surface-muted)' }}>
+            <thead className="bg-gray-50">
               {children}
             </thead>
           ),
           tbody: ({ children }) => (
-            <tbody>
+            <tbody className="divide-y divide-gray-100 bg-white">
               {children}
             </tbody>
           ),
           tr: ({ children }) => (
-            <tr style={{ borderBottom: '1px solid var(--ak-color-border-subtle)' }}>
+            <tr className="hover:bg-gray-50 transition-colors">
               {children}
             </tr>
           ),
           th: ({ children }) => (
-            <th className="ak-body p-3 text-left font-semibold">
+            <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="ak-body p-3 align-top">
+            <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
               {children}
             </td>
           ),

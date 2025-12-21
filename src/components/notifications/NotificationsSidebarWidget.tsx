@@ -29,7 +29,7 @@ export function NotificationsSidebarWidget({ activeView = 'all', onViewSelect, o
     <WidgetCard
       className="h-full border-none shadow-none bg-transparent"
       padding="sm"
-      action={
+      actions={
           <button onClick={onInfoClick} className="text-gray-400 hover:text-gray-600 transition-colors">
               <InformationCircleIcon className="h-5 w-5" />
           </button>

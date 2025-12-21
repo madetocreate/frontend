@@ -6,26 +6,64 @@
  * Basierend auf OpenAI Real-Time API Best Practices
  */
 
+type Transport = 'websocket' | 'webrtc'
+
 type RealtimeVoiceClient = {
   sessionId: string | null
+  transport: Transport
   client: WebSocket | null
+  peer: RTCPeerConnection | null
+  dataChannel: RTCDataChannel | null
+  remoteAudio: HTMLAudioElement | null
+  micStream: MediaStream | null
+  context: { threadId?: string; tenantId?: string } | null
   isActive: boolean
   onTextDelta?: (text: string) => void
   onAudioDelta?: (audio: string) => void
   onResponseDone?: () => void
+  onUserTranscript?: (text: string) => void
 }
 
 const realtimeClient: RealtimeVoiceClient = {
   sessionId: null,
   client: null,
+  peer: null,
+  dataChannel: null,
+  remoteAudio: null,
+  micStream: null,
+  transport: 'websocket',
+  context: null,
   isActive: false,
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'
+// Python backend-agents hosts /realtime/session (ephemeral session minting)
+const PY_BACKEND_URL =
+  process.env.NEXT_PUBLIC_PY_BACKEND_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  'http://127.0.0.1:8000'
+
+const DEFAULT_TRANSPORT: Transport =
+  (process.env.NEXT_PUBLIC_REALTIME_TRANSPORT as Transport) || 'webrtc'
+
+function parseIceServers(): RTCIceServer[] {
+  const turnUrls = (process.env.NEXT_PUBLIC_TURN_URLS || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const stunDefaults = [{ urls: 'stun:stun.l.google.com:19302' }];
+  if (turnUrls.length === 0) return stunDefaults;
+  const username = process.env.NEXT_PUBLIC_TURN_USERNAME || '';
+  const credential = process.env.NEXT_PUBLIC_TURN_PASSWORD || '';
+  return [
+    ...stunDefaults,
+    ...turnUrls.map((u) => ({
+      urls: u,
+      username: username || undefined,
+      credential: credential || undefined,
+    })),
+  ];
+}
 
 let audioContext: AudioContext | null = null
 let mediaStream: MediaStream | null = null
-let audioOutputNode: GainNode | null = null
+let keepAliveSink: GainNode | null = null
 
 /**
  * Startet eine Real-Time Voice Session mit OpenAI
@@ -35,7 +73,10 @@ export async function startRealtimeVoiceSession(
     onTextDelta?: (text: string) => void
     onAudioDelta?: (audio: string) => void
     onResponseDone?: () => void
-  }
+    onUserTranscript?: (text: string) => void
+  },
+  transport: Transport = DEFAULT_TRANSPORT,
+  context?: { threadId?: string; tenantId?: string }
 ): Promise<void> {
   if (realtimeClient.isActive) {
     console.warn('Real-Time Voice Session ist bereits aktiv')
@@ -44,7 +85,7 @@ export async function startRealtimeVoiceSession(
 
   try {
     // Erstelle eine Ephemeral Session über das Backend
-    const response = await fetch(`${BACKEND_URL}/realtime/session`, {
+    const response = await fetch(`${PY_BACKEND_URL}/realtime/session`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -58,170 +99,35 @@ export async function startRealtimeVoiceSession(
     }
 
     const data = await response.json()
-    const { session_id, client_secret } = data
-
-    // OpenAI Real-Time API WebSocket URL
-    // Für Ephemeral Sessions: client_secret wird als Query-Parameter übergeben
-    // Die URL-Struktur: wss://api.openai.com/v1/realtime?model=MODEL&client_secret=SECRET
-    const wsUrl = `wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17&client_secret=${encodeURIComponent(client_secret)}`
-    
-    console.log('Connecting to Real-Time API:', wsUrl.replace(client_secret, '***'))
-    
-    // Erstelle WebSocket-Verbindung
-    const ws = new WebSocket(wsUrl)
-    
-    ws.onopen = () => {
-      console.log('Real-Time Voice Session verbunden')
-      
-      // Konfiguriere Session
-      ws.send(JSON.stringify({
-        type: 'session.update',
-        session: {
-          modalities: ['text', 'audio'],
-          instructions: 'Du bist ein hilfreicher Assistent. Antworte auf Deutsch und duze den Nutzer. Sei präzise und freundlich.',
-          voice: 'nova', // Hochwertige Stimme
-          input_audio_format: 'pcm16',
-          output_audio_format: 'pcm16',
-          input_audio_transcription: {
-            // OpenAI Real-Time API verwendet automatisch das beste verfügbare Modell
-            // Für Live-Transkription wird whisper-1 verwendet (beste Qualität)
-            // Alternativ könnte auch gpt-4o-mini-transcribe verwendet werden (schneller)
-            model: 'whisper-1', // Beste Qualität für Live-Transkription
-          },
-          turn_detection: {
-            type: 'server_vad',
-            threshold: 0.5,
-            prefix_padding_ms: 300,
-            silence_duration_ms: 500,
-          },
-          temperature: 0.8,
-          max_response_output_tokens: 4096,
-        },
-      }))
-      
-      // Starte Konversation
-      ws.send(JSON.stringify({
-        type: 'conversation.item.create',
-        item: {
-          type: 'message',
-          role: 'system',
-          content: [
-            {
-              type: 'input_text',
-              text: 'Hallo! Ich bin bereit für eine Live-Konversation.',
-            },
-          ],
-        },
-      }))
-      
-      realtimeClient.sessionId = session_id
-      realtimeClient.isActive = true
-      realtimeClient.onTextDelta = callbacks?.onTextDelta
-      realtimeClient.onAudioDelta = callbacks?.onAudioDelta
-      realtimeClient.onResponseDone = callbacks?.onResponseDone
+    const { session_id, client_secret, model } = data
+    if (!client_secret || !session_id) {
+      throw new Error('Invalid realtime session response (missing client_secret/session_id)')
+    }
+    if (!model || typeof model !== 'string') {
+      throw new Error('Invalid realtime session response (missing model)')
     }
 
-    ws.onmessage = (event) => {
+    realtimeClient.sessionId = session_id
+    realtimeClient.transport = transport
+    realtimeClient.context = context || null
+    realtimeClient.onTextDelta = callbacks?.onTextDelta
+    realtimeClient.onAudioDelta = callbacks?.onAudioDelta
+    realtimeClient.onResponseDone = callbacks?.onResponseDone
+    realtimeClient.onUserTranscript = callbacks?.onUserTranscript
+
+    if (transport === 'webrtc') {
       try {
-        const message = JSON.parse(event.data)
-        
-        switch (message.type) {
-          case 'session.created':
-            console.log('Real-Time Session erstellt:', message.session.id)
-            break
-            
-          case 'session.updated':
-            console.log('Session aktualisiert')
-            // Starte Audio-Erfassung nach Session-Update
-            startAudioCapture(ws)
-            break
-            
-          case 'response.audio_transcript.delta':
-            // Transkription des User-Audio (optional, für Debugging)
-            if (message.delta) {
-              console.log('User Audio Transcript:', message.delta)
-            }
-            break
-            
-          case 'response.text.delta':
-            // Text-Antwort vom Assistant (inkrementell)
-            if (message.delta && realtimeClient.onTextDelta) {
-              realtimeClient.onTextDelta(message.delta)
-            }
-            break
-            
-          case 'response.audio.delta':
-            // Audio-Antwort vom Assistant (Base64-kodiertes PCM16)
-            if (message.delta && realtimeClient.onAudioDelta) {
-              realtimeClient.onAudioDelta(message.delta)
-            } else {
-              // Fallback: Direktes Abspielen
-              handleAudioDelta(message.delta)
-            }
-            break
-            
-          case 'response.audio_transcript.done':
-            // Vollständige Transkription verfügbar
-            if (message.transcript) {
-              console.log('Full transcript:', message.transcript)
-            }
-            break
-            
-          case 'response.done':
-            // Antwort abgeschlossen
-            console.log('Assistant Antwort abgeschlossen')
-            if (realtimeClient.onResponseDone) {
-              realtimeClient.onResponseDone()
-            }
-            break
-            
-          case 'error':
-            console.error('Real-Time API Fehler:', message.error)
-            break
-            
-          case 'conversation.item.input_audio_transcription.completed':
-            // User-Input wurde transkribiert
-            if (message.transcript) {
-              console.log('User sagte:', message.transcript)
-            }
-            break
-            
-          default:
-            // Unbekannte Nachricht (für Debugging)
-            if (message.type && !message.type.startsWith('response.')) {
-              console.log('Real-Time message:', message.type)
-            }
-        }
-      } catch (error) {
-        console.error('Fehler beim Verarbeiten der WebSocket-Nachricht:', error)
+        await connectWebRTC({ clientSecret: client_secret, model })
+        realtimeClient.isActive = true
+        return
+      } catch (err) {
+        console.warn('WebRTC failed, falling back to WebSocket', err)
       }
     }
 
-    ws.onerror = (error) => {
-      console.error('Real-Time WebSocket Fehler:', error)
-      realtimeClient.isActive = false
-      if (realtimeClient.onResponseDone) {
-        realtimeClient.onResponseDone()
-      }
-    }
-
-    ws.onclose = (event) => {
-      console.log('Real-Time Voice Session beendet', event.code, event.reason)
-      if (event.code !== 1000) {
-        console.error('WebSocket closed unexpectedly:', {
-          code: event.code,
-          reason: event.reason,
-          wasClean: event.wasClean
-        })
-      }
-      realtimeClient.isActive = false
-      realtimeClient.sessionId = null
-      realtimeClient.client = null
-      stopAudioCapture()
-    }
-
-    realtimeClient.client = ws
-    
+    await connectWebSocket({ clientSecret: client_secret, model })
+    realtimeClient.isActive = true
+    return
   } catch (error) {
     console.error('Fehler beim Starten der Real-Time Voice Session:', error)
     throw error
@@ -232,7 +138,7 @@ export async function startRealtimeVoiceSession(
  * Stoppt die aktive Real-Time Voice Session
  */
 export async function stopRealtimeVoiceSession(): Promise<void> {
-  if (!realtimeClient.isActive || !realtimeClient.client) {
+  if (!realtimeClient.isActive) {
     return
   }
 
@@ -240,14 +146,30 @@ export async function stopRealtimeVoiceSession(): Promise<void> {
     // Stoppe Audio-Erfassung
     stopAudioCapture()
     
-    // Schließe WebSocket-Verbindung
+    // Schließe Verbindungen
     if (realtimeClient.client instanceof WebSocket) {
       realtimeClient.client.close(1000, 'User requested stop')
+    }
+    if (realtimeClient.dataChannel) {
+      realtimeClient.dataChannel.close()
+    }
+    if (realtimeClient.peer) {
+      realtimeClient.peer.close()
+    }
+    if (realtimeClient.remoteAudio) {
+      realtimeClient.remoteAudio.srcObject = null
+    }
+    if (realtimeClient.micStream) {
+      realtimeClient.micStream.getTracks().forEach((t) => t.stop())
+      realtimeClient.micStream = null
     }
     
     realtimeClient.isActive = false
     realtimeClient.sessionId = null
     realtimeClient.client = null
+    realtimeClient.peer = null
+    realtimeClient.dataChannel = null
+    realtimeClient.remoteAudio = null
     realtimeClient.onTextDelta = undefined
     realtimeClient.onAudioDelta = undefined
     realtimeClient.onResponseDone = undefined
@@ -276,6 +198,7 @@ async function startAudioCapture(ws: WebSocket): Promise<void> {
     })
 
     mediaStream = stream
+    realtimeClient.micStream = stream
 
     // Erstelle AudioContext mit 24kHz Sample Rate
     audioContext = new AudioContext({ sampleRate: 24000 })
@@ -283,10 +206,9 @@ async function startAudioCapture(ws: WebSocket): Promise<void> {
     // Erstelle MediaStreamSource
     const source = audioContext.createMediaStreamSource(stream)
     
-    // Erstelle ScriptProcessorNode für Audio-Verarbeitung
-    // Hinweis: ScriptProcessorNode ist deprecated, aber funktioniert in allen Browsern
-    // Für Production sollte AudioWorklet verwendet werden
-    const bufferSize = 4096
+    // ScriptProcessorNode is deprecated; keep buffer small for low latency.
+    // TODO: migrate to AudioWorklet for production-grade latency/jitter.
+    const bufferSize = 2048
     const processor = audioContext.createScriptProcessor(bufferSize, 1, 1)
     
     processor.onaudioprocess = (e) => {
@@ -316,7 +238,11 @@ async function startAudioCapture(ws: WebSocket): Promise<void> {
     }
     
     source.connect(processor)
-    processor.connect(audioContext.destination)
+    // Keep the processor alive without routing mic audio to speakers (avoids echo feedback).
+    keepAliveSink = audioContext.createGain()
+    keepAliveSink.gain.value = 0
+    processor.connect(keepAliveSink)
+    keepAliveSink.connect(audioContext.destination)
     
     console.log('Audio-Erfassung gestartet')
   } catch (error) {
@@ -339,46 +265,8 @@ function stopAudioCapture(): void {
     audioContext = null
   }
   
-  audioOutputNode = null
+  keepAliveSink = null
   console.log('Audio-Erfassung gestoppt')
-}
-
-/**
- * Verarbeitet Audio-Antworten vom Assistant (Base64 PCM16)
- */
-function handleAudioDelta(base64Audio: string): void {
-  if (!audioContext) {
-    audioContext = new AudioContext({ sampleRate: 24000 })
-  }
-  
-  try {
-    // Dekodiere Base64 zu Int16Array
-    const audioData = base64ToArrayBuffer(base64Audio)
-    const pcm16 = new Int16Array(audioData)
-    
-    // Konvertiere Int16 zu Float32
-    const float32 = new Float32Array(pcm16.length)
-    for (let i = 0; i < pcm16.length; i++) {
-      float32[i] = pcm16[i] / 32768.0
-    }
-    
-    // Erstelle AudioBuffer und spiele ab
-    const audioBuffer = audioContext.createBuffer(1, float32.length, 24000)
-    audioBuffer.copyToChannel(float32, 0)
-    
-    const source = audioContext.createBufferSource()
-    source.buffer = audioBuffer
-    
-    if (!audioOutputNode) {
-      audioOutputNode = audioContext.createGain()
-      audioOutputNode.connect(audioContext.destination)
-    }
-    
-    source.connect(audioOutputNode)
-    source.start(0)
-  } catch (error) {
-    console.error('Fehler beim Abspielen der Audio-Antwort:', error)
-  }
 }
 
 /**
@@ -386,40 +274,337 @@ function handleAudioDelta(base64Audio: string): void {
  */
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer)
+  // Chunk to avoid quadratic string concat costs for frequent realtime audio frames.
+  const chunkSize = 0x8000
   let binary = ''
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i])
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const sub = bytes.subarray(i, i + chunkSize)
+    binary += String.fromCharCode(...sub)
   }
   return btoa(binary)
 }
 
-/**
- * Hilfsfunktion: Base64 zu ArrayBuffer
- */
-function base64ToArrayBuffer(base64: string): ArrayBuffer {
-  const binary = atob(base64)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i)
+async function handleFunctionCall(message: unknown) {
+  const msg = (message && typeof message === 'object' ? (message as Record<string, unknown>) : {}) as Record<
+    string,
+    unknown
+  >
+  const name = typeof msg.name === 'string' ? msg.name : undefined
+  const argsJson = msg.arguments
+  let args: Record<string, unknown> = {}
+  if (typeof argsJson === 'string') {
+    try {
+      args = JSON.parse(argsJson)
+    } catch {
+      args = {}
+    }
+  } else if (typeof argsJson === 'object' && argsJson != null) {
+    args = argsJson as Record<string, unknown>
   }
-  return bytes.buffer
+
+  let toolResult = ''
+  try {
+    const res = await fetch('/api/realtime/tools', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tool: name,
+        args,
+        threadId: realtimeClient.context?.threadId,
+        tenantId: realtimeClient.context?.tenantId,
+      }),
+    })
+    const txt = await res.text()
+    toolResult = txt || `Tool ${name} responded with empty body`
+    if (!res.ok) {
+      toolResult = `Tool ${name} failed (${res.status}): ${toolResult}`
+    }
+  } catch (err) {
+    toolResult = `Tool ${name} error: ${String(err)}`
+  }
+
+  const payload = {
+    type: 'conversation.item.create',
+    item: {
+      type: 'message',
+      role: 'assistant',
+      content: [
+        {
+          type: 'output_text',
+          text: toolResult,
+        },
+      ],
+      metadata: {
+        tool_name: name,
+        thread_id: realtimeClient.context?.threadId,
+        tenant_id: realtimeClient.context?.tenantId,
+        channel: 'voice',
+      },
+    },
+  }
+
+  sendRealtimePayload(payload)
+
+  sendRealtimePayload({
+    type: 'response.create',
+    response: {
+      modalities: ['text', 'audio'],
+    },
+  })
+}
+
+/**
+ * Shared Realtime event handler (WS / WebRTC DC)
+ */
+function handleRealtimeEvent(raw: unknown) {
+  try {
+    const message = typeof raw === 'string' ? JSON.parse(raw) : raw
+    if (!message || typeof message !== 'object') return
+    const msg = message as Record<string, unknown>
+    switch (msg.type) {
+      case 'session.created':
+        console.log('Real-Time Session erstellt:', (msg.session && typeof msg.session === 'object' ? (msg.session as Record<string, unknown>).id : undefined))
+        break
+      case 'session.updated':
+        break
+      case 'conversation.item.input_audio_transcription.completed':
+        if (msg.transcript && realtimeClient.onUserTranscript) {
+          realtimeClient.onUserTranscript(msg.transcript as string)
+        }
+        break
+      case 'response.text.delta':
+        if (msg.delta && realtimeClient.onTextDelta) {
+          realtimeClient.onTextDelta(msg.delta as string)
+        }
+        break
+      case 'response.audio.delta':
+        if (msg.delta && realtimeClient.onAudioDelta) {
+          realtimeClient.onAudioDelta(msg.delta as string)
+        }
+        break
+      case 'response.function_call_arguments.done':
+        void handleFunctionCall(msg)
+        break
+      case 'response.done':
+        if (realtimeClient.onResponseDone) {
+          realtimeClient.onResponseDone()
+        }
+        break
+      case 'error':
+        console.error('Realtime error', message.error)
+        break
+      default:
+        break
+    }
+  } catch (error) {
+    console.error('Fehler beim Verarbeiten der Realtime-Nachricht:', error)
+  }
+}
+
+/**
+ * Legacy / fallback WebSocket transport
+ */
+async function connectWebSocket(args: { clientSecret: string; model: string }) {
+  const wsUrl = `wss://api.openai.com/v1/realtime?model=${encodeURIComponent(
+    args.model
+  )}&client_secret=${encodeURIComponent(args.clientSecret)}`
+  
+  console.log('Connecting to Real-Time API (WS):', wsUrl.replace(args.clientSecret, '***'))
+  
+  const ws = new WebSocket(wsUrl)
+  
+  ws.onopen = () => {
+    console.log('Real-Time Voice Session (WS) verbunden')
+    
+    ws.send(
+      JSON.stringify({
+      type: 'session.update',
+      session: {
+        modalities: ['text', 'audio'],
+        instructions: 'Antworte kurz, präzise und freundlich auf Deutsch.',
+        voice: 'nova',
+        input_audio_format: 'pcm16',
+        output_audio_format: 'pcm16',
+        input_audio_transcription: {
+          model: 'whisper-1',
+        },
+        turn_detection: {
+          type: 'server_vad',
+          threshold: 0.5,
+          prefix_padding_ms: 150,
+          silence_duration_ms: 350,
+          create_response: true,
+        },
+        temperature: 0.6,
+        max_response_output_tokens: 1024,
+        metadata: {
+          thread_id: realtimeClient.context?.threadId,
+          tenant_id: realtimeClient.context?.tenantId,
+          channel: 'voice',
+        },
+      },
+    })
+    )
+    
+    startAudioCapture(ws)
+  }
+
+  ws.onmessage = (event) => {
+    handleRealtimeEvent(event.data)
+  }
+
+  ws.onerror = (error) => {
+    console.error('Real-Time WebSocket Fehler:', error)
+    realtimeClient.isActive = false
+    realtimeClient.client = null
+    if (realtimeClient.onResponseDone) {
+      realtimeClient.onResponseDone()
+    }
+  }
+
+  ws.onclose = (event) => {
+    console.log('Real-Time Voice Session beendet', event.code, event.reason)
+    if (event.code !== 1000) {
+      console.error('WebSocket closed unexpectedly:', {
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean
+      })
+    }
+    realtimeClient.isActive = false
+    realtimeClient.sessionId = null
+    realtimeClient.client = null
+    stopAudioCapture()
+  }
+
+  realtimeClient.client = ws
+}
+
+/**
+ * Preferred WebRTC transport (lower latency/jitter in browsers)
+ */
+async function connectWebRTC(args: { clientSecret: string; model: string }) {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: {
+      channelCount: 1,
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+    },
+  })
+
+  const pc = new RTCPeerConnection({
+    iceServers: parseIceServers(),
+  })
+
+  stream.getTracks().forEach((t) => pc.addTrack(t, stream))
+
+  const dc = pc.createDataChannel('oai-events')
+  dc.onopen = () => {
+    dc.send(
+      JSON.stringify({
+        type: 'session.update',
+        session: {
+          modalities: ['text', 'audio'],
+          instructions: 'Antworte kurz, präzise und freundlich auf Deutsch.',
+          voice: 'nova',
+          input_audio_transcription: {
+            model: 'whisper-1',
+          },
+          turn_detection: {
+            type: 'server_vad',
+            threshold: 0.5,
+            prefix_padding_ms: 150,
+            silence_duration_ms: 350,
+            create_response: true,
+          },
+          temperature: 0.6,
+          max_response_output_tokens: 1024,
+          metadata: {
+            thread_id: realtimeClient.context?.threadId,
+            tenant_id: realtimeClient.context?.tenantId,
+            channel: 'voice',
+          },
+        },
+      })
+    )
+  }
+  dc.onmessage = (ev) => handleRealtimeEvent(ev.data)
+  dc.onerror = (err) => console.error('DataChannel error', err)
+
+  pc.ontrack = (ev) => {
+    const [stream] = ev.streams
+    if (!stream) return
+    if (!realtimeClient.remoteAudio) {
+      const audioEl = new Audio()
+      audioEl.autoplay = true
+      realtimeClient.remoteAudio = audioEl
+    }
+    realtimeClient.remoteAudio.srcObject = stream
+  }
+
+  const offer = await pc.createOffer()
+  await pc.setLocalDescription(offer)
+  await waitForIceGatheringComplete(pc)
+
+  const resp = await fetch(`https://api.openai.com/v1/realtime?model=${encodeURIComponent(args.model)}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/sdp',
+      Authorization: `Bearer ${args.clientSecret}`,
+    },
+    body: offer.sdp || '',
+  })
+
+  if (!resp.ok) {
+    const text = await resp.text()
+    throw new Error(`Failed to start Realtime WebRTC: ${resp.status} ${text}`)
+  }
+
+  const answerSdp = await resp.text()
+  await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp })
+
+  realtimeClient.peer = pc
+  realtimeClient.dataChannel = dc
+  return { pc, dc }
+}
+
+function waitForIceGatheringComplete(pc: RTCPeerConnection): Promise<void> {
+  if (pc.iceGatheringState === 'complete') return Promise.resolve()
+  return new Promise((resolve) => {
+    const checkState = () => {
+      if (pc.iceGatheringState === 'complete') {
+        pc.removeEventListener('icegatheringstatechange', checkState)
+        resolve()
+      }
+    }
+    pc.addEventListener('icegatheringstatechange', checkState)
+  })
+}
+
+function sendRealtimePayload(obj: unknown) {
+  const payload = JSON.stringify(obj)
+  if (realtimeClient.transport === 'webrtc' && realtimeClient.dataChannel?.readyState === 'open') {
+    realtimeClient.dataChannel.send(payload)
+    return true
+  }
+  if (realtimeClient.client && realtimeClient.client.readyState === WebSocket.OPEN) {
+    realtimeClient.client.send(payload)
+    return true
+  }
+  return false
 }
 
 /**
  * Sendet eine Text-Nachricht an die Real-Time Session
  */
 export function sendRealtimeTextMessage(text: string): void {
-  if (!realtimeClient.isActive || !realtimeClient.client) {
+  if (!realtimeClient.isActive) {
     console.warn('Real-Time Session ist nicht aktiv')
     return
   }
   
-  if (realtimeClient.client.readyState !== WebSocket.OPEN) {
-    console.warn('WebSocket ist nicht verbunden')
-    return
-  }
-  
-  realtimeClient.client.send(JSON.stringify({
+  const payload = JSON.stringify({
     type: 'conversation.item.create',
     item: {
       type: 'message',
@@ -430,8 +615,78 @@ export function sendRealtimeTextMessage(text: string): void {
           text: text,
         },
       ],
+      metadata: {
+        thread_id: realtimeClient.context?.threadId,
+        tenant_id: realtimeClient.context?.tenantId,
+        channel: 'voice',
+      },
     },
-  }))
+  })
+
+  if (realtimeClient.transport === 'webrtc' && realtimeClient.dataChannel?.readyState === 'open') {
+    realtimeClient.dataChannel.send(payload)
+    realtimeClient.dataChannel.send(
+      JSON.stringify({
+        type: 'response.create',
+        response: {
+          modalities: ['text', 'audio'],
+        },
+      })
+    )
+    return
+  }
+
+  if (!realtimeClient.client || realtimeClient.client.readyState !== WebSocket.OPEN) {
+    console.warn('WebSocket ist nicht verbunden')
+    return
+  }
+  
+  realtimeClient.client.send(payload)
+
+  // If text input is used (no audio VAD), explicitly request a response.
+  realtimeClient.client.send(
+    JSON.stringify({
+      type: 'response.create',
+      response: {
+        modalities: ['text', 'audio'],
+      },
+    })
+  )
+}
+
+/**
+ * PTT helpers
+ */
+export function setMicEnabled(enabled: boolean) {
+  if (realtimeClient.micStream) {
+    realtimeClient.micStream.getAudioTracks().forEach((t) => {
+      t.enabled = enabled
+    })
+  }
+}
+
+export function commitInputAudio() {
+  if (!realtimeClient.isActive) return
+  const payload = JSON.stringify({ type: 'input_audio_buffer.commit' })
+  if (realtimeClient.transport === 'webrtc' && realtimeClient.dataChannel?.readyState === 'open') {
+    realtimeClient.dataChannel.send(payload)
+    return
+  }
+  if (realtimeClient.client && realtimeClient.client.readyState === WebSocket.OPEN) {
+    realtimeClient.client.send(payload)
+  }
+}
+
+export function cancelResponse() {
+  if (!realtimeClient.isActive) return
+  const payload = JSON.stringify({ type: 'response.cancel' })
+  if (realtimeClient.transport === 'webrtc' && realtimeClient.dataChannel?.readyState === 'open') {
+    realtimeClient.dataChannel.send(payload)
+    return
+  }
+  if (realtimeClient.client && realtimeClient.client.readyState === WebSocket.OPEN) {
+    realtimeClient.client.send(payload)
+  }
 }
 
 /**

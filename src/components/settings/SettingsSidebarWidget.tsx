@@ -67,7 +67,7 @@ export function SettingsSidebarWidget({
                 return (
                   <li key={view.id}>
                     <AkListRow
-                      accent="default"
+                      accent="graphite"
                       selected={isActive}
                       title={view.label}
                       leading={

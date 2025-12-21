@@ -88,7 +88,9 @@ export function RealEstateExposeGenerator({ onClose, onComplete }: ExposeGenerat
   }
 
   const handleComplete = () => {
-    onComplete?.(generatedExpose)
+    if (generatedExpose) {
+      onComplete?.(generatedExpose)
+    }
     setStep('complete')
     setTimeout(() => {
       onClose?.()

@@ -5,28 +5,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Calendar, dateFnsLocalizer } from "react-big-calendar";
-import format from "date-fns/format";
-import parse from "date-fns/parse";
-import startOfWeek from "date-fns/startOfWeek";
-import getDay from "date-fns/getDay";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import { de } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-
-const locales = {
-  "de": de,
-};
-
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek,
-  getDay,
-  locales,
-});
 
 interface ViewingEvent {
   id: string;
@@ -38,14 +19,11 @@ interface ViewingEvent {
   participant_count: number;
 }
 
-type CalendarView = "month" | "week" | "day" | "agenda";
-
 export default function ViewingCalendarPage() {
   const [events, setEvents] = useState<ViewingEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [tenantId] = useState("demo-tenant"); // TODO: Get from auth
-  const [view, setView] = useState<CalendarView>("week");
-  const [date, setDate] = useState(new Date());
+  const [date] = useState(new Date());
 
   const fetchViewings = useCallback(async () => {
     setLoading(true);
@@ -93,36 +71,25 @@ export default function ViewingCalendarPage() {
       </div>
 
       <Card>
-        <CardContent className="p-6 h-[700px]">
-          <Calendar
-            localizer={localizer}
-            events={events}
-            startAccessor="start"
-            endAccessor="end"
-            style={{ height: "100%" }}
-            view={view}
-            onView={setView}
-            date={date}
-            onNavigate={setDate}
-            culture="de"
-            messages={{
-              next: "Weiter",
-              previous: "Zurück",
-              today: "Heute",
-              month: "Monat",
-              week: "Woche",
-              day: "Tag",
-              agenda: "Agenda",
-              date: "Datum",
-              time: "Uhrzeit",
-              event: "Termin",
-            }}
-            eventPropGetter={(event) => ({
-              className: `bg-primary text-primary-foreground rounded-md border-none ${
-                event.status === 'completed' ? 'opacity-50' : ''
-              }`,
-            })}
-          />
+        <CardContent className="p-6">
+          <div className="text-sm text-muted-foreground">
+            Hinweis: Kalender-Grid ist im Minimal-Build deaktiviert (fehlende optionale UI-Packages).
+            Termine werden als Liste dargestellt.
+          </div>
+          <div className="mt-4 space-y-2">
+            {events.length === 0 ? (
+              <div className="text-sm text-muted-foreground">Keine Termine im Zeitraum.</div>
+            ) : (
+              events.map((e) => (
+                <div key={e.id} className="rounded-lg border p-3">
+                  <div className="text-sm font-semibold">{e.title}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {e.start.toLocaleString()} – {e.end.toLocaleString()} · {e.status}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

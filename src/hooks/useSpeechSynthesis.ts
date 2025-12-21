@@ -83,7 +83,6 @@ export function useSpeechSynthesis(defaultLang: string = 'de-DE') {
           body: JSON.stringify({
             text,
             voice,
-            model: 'tts-1-hd', // Höchste Qualität
           }),
         })
 
