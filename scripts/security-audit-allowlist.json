@@ -1,0 +1,20 @@
+{
+  "allowXTenantIdHeader": [
+    "src/app/api/shield/[...path]/route.ts",
+    "src/app/api/actions/execute/route.ts",
+    "src/app/api/internal/admin/diagnostics/core7/route.ts",
+    "src/app/api/internal/admin/diagnostics/core10/route.ts"
+  ],
+  "allowClientTenantId": [
+    "src/app/api/runs/route.ts",
+    "src/app/api/actions/settings/features/route.ts",
+    "src/app/api/actions/settings/features/[featureId]/route.ts",
+    "src/app/api/internal/admin/diagnostics/core7/route.ts",
+    "src/app/api/internal/admin/diagnostics/core10/route.ts"
+  ],
+  "allowHardcodedDefaults": [
+    "src/app/api/internal/admin/diagnostics/core7/route.ts",
+    "src/app/api/internal/admin/diagnostics/core10/route.ts"
+  ]
+}
+

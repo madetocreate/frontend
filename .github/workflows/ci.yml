@@ -1,0 +1,167 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-24.04
+    # Security: Explicit permissions (least privilege)
+    # Standard: contents: read (for checkout)
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      
+      - name: Setup Node.js
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run ESLint
+        run: pnpm lint
+      
+      - name: Run TypeScript Check
+        run: pnpm typecheck
+      
+      - name: Token Audit
+        run: pnpm tokens:audit
+      
+      - name: Design Guard
+        run: pnpm design:guard
+      
+      - name: Security Audit
+        run: pnpm audit:security
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      
+      - name: Setup Node.js
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run Vitest
+        run: pnpm test --run --coverage
+      
+      - name: Upload coverage
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  build:
+    name: Build Check
+    runs-on: ubuntu-24.04
+    needs: [lint, test]
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      
+      - name: Setup Node.js
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build Next.js App
+        run: pnpm build
+        env:
+          # Dummy env vars for build (if needed)
+          NEXT_PUBLIC_BACKEND_URL: http://localhost:4000
+          NEXT_PUBLIC_ORCHESTRATOR_API_URL: http://localhost:4000
+      
+      - name: Upload build artifacts
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-build
+          path: .next/
+          retention-days: 3
+
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-24.04
+    needs: [lint, test, build]
+    if: always()
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Check job results
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ]; then
+            echo "❌ CI Pipeline failed"
+            exit 1
+          else
+            echo "✅ All CI checks passed"
+          fi
+

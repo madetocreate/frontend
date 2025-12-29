@@ -1,0 +1,119 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run daily at 3:00 UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+      
+      - name: Setup Node.js
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run pnpm audit
+        run: pnpm audit --audit-level=moderate || true
+        continue-on-error: true
+      
+      - name: Generate audit report
+        run: pnpm audit --json > audit-report.json || true
+        continue-on-error: true
+      
+      - name: Upload audit report
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-audit-report
+          path: audit-report.json
+          retention-days: 30
+
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-24.04
+    # Security: Required for SARIF upload to GitHub Security
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Run Gitleaks
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v2
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+        with:
+          exit-code: 1
+          format: sarif
+          output-path: gitleaks-report.sarif
+      
+      - name: Upload Gitleaks results
+        # Security: Requires security-events: write permission (set at job level)
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v3
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: gitleaks-report.sarif
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: read
+    
+    steps:
+      - name: Checkout code
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/checkout@v4
+      
+      - name: Dependency Review
+        # TODO: Pin to commit SHA for supply chain security (recommended)
+        # Current version: v4
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+          deny-licenses: GPL-2.0, GPL-3.0
+

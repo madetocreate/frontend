@@ -1,0 +1,47 @@
+:root {
+  --ak-control-accent: var(--ak-color-accent);
+  --ak-control-accent-soft: var(--ak-color-accent-soft);
+
+  --ak-radius-control: 12px;
+
+  /* Glass-Border wird jetzt über ak-tokens.css definiert */
+  /* --ak-glass-border wird in ak-tokens.css als Shorthand definiert */
+
+  --ak-accent-docs: var(--ak-accent-documents);
+
+  --ak-semantic-warn: var(--ak-semantic-warning);
+  --ak-semantic-warn-soft: var(--ak-semantic-warning-soft);
+
+  --ak-color-border-default: var(--ak-color-border-subtle);
+  --ak-color-bg-surface-elevated-secondary: var(--ak-color-bg-surface-muted);
+
+  --ak-color-text-success: var(--ak-semantic-success);
+  --ak-color-bg-success: var(--ak-semantic-success-soft);
+  --ak-color-border-success: rgba(52, 199, 89, 0.25);
+
+  --ak-color-text-danger: var(--ak-semantic-danger);
+  --ak-color-bg-danger: var(--ak-color-bg-danger-soft);
+  --ak-color-border-danger: rgba(255, 59, 48, 0.25);
+
+  --ak-color-text-warning: var(--ak-semantic-warning);
+  --ak-color-bg-warning: var(--ak-semantic-warning-soft);
+  --ak-color-border-warning: rgba(255, 149, 0, 0.25);
+  --ak-color-warning: var(--ak-semantic-warning);
+
+  --ak-color-text-info: var(--ak-semantic-info);
+  --ak-color-bg-info: var(--ak-semantic-info-soft);
+  --ak-color-border-info: rgba(31, 41, 55, 0.25); /* Graphite statt Blue */
+
+  --ak-color-text-discovery: var(--ak-accent-documents);
+  --ak-color-bg-discovery: var(--ak-accent-documents-soft);
+  --ak-color-border-discovery: rgba(175, 82, 222, 0.25);
+}
+
+@layer utilities {
+  .hover\:ak-surface-2-hover:hover {
+    background: var(--ak-surface-2-hover);
+  }
+  .hover\:ak-elev-1:hover {
+    box-shadow: var(--ak-elev-1);
+  }
+}

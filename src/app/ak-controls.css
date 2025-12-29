@@ -1,0 +1,43 @@
+@layer utilities {
+  .ak-btn-primary {
+    background: var(--ak-color-accent);
+    color: var(--ak-color-text-inverted);
+    border: 1px solid color-mix(in srgb, var(--ak-color-accent) 70%, var(--ak-color-border-subtle));
+    box-shadow: var(--ak-shadow-soft);
+  }
+
+  .ak-btn-primary:hover {
+    filter: brightness(1.03);
+  }
+
+  .ak-btn-secondary {
+    background: var(--ak-color-bg-surface);
+    color: var(--ak-color-text-primary);
+    border: 1px solid var(--ak-color-border-subtle);
+  }
+
+  .ak-btn-secondary:hover {
+    background: var(--ak-color-bg-hover);
+  }
+
+  .ak-btn-ghost {
+    background: transparent;
+    color: var(--ak-color-text-primary);
+    border: 1px solid transparent;
+  }
+
+  .ak-btn-ghost:hover {
+    background: var(--ak-color-bg-hover);
+    border-color: var(--ak-color-border-subtle);
+  }
+
+  .ak-btn-danger {
+    background: var(--ak-color-bg-danger-soft);
+    color: var(--ak-color-danger);
+    border: 1px solid color-mix(in srgb, var(--ak-color-danger) 25%, var(--ak-color-border-subtle));
+  }
+
+  .ak-btn-danger:hover {
+    background: color-mix(in srgb, var(--ak-color-bg-danger-soft) 80%, var(--ak-color-bg-hover));
+  }
+}

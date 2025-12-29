@@ -1,0 +1,705 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.ak-theme-dark, .ak-theme-dark *));
+@import "./ak-typography.css";
+@import "./ak-tokens.css";
+@import "./ak-scaffold.css";
+@import "./ak-inspector.css";
+@import "./ak-unified.css";
+@import "./ak-controls.css";
+@import "./ak-badges.css";
+@import "./ak-interactions.css";
+@import "./ak-utilities.css";
+@import "./ak-workspace-accent.css";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --spacing: var(--ak-space-1);
+
+  --radius-xs:  var(--ak-radius-xs);
+  --radius-sm:  var(--ak-radius-sm);
+  --radius-md:  var(--ak-radius-md);
+  --radius-lg:  var(--ak-radius-lg);
+  --radius-xl:  var(--ak-radius-xl);
+  --radius-2xl: var(--ak-radius-2xl);
+  --radius-3xl: var(--ak-radius-3xl);
+
+  --shadow-sm:  var(--ak-shadow-sm);
+  --shadow-md:  var(--ak-shadow-md);
+  --shadow-lg:  var(--ak-shadow-strong);
+  --shadow-xl:  var(--ak-elev-4);
+
+  --color-graphite: var(--ak-color-graphite-base);
+  --color-graphite-hover: var(--ak-color-graphite-hover);
+  --color-graphite-soft: var(--ak-color-graphite-soft);
+  --color-graphite-text: var(--ak-color-graphite-text);
+  --color-graphite-border: var(--ak-color-graphite-border);
+  --color-graphite-selected: var(--ak-color-graphite-selected);
+  --color-graphite-surface: var(--ak-color-graphite-surface);
+
+  /* shadcn/ui mappings */
+  --color-background: var(--ak-color-bg-app);
+  --color-foreground: var(--ak-color-text-primary);
+  --color-card: var(--ak-color-bg-surface);
+  --color-card-foreground: var(--ak-color-text-primary);
+  --color-popover: var(--ak-color-bg-surface);
+  --color-popover-foreground: var(--ak-color-text-primary);
+  --color-primary: var(--ak-color-accent);
+  --color-primary-foreground: var(--ak-color-text-inverted);
+  --color-secondary: var(--ak-color-bg-surface-muted);
+  --color-secondary-foreground: var(--ak-color-text-secondary);
+  --color-muted: var(--ak-color-bg-surface-muted);
+  --color-muted-foreground: var(--ak-color-text-muted);
+  --color-accent: var(--ak-color-accent-soft);
+  --color-accent-foreground: var(--ak-color-accent);
+  --color-destructive: var(--ak-color-bg-danger-soft);
+  --color-destructive-foreground: #ff3b30;
+  --color-border: var(--ak-color-border-subtle);
+  --color-input: var(--ak-color-border-subtle);
+  --color-ring: var(--ak-focus-ring-color);
+}
+
+.ak-theme-light {
+  color-scheme: light;
+}
+
+/* Standard: Light Mode (White Mode) - ChatGPT/Apple Style */
+:root {
+  color-scheme: light;
+  --ak-color-layer-0: #fbfbfb; /* Slightly warmer, less blue-gray */
+  --ak-color-layer-1: #ffffff;
+  --ak-color-layer-2: rgba(255, 255, 255, 0.85);
+
+  --ak-color-bg-app: var(--ak-color-layer-0);
+  --ak-color-bg-surface: var(--ak-color-layer-1);
+  --ak-color-bg-surface-muted: #f7f7f7; /* Slightly warmer and lighter */
+  --ak-color-bg-sidebar: #f9fafb; /* Slightly warmer, less blue-gray */
+  --ak-color-bg-elevated: #ffffff; /* Added for DrawerCard */
+  
+  /* Surface Aliases: Map --ak-surface-* to --ak-color-bg-* for consistency */
+  --ak-surface-0: var(--ak-color-bg-app);
+  --ak-surface-1: var(--ak-color-bg-surface);
+  --ak-surface-2: var(--ak-color-bg-hover);
+  --ak-surface-3: var(--ak-glass-bg);
+
+  --ak-color-text-primary: #1d1d1f;
+  --ak-color-text-secondary: #6e6e73;
+  --ak-color-text-muted: #86868b;
+  --ak-color-text-inverted: #fafafa;
+
+  --ak-color-bg-hover: rgba(0, 0, 0, 0.03); /* Subtiler - Apple Style */
+  --ak-color-bg-active: rgba(0, 0, 0, 0.06);
+  --ak-color-bg-selected: rgba(0, 0, 0, 0.04); /* Subtiler - Apple Style */
+  --ak-color-bg-selected-strong: rgba(0, 0, 0, 0.06);
+  --ak-color-bg-danger-soft: rgba(255, 59, 48, 0.12);
+
+  --ak-color-border-fine: rgba(0, 0, 0, 0.06);
+  --ak-color-border-subtle: rgba(0, 0, 0, 0.1);
+  --ak-color-border-strong: rgba(0, 0, 0, 0.12);
+
+  --ak-color-accent: #1F2937; /* Graphite */
+  --ak-color-accent-soft: rgba(31, 41, 55, 0.08); /* Subtiler - Apple Style */
+  --ak-color-accent-strong: #111827; /* Dunkleres Graphite */
+  --ak-color-accent-subtle: rgba(31, 41, 55, 0.04); /* Sehr subtil für Selected */
+  --ak-color-accent-border: rgba(31, 41, 55, 0.2); /* Für Borders */
+  --ak-color-accent-glow: rgba(31, 41, 55, 0.15); /* Für Glow-Effekte */
+  --ak-color-selected: rgba(0, 0, 0, 0.04); /* Subtiler - Apple Style */
+  --ak-color-selected-strong: rgba(0, 0, 0, 0.06);
+  --ak-color-selected-border: rgba(31, 41, 55, 0.15); /* Sanfter Graphite-Rand */
+  --ak-color-selected-bg: rgba(31, 41, 55, 0.05); /* Sehr subtiler Graphite-Hintergrund */
+  
+  /* Icon Colors */
+  --ak-icon-default: rgba(0, 0, 0, 0.5);
+  --ak-icon-hover: rgba(0, 0, 0, 0.7);
+  --ak-icon-active: var(--ak-color-accent);
+  --ak-icon-active-glow: rgba(31, 41, 55, 0.2);
+  --ak-color-success: #34c759;
+  --ak-color-success-strong: #248a3d;
+  --ak-color-warning-strong: #d97706;
+  --ak-color-danger: var(--ak-semantic-danger); /* Alias für semantischen Danger Token */
+  --ak-color-danger-strong: #dc2626;
+  --ak-color-info-strong: #2563eb;
+  
+  --ak-color-tooltip-bg: rgba(28, 28, 30, 0.9);
+  --ak-color-tooltip-text: #fafafa;
+  --ak-color-border-hairline: var(--ak-color-border-fine);
+
+  --ak-color-text-tertiary: var(--ak-color-text-muted);
+  --ak-color-text-strong: var(--ak-color-text-primary);
+
+  --ak-color-border: var(--ak-color-border-subtle);
+  --ak-color-border-hover: var(--ak-color-border-strong);
+
+  --ak-color-bg-surface-hover: var(--ak-color-bg-hover);
+  --ak-color-bg-hover-strong: var(--ak-color-bg-active);
+  --ak-color-bg-base: var(--ak-color-bg-app);
+  --ak-color-bg-surface-elevated: var(--ak-color-bg-elevated);
+
+  --ak-semantic-error: var(--ak-semantic-danger);
+  --ak-color-text-error: var(--ak-semantic-danger);
+  --ak-color-status-danger-text: var(--ak-semantic-danger);
+  --ak-semantic-success-strong: var(--ak-color-success-strong);
+  --ak-color-danger-soft: var(--ak-semantic-danger-soft);
+  --ak-color-success-soft: var(--ak-semantic-success-soft);
+  --ak-color-warning-soft: var(--ak-semantic-warning-soft);
+
+  --ak-accent-primary: var(--ak-color-accent);
+  --ak-color-accent-hover: var(--ak-color-accent-strong);
+
+  --ak-color-graphite-surface-strong: var(--ak-color-graphite-surface);
+  --ak-color-accent-documents: var(--ak-accent-documents);
+  --ak-color-accent-growth: var(--ak-accent-growth);
+  --ak-accent-success: var(--ak-semantic-success);
+  --ak-accent-success-soft: var(--ak-semantic-success-soft);
+  /* Composer Surface - Light Mode */
+  --ak-composer-bg-top: rgba(255,255,255,0.96);
+  --ak-composer-bg-bottom: rgba(255,255,255,0.90);
+  --ak-composer-border: rgba(0,0,0,0.06);
+  --ak-composer-border-hover: rgba(0,0,0,0.08);
+  --ak-composer-border-focus: rgba(0,0,0,0.10);
+  --ak-composer-shadow: 0 0 0 1px rgba(0,0,0,0.02), 0 4px 16px rgba(0,0,0,0.04), 0 16px 48px rgba(0,0,0,0.08);
+  --ak-composer-shadow-hover: 0 0 0 1px rgba(0,0,0,0.03), 0 8px 24px rgba(0,0,0,0.06), 0 24px 64px rgba(0,0,0,0.10);
+  --ak-composer-shadow-focus: 0 0 0 1px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.08), 0 32px 80px rgba(0,0,0,0.12);
+
+  /* Radius: Use tokens from ak-tokens.css as canonical source */
+  --ak-radius-card: var(--ak-radius-xl);
+  --ak-color-hover: var(--ak-color-bg-hover);
+  
+  /* Shadow Aliases: Map --ak-shadow-* to --ak-elev-* for consistency */
+  --ak-shadow-soft: var(--ak-elev-1);
+  --ak-shadow-sm: var(--ak-elev-1);
+  --ak-shadow-md: var(--ak-elev-2);
+  --ak-shadow-card: var(--ak-elev-2);
+  --ak-shadow-strong: var(--ak-elev-3);
+  --ak-shadow-glass: var(--ak-elev-2);
+  --ak-shadow-colored: var(--ak-elev-2); /* Special case, keep as is */
+  --ak-shadow-panel: var(--ak-shadow-soft);
+}
+
+/* Optional: Dark Mode nur, wenn explizit Klasse gesetzt wird - Warmer Premium Dark */
+.ak-theme-dark {
+  /* Warme, gemütliche Dunkelfarben statt kaltem Schwarz */
+  --ak-color-layer-0: #141414;
+  --ak-color-layer-1: #1e1e1e;
+  --ak-color-layer-2: rgba(30, 30, 30, 0.9);
+
+  --ak-color-bg-app: var(--ak-color-layer-0);
+  --ak-color-bg-surface: var(--ak-color-layer-1);
+  --ak-color-bg-surface-muted: rgba(45, 45, 45, 0.6);
+  --ak-color-bg-sidebar: #181818;
+  --ak-color-bg-elevated: #242424;
+  
+  /* Surface Aliases: Map --ak-surface-* to --ak-color-bg-* for consistency */
+  --ak-surface-0: var(--ak-color-bg-app);
+  --ak-surface-1: var(--ak-color-bg-surface);
+  --ak-surface-2: var(--ak-color-bg-hover);
+  --ak-surface-3: var(--ak-glass-bg);
+
+  /* Warme Textfarben für bessere Lesbarkeit */
+  --ak-color-text-primary: #f5f0e8;
+  --ak-color-text-secondary: rgba(245, 240, 232, 0.72);
+  --ak-color-text-muted: rgba(245, 240, 232, 0.48);
+  --ak-color-text-inverted: #141414;
+
+  --ak-color-bg-hover: rgba(255, 255, 255, 0.04); /* Subtiler - Apple Style */
+  --ak-color-bg-active: rgba(255, 255, 255, 0.08);
+  --ak-color-bg-selected: rgba(255, 255, 255, 0.06); /* Subtiler - Apple Style */
+  --ak-color-bg-selected-strong: rgba(255, 255, 255, 0.1);
+  
+  /* Selected States - Dark Mode */
+  --ak-color-selected-border-dark: rgba(229, 231, 235, 0.2); /* Light Graphite für Dark Mode */
+  --ak-color-selected-bg-dark: rgba(229, 231, 235, 0.08);
+  
+  /* Icon Colors - Dark Mode */
+  --ak-icon-default-dark: rgba(255, 255, 255, 0.5);
+  --ak-icon-hover-dark: rgba(255, 255, 255, 0.7);
+  --ak-icon-active-dark: var(--ak-color-accent);
+  --ak-color-bg-danger-soft: rgba(255, 82, 82, 0.18);
+
+  /* Subtilere Borders */
+  --ak-color-border-fine: rgba(255, 255, 255, 0.06);
+  --ak-color-border-subtle: rgba(255, 255, 255, 0.1);
+  --ak-color-border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Light Graphite für Dark Mode */
+  --ak-color-accent: #E5E7EB; /* Light Graphite */
+  --ak-color-accent-soft: rgba(229, 231, 235, 0.18);
+  --ak-color-accent-strong: #D1D5DB; /* Lighter Graphite */
+  --ak-color-selected: rgba(255, 255, 255, 0.08);
+  --ak-color-selected-strong: rgba(255, 255, 255, 0.12);
+  --ak-color-success: #34d399;
+  --ak-color-success-strong: #34d399;
+  --ak-color-warning-strong: #fbbf24;
+  --ak-color-danger-strong: #f87171;
+  --ak-color-info-strong: #60a5fa;
+  
+  --ak-color-tooltip-bg: rgba(20, 20, 20, 0.96);
+  --ak-color-tooltip-text: #f5f0e8;
+  --ak-color-border-hairline: var(--ak-color-border-fine);
+
+  --ak-color-text-tertiary: var(--ak-color-text-muted);
+  --ak-color-text-strong: var(--ak-color-text-primary);
+
+  --ak-color-border: var(--ak-color-border-subtle);
+  --ak-color-border-hover: var(--ak-color-border-strong);
+
+  --ak-color-bg-surface-hover: var(--ak-color-bg-hover);
+  --ak-color-bg-hover-strong: var(--ak-color-bg-active);
+  --ak-color-bg-base: var(--ak-color-bg-app);
+  --ak-color-bg-surface-elevated: var(--ak-color-bg-elevated);
+
+  --ak-semantic-error: var(--ak-semantic-danger);
+  --ak-color-text-error: var(--ak-semantic-danger);
+  --ak-color-status-danger-text: var(--ak-semantic-danger);
+  --ak-semantic-success-strong: var(--ak-color-success-strong);
+  --ak-color-danger-soft: var(--ak-semantic-danger-soft);
+  --ak-color-success-soft: var(--ak-semantic-success-soft);
+  --ak-color-warning-soft: var(--ak-semantic-warning-soft);
+
+  --ak-accent-primary: var(--ak-color-accent);
+  --ak-color-accent-hover: var(--ak-color-accent-strong);
+
+  --ak-color-graphite-surface-strong: var(--ak-color-graphite-surface);
+  --ak-color-accent-documents: var(--ak-accent-documents);
+  --ak-color-accent-growth: var(--ak-accent-growth);
+  --ak-accent-success: var(--ak-semantic-success);
+  --ak-accent-success-soft: var(--ak-semantic-success-soft);
+  /* Composer Surface - Dark Mode */
+  --ak-composer-bg-top: rgba(30,30,30,0.92);
+  --ak-composer-bg-bottom: rgba(30,30,30,0.78);
+  --ak-composer-border: rgba(255,255,255,0.10);
+  --ak-composer-border-hover: rgba(255,255,255,0.14);
+  --ak-composer-border-focus: rgba(255,255,255,0.18);
+  --ak-composer-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 8px 24px rgba(0,0,0,0.55), 0 24px 64px rgba(0,0,0,0.65);
+  --ak-composer-shadow-hover: 0 0 0 1px rgba(255,255,255,0.05), 0 12px 32px rgba(0,0,0,0.60), 0 32px 80px rgba(0,0,0,0.72);
+  --ak-composer-shadow-focus: 0 0 0 1px rgba(255,255,255,0.07), 0 16px 40px rgba(0,0,0,0.65), 0 40px 96px rgba(0,0,0,0.78);
+
+  /* Shadow Aliases: Map --ak-shadow-* to --ak-elev-* for consistency (Dark Mode uses dark variants) */
+  --ak-shadow-soft: var(--ak-elev-1-dark);
+  --ak-shadow-sm: var(--ak-elev-1-dark);
+  --ak-shadow-md: var(--ak-elev-2-dark);
+  --ak-shadow-card: var(--ak-elev-2-dark);
+  --ak-shadow-strong: var(--ak-elev-3-dark);
+  --ak-shadow-glass: var(--ak-elev-2-dark);
+  --ak-shadow-colored: var(--ak-elev-2-dark); /* Special case, keep as is */
+  --ak-shadow-panel: var(--ak-shadow-soft);
+
+  /* Radius: Use tokens from ak-tokens.css as canonical source */
+  --ak-radius-card: var(--ak-radius-xl);
+  --ak-color-hover: var(--ak-color-bg-hover);
+}
+
+@layer utilities {
+  /* ============================================
+     SURFACE LEVELS
+     ============================================ */
+  .ak-surface-0 {
+    background: var(--ak-surface-0);
+  }
+  
+  .ak-surface-1 {
+    background: var(--ak-surface-1);
+  }
+  
+  .ak-surface-2 {
+    background: var(--ak-surface-2);
+  }
+  
+  .ak-surface-2-hover:hover {
+    background: var(--ak-surface-2-hover);
+  }
+  
+  .ak-surface-2-selected {
+    background: var(--ak-surface-2-selected);
+  }
+  
+  /* ============================================
+     BORDERS
+     ============================================ */
+  .ak-border-hairline {
+    border: var(--ak-border-hairline);
+  }
+  
+  .ak-border-default {
+    border: var(--ak-border-default);
+  }
+  
+  .ak-border-strong {
+    border: var(--ak-border-strong);
+  }
+  
+  /* ============================================
+     ELEVATION
+     ============================================ */
+  .ak-elev-0 {
+    box-shadow: var(--ak-elev-0);
+  }
+  
+  .ak-elev-1 {
+    box-shadow: var(--ak-elev-1);
+  }
+  
+  .ak-elev-2 {
+    box-shadow: var(--ak-elev-2);
+  }
+  
+  .ak-elev-3 {
+    box-shadow: var(--ak-elev-3);
+  }
+  
+  /* ============================================
+     LIST ROWS (konsistente Höhe)
+     ============================================ */
+  .ak-list-row {
+    min-height: var(--ak-row-height);
+    padding: var(--ak-row-padding-y) var(--ak-row-padding-x);
+    transition: background-color var(--ak-motion-duration) var(--ak-motion-ease),
+                transform var(--ak-motion-duration-fast) var(--ak-motion-ease);
+  }
+  
+  .ak-list-row-compact {
+    min-height: var(--ak-row-height-compact);
+    padding: var(--ak-space-2) var(--ak-row-padding-x);
+  }
+  
+  .ak-list-row-hover:hover {
+    background: var(--ak-surface-2-hover);
+    transform: translateY(-1px);
+    opacity: 0.98;
+  }
+  
+  .ak-list-row-selected {
+    background: var(--ak-surface-2-selected);
+  }
+  
+  /* ============================================
+     BUTTONS (konsistente Größen)
+     ============================================ */
+  .ak-button-sm {
+    height: var(--ak-button-height-sm);
+    padding: 0 var(--ak-button-padding-x-sm);
+    font-size: var(--ak-font-size-sm);
+    border-radius: var(--ak-radius-md);
+  }
+  
+  .ak-button-md {
+    height: var(--ak-button-height-md);
+    padding: 0 var(--ak-button-padding-x-md);
+    font-size: var(--ak-font-size-base);
+    border-radius: var(--ak-radius-md);
+  }
+  
+  .ak-button-lg {
+    height: var(--ak-button-height-lg);
+    padding: 0 var(--ak-button-padding-x-lg);
+    font-size: var(--ak-font-size-base);
+    border-radius: var(--ak-radius-md);
+  }
+  
+  /* ============================================
+     CARDS (selten, aber konsistent)
+     ============================================ */
+  .ak-card {
+    padding: var(--ak-card-padding);
+    border-radius: var(--ak-card-radius);
+    background: var(--ak-surface-1);
+    border: var(--ak-border-default);
+    box-shadow: var(--ak-elev-1);
+  }
+  
+  /* ============================================
+     MICRO-INTERACTIONS (minimal, präzise)
+     ============================================ */
+  .ak-button-interactive {
+    transition-property: background-color, border-color, box-shadow, transform, opacity;
+    transition-duration: var(--ak-motion-duration-fast);
+    transition-timing-function: var(--ak-motion-ease);
+    transform: translateZ(0);
+  }
+
+  .ak-icon-interactive {
+    transition-property: background-color, border-color, box-shadow, transform, opacity;
+    transition-duration: var(--ak-motion-duration-fast);
+    transition-timing-function: var(--ak-motion-ease);
+    transform: translateZ(0);
+  }
+  
+  /* ============================================
+     SCROLLBAR
+     ============================================ */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .ak-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  .ak-scrollbar:hover {
+    scrollbar-color: rgba(0,0,0,0.15) transparent;
+  }
+  .ak-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .ak-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .ak-scrollbar::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 4px;
+    transition: background 200ms ease;
+  }
+  .ak-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.08); /* Subtiler - Apple Style */
+  }
+  .ak-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.15); /* Subtiler - Apple Style */
+  }
+
+  /* ============================================
+     AK Custom Shadow Utilities
+     ============================================ */
+  .ak-shadow-color-accent-documents-soft {
+    --tw-shadow-color: var(--ak-accent-documents-soft);
+    --tw-shadow-alpha: 100%;
+  }
+
+  .ak-shadow-color-accent-inbox-30 {
+    --tw-shadow-color: var(--ak-accent-inbox);
+    --tw-shadow-alpha: 30%;
+  }
+
+  .ak-shadow-color-accent-30 {
+    --tw-shadow-color: var(--ak-color-accent);
+    --tw-shadow-alpha: 30%;
+  }
+
+  .ak-shadow-color-accent-soft {
+    --tw-shadow-color: var(--ak-color-accent-soft);
+    --tw-shadow-alpha: 100%;
+  }
+
+  .ak-shadow-color-border-subtle-50 {
+    --tw-shadow-color: var(--ak-color-border-subtle);
+    --tw-shadow-alpha: 50%;
+  }
+
+  .ak-shadow-color-semantic-danger-soft {
+    --tw-shadow-color: var(--ak-semantic-danger-soft);
+    --tw-shadow-alpha: 100%;
+  }
+
+  .ak-shadow-color-semantic-info-soft {
+    --tw-shadow-color: var(--ak-semantic-info-soft);
+    --tw-shadow-alpha: 100%;
+  }
+
+  .ak-shadow-color-semantic-success-soft {
+    --tw-shadow-color: var(--ak-semantic-success-soft);
+    --tw-shadow-alpha: 100%;
+  }
+
+  .ak-shadow-color-semantic-warning-soft {
+    --tw-shadow-color: var(--ak-semantic-warning-soft);
+    --tw-shadow-alpha: 100%;
+  }
+
+  .ak-shadow-elev-1 {
+    --tw-shadow: var(--ak-elev-1);
+  }
+
+  .ak-shadow-elev-2 {
+    --tw-shadow: var(--ak-elev-2);
+  }
+
+  .ak-shadow-elev-3 {
+    --tw-shadow: var(--ak-elev-3);
+  }
+
+  .ak-shadow-card {
+    --tw-shadow: var(--ak-shadow-card);
+  }
+
+  .ak-shadow-colored {
+    --tw-shadow: var(--ak-shadow-colored);
+  }
+
+  .ak-shadow-md {
+    --tw-shadow: var(--ak-shadow-md);
+  }
+
+  .ak-shadow-sm {
+    --tw-shadow: var(--ak-shadow-sm);
+  }
+
+  .ak-shadow-soft {
+    --tw-shadow: var(--ak-shadow-soft);
+  }
+
+  .ak-shadow-strong {
+    --tw-shadow: var(--ak-shadow-strong);
+  }
+
+  .hover\:ak-shadow-md:hover {
+    --tw-shadow: var(--ak-shadow-md);
+  }
+
+  .hover\:ak-shadow-card:hover {
+    --tw-shadow: var(--ak-shadow-card);
+  }
+
+  .hover\:ak-shadow-strong:hover {
+    --tw-shadow: var(--ak-shadow-strong);
+  }
+}
+
+/* Global resets & typography enhancement */
+body {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--ak-color-bg-app);
+  color: var(--ak-color-text-primary);
+}
+
+/* Selection color - Subtiler Apple style */
+::selection {
+  background-color: rgba(31, 41, 55, 0.2); /* Graphite - Apple Style */
+  color: inherit; /* Behalte Textfarbe */
+}
+
+/* fadeInUp animation for chat messages */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Skeleton shimmer animation - Subtiler Apple Style */
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.02) 0%, /* Subtiler - Apple Style */
+    rgba(0, 0, 0, 0.05) 50%, /* Subtiler - Apple Style */
+    rgba(0, 0, 0, 0.02) 100%
+  );
+  background-size: 200% 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+  .ak-button-interactive,
+  .ak-icon-interactive {
+    transform: none !important;
+  }
+}
+
+/* Filter Overlay Animation */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-in-left {
+    animation: none;
+  }
+}
+
+/* Chat Workspace Router Fade */
+.ak-fade-in {
+  animation: fadeIn 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ak-fade-in {
+    animation: none;
+  }
+}
+
+/* PWA Mobile/Tablet Optimierungen: Safe Area Insets für Notch/Home Indicator */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Für Fixed/Sticky Header/Footer */
+  .ak-safe-area-top {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+
+  .ak-safe-area-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+
+  .ak-safe-area-left {
+    padding-left: max(env(safe-area-inset-left), 0px);
+  }
+
+  .ak-safe-area-right {
+    padding-right: max(env(safe-area-inset-right), 0px);
+  }
+}
+
+/* Touch-Optimierungen für Mobile */
+@media (hover: none) and (pointer: coarse) {
+  /* Größere Touch-Targets auf Mobile */
+  button,
+  a,
+  [role="button"] {
+    min-height: 44px; /* Apple HIG Minimum */
+    min-width: 44px;
+  }
+
+  /* Verhindert Text-Selektion bei Doppel-Tap (iOS) */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Import custom animations for Settings & UI enhancements */
+@import './animations.css';

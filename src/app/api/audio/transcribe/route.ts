@@ -1,0 +1,72 @@
+import { NextRequest, NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+
+import { BackendUrls } from '@/app/api/_utils/proxyAuth'
+
+const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  const formData = await req.formData();
+  const file = formData.get("file");
+
+  if (!file || !(file instanceof File)) {
+    return NextResponse.json({ error: "Missing audio file" }, { status: 400 });
+  }
+
+  if (!file.type || !file.type.startsWith("audio/")) {
+    return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
+  }
+
+  if (typeof file.size === "number" && file.size > MAX_FILE_SIZE_BYTES) {
+    return NextResponse.json({ error: "File too large" }, { status: 413 });
+  }
+
+    try {
+      // Weiterleitung an Backend für Transkription
+      const backendFormData = new FormData();
+      backendFormData.append("file", file);
+
+      const response = await fetch(`${BackendUrls.agent()}/audio/transcribe`, {
+        method: "POST",
+        body: backendFormData,
+      });
+
+      if (!response.ok) {
+        let errorDetail = "Transcription failed";
+        try {
+          const errorJson = await response.json();
+          // Bessere Extraktion der Fehlermeldung aus verschiedenen Formaten
+          if (errorJson.error) {
+            if (typeof errorJson.error === 'string') {
+              errorDetail = errorJson.error;
+            } else if (errorJson.error.message) {
+              errorDetail = errorJson.error.message;
+            } else if (errorJson.error.detail) {
+              errorDetail = errorJson.error.detail;
+            }
+          } else if (errorJson.detail) {
+            errorDetail = errorJson.detail;
+          } else if (errorJson.message) {
+            errorDetail = errorJson.message;
+          }
+        } catch {
+          const errorText = await response.text().catch(() => "");
+          errorDetail = errorText || errorDetail;
+        }
+        return NextResponse.json(
+          { error: errorDetail },
+          { status: response.status }
+        );
+      }
+
+      const result = await response.json();
+      return NextResponse.json(result);
+    } catch (error) {
+      console.error("Transcription error:", error);
+      return NextResponse.json(
+        { error: "Failed to connect to backend" },
+        { status: 503 }
+      );
+    }
+}

@@ -1,0 +1,68 @@
+/* Workspace Accent Mapping - nutzt data-ak-accent statt data-ak-workspace */
+
+[data-ak-accent="inbox"] {
+  --ak-color-accent: var(--ak-accent-inbox, var(--ak-color-accent));
+  --ak-color-accent-soft: var(--ak-accent-inbox-soft, var(--ak-color-accent-soft));
+  --ak-color-accent-strong: color-mix(in oklab, var(--ak-color-accent) 92%, black);
+  --ak-color-accent-hover: var(--ak-color-accent-strong);
+  --ak-color-accent-border: color-mix(in oklab, var(--ak-color-accent) 22%, transparent);
+  --ak-color-accent-glow: color-mix(in oklab, var(--ak-color-accent) 18%, transparent);
+  --ak-color-accent-subtle: color-mix(in oklab, var(--ak-color-accent) 6%, transparent);
+}
+
+[data-ak-accent="documents"],
+[data-ak-accent="docs"] {
+  --ak-color-accent: var(--ak-accent-documents, var(--ak-color-accent));
+  --ak-color-accent-soft: var(--ak-accent-documents-soft, var(--ak-color-accent-soft));
+  --ak-color-accent-strong: color-mix(in oklab, var(--ak-color-accent) 92%, black);
+  --ak-color-accent-hover: var(--ak-color-accent-strong);
+  --ak-color-accent-border: color-mix(in oklab, var(--ak-color-accent) 22%, transparent);
+  --ak-color-accent-glow: color-mix(in oklab, var(--ak-color-accent) 18%, transparent);
+  --ak-color-accent-subtle: color-mix(in oklab, var(--ak-color-accent) 6%, transparent);
+}
+
+[data-ak-accent="actions"] {
+  --ak-color-accent: var(--ak-accent-actions, var(--ak-color-accent));
+  --ak-color-accent-soft: var(--ak-accent-actions-soft, var(--ak-color-accent-soft));
+  --ak-color-accent-strong: color-mix(in oklab, var(--ak-color-accent) 92%, black);
+  --ak-color-accent-hover: var(--ak-color-accent-strong);
+  --ak-color-accent-border: color-mix(in oklab, var(--ak-color-accent) 22%, transparent);
+  --ak-color-accent-glow: color-mix(in oklab, var(--ak-color-accent) 18%, transparent);
+  --ak-color-accent-subtle: color-mix(in oklab, var(--ak-color-accent) 6%, transparent);
+}
+
+[data-ak-accent="customers"] {
+  --ak-color-accent: var(--ak-accent-customers, var(--ak-color-accent));
+  --ak-color-accent-soft: var(--ak-accent-customers-soft, var(--ak-color-accent-soft));
+  --ak-color-accent-strong: color-mix(in oklab, var(--ak-color-accent) 92%, black);
+  --ak-color-accent-hover: var(--ak-color-accent-strong);
+  --ak-color-accent-border: color-mix(in oklab, var(--ak-color-accent) 22%, transparent);
+  --ak-color-accent-glow: color-mix(in oklab, var(--ak-color-accent) 18%, transparent);
+  --ak-color-accent-subtle: color-mix(in oklab, var(--ak-color-accent) 6%, transparent);
+}
+
+[data-ak-accent="chat"] {
+  --ak-color-accent: var(--ak-accent-chat, var(--ak-color-accent));
+  --ak-color-accent-soft: var(--ak-accent-chat-soft, var(--ak-color-accent-soft));
+  --ak-color-accent-strong: color-mix(in oklab, var(--ak-color-accent) 92%, black);
+  --ak-color-accent-hover: var(--ak-color-accent-strong);
+  --ak-color-accent-border: color-mix(in oklab, var(--ak-color-accent) 22%, transparent);
+  --ak-color-accent-glow: color-mix(in oklab, var(--ak-color-accent) 18%, transparent);
+  --ak-color-accent-subtle: color-mix(in oklab, var(--ak-color-accent) 6%, transparent);
+}
+
+[data-ak-accent="settings"] {
+  --ak-color-accent: var(--ak-accent-settings, var(--ak-color-accent));
+  --ak-color-accent-soft: var(--ak-accent-settings-soft, var(--ak-color-accent-soft));
+  --ak-color-accent-strong: color-mix(in oklab, var(--ak-color-accent) 92%, black);
+  --ak-color-accent-hover: var(--ak-color-accent-strong);
+  --ak-color-accent-border: color-mix(in oklab, var(--ak-color-accent) 22%, transparent);
+  --ak-color-accent-glow: color-mix(in oklab, var(--ak-color-accent) 18%, transparent);
+  --ak-color-accent-subtle: color-mix(in oklab, var(--ak-color-accent) 6%, transparent);
+}
+
+[data-ak-accent="default"],
+[data-ak-accent="unknown"] {
+  /* Keine Overrides - nutze Standard-Accent */
+}
+

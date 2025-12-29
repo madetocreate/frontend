@@ -1,0 +1,58 @@
+.ak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ak-space-1);
+  border-radius: 9999px;
+  border: var(--ak-border-hairline); /* Subtiler Border - Apple Style */
+  background: color-mix(in oklab, var(--ak-color-bg-surface) 78%, transparent);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  color: var(--ak-color-text-secondary);
+  font-weight: 500; /* Medium statt Semibold - Apple Style */
+  letter-spacing: 0; /* Natürlicher - Apple Style */
+  white-space: nowrap;
+}
+
+.ak-badge--sm {
+  height: 20px;
+  padding: 0 8px;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.ak-badge--md {
+  height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+  line-height: 24px;
+}
+
+.ak-badge--neutral {
+  border-color: var(--ak-color-border-subtle);
+  background: color-mix(in oklab, var(--ak-color-bg-surface) 82%, transparent);
+  color: var(--ak-color-text-secondary);
+}
+
+.ak-badge--info {
+  border-color: color-mix(in oklab, var(--ak-semantic-info) 35%, var(--ak-color-border-subtle));
+  background: var(--ak-semantic-info-soft);
+  color: var(--ak-semantic-info);
+}
+
+.ak-badge--success {
+  border-color: color-mix(in oklab, var(--ak-semantic-success) 35%, var(--ak-color-border-subtle));
+  background: var(--ak-semantic-success-soft);
+  color: var(--ak-semantic-success);
+}
+
+.ak-badge--warning {
+  border-color: color-mix(in oklab, var(--ak-semantic-warning) 35%, var(--ak-color-border-subtle));
+  background: var(--ak-semantic-warning-soft);
+  color: var(--ak-semantic-warning);
+}
+
+.ak-badge--danger {
+  border-color: color-mix(in oklab, var(--ak-semantic-danger) 35%, var(--ak-color-border-subtle));
+  background: var(--ak-semantic-danger-soft);
+  color: var(--ak-semantic-danger);
+}

@@ -1,0 +1,340 @@
+/**
+ * AKLOW Utility Classes - Text, Focus, Spinner, Semantic Alerts
+ * 
+ * Diese Utilities ergänzen das Token-System und sollten verwendet werden,
+ * statt direkter Tailwind-Farbklassen wie text-gray-*, bg-blue-*, etc.
+ */
+
+@layer utilities {
+  /* ============================================
+     TEXT COLORS
+     ============================================ */
+  .ak-text-primary {
+    color: var(--ak-text-primary);
+  }
+  
+  .ak-text-secondary {
+    color: var(--ak-text-secondary);
+  }
+  
+  .ak-text-muted {
+    color: var(--ak-text-muted);
+  }
+
+  .ak-text-success {
+    color: var(--ak-semantic-success);
+  }
+
+  .ak-text-warning {
+    color: var(--ak-semantic-warning);
+  }
+
+  .ak-text-danger {
+    color: var(--ak-semantic-danger);
+  }
+
+  .ak-text-info {
+    color: var(--ak-semantic-info);
+  }
+  
+  /* ============================================
+     BACKGROUND SURFACES
+     ============================================ */
+  .ak-bg-surface-0 {
+    background: var(--ak-surface-0);
+  }
+  
+  .ak-bg-surface-1 {
+    background: var(--ak-surface-1);
+  }
+  
+  .ak-bg-surface-2 {
+    background: var(--ak-surface-2);
+  }
+
+  /* ============================================
+     CANONICAL SURFACES
+     ============================================ */
+  .ak-surface-card {
+    background: var(--ak-color-bg-surface);
+    border: var(--ak-border-default);
+    border-radius: var(--ak-card-radius);
+    box-shadow: var(--ak-elev-1);
+  }
+
+  .ak-surface-panel {
+    background: var(--ak-color-bg-surface);
+    border: var(--ak-border-hairline);
+    border-radius: var(--ak-radius-lg);
+    box-shadow: var(--ak-elev-0);
+  }
+
+  .ak-surface-floating {
+    background: var(--ak-glass-bg);
+    border: var(--ak-glass-border);
+    border-radius: var(--ak-radius-xl);
+    box-shadow: var(--ak-elev-3);
+    backdrop-filter: blur(var(--ak-glass-blur)) saturate(var(--ak-glass-saturate));
+    -webkit-backdrop-filter: blur(var(--ak-glass-blur)) saturate(var(--ak-glass-saturate));
+  }
+  
+  /* AK Glass Recipe: Einheitliche Glass-Definition */
+  .ak-bg-glass {
+    background: var(--ak-glass-bg);
+    backdrop-filter: blur(var(--ak-glass-blur));
+    -webkit-backdrop-filter: blur(var(--ak-glass-blur));
+    border: var(--ak-glass-border);
+    box-shadow: var(--ak-glass-shadow);
+  }
+  
+  /* ============================================
+     BORDERS & SHADOWS
+     ============================================ */
+  .ak-border-hairline {
+    border: var(--ak-border-hairline);
+  }
+  
+  .ak-border-default {
+    border: var(--ak-border-default);
+  }
+  
+  .ak-shadow-1 {
+    box-shadow: var(--ak-elev-1);
+  }
+  
+  .ak-shadow-2 {
+    box-shadow: var(--ak-elev-2);
+  }
+  
+  /* ============================================
+     DIVIDER UTILITIES
+     ============================================ */
+  .ak-divider-y {
+    width: var(--ak-divider-hairline);
+    background: var(--ak-divider-color);
+  }
+  
+  .ak-divider-x {
+    height: var(--ak-divider-hairline);
+    background: var(--ak-divider-color);
+  }
+  
+  /* ============================================
+     ICON SIZES (konsistente Größen)
+     ============================================ */
+  .ak-icon-16 {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .ak-icon-18 {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .ak-icon-20 {
+    width: 20px;
+    height: 20px;
+  }
+  
+  /* ============================================
+     FOCUS RING (Alternative für outline-basierte Komponenten)
+     ============================================ */
+  /* NOTE: .ak-focus-ring ist in ak-interactions.css definiert (Single Source of Truth) */
+  /* Diese Klasse ist für Komponenten, die outline statt ring benötigen */
+  .ak-focus-outline {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  
+  .ak-focus-outline:focus {
+    outline: 2px solid var(--ak-focus-ring-color);
+    outline-offset: 2px;
+    border-color: var(--ak-focus-ring-color);
+  }
+  
+  .ak-focus-outline:focus-visible {
+    outline: 2px solid var(--ak-focus-ring-color);
+    outline-offset: 2px;
+    border-color: var(--ak-focus-ring-color);
+  }
+  
+  /* Alternative mit ring-util (für Tailwind-kompatible Komponenten) */
+  .ak-focus-ring-ring {
+    --tw-ring-color: var(--ak-focus-ring-color);
+  }
+  
+  .ak-focus-ring-ring:focus {
+    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+    box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+    border-color: var(--ak-focus-ring-color);
+  }
+  
+  /* ============================================
+     SPINNER (Token-basiert)
+     ============================================ */
+  .ak-spinner {
+    border-color: var(--ak-accent-inbox);
+    border-top-color: transparent;
+  }
+  
+  .ak-spinner-primary {
+    border-color: var(--ak-accent-inbox);
+    border-top-color: transparent;
+  }
+  
+  /* ============================================
+     SEMANTIC BADGES/ALERTS
+     ============================================ */
+  .ak-badge-success {
+    background: var(--ak-semantic-success-soft);
+    border-color: color-mix(in oklab, var(--ak-semantic-success) 35%, var(--ak-color-border-subtle));
+    color: var(--ak-semantic-success);
+  }
+  
+  .ak-badge-warning {
+    background: var(--ak-semantic-warning-soft);
+    border-color: color-mix(in oklab, var(--ak-semantic-warning) 35%, var(--ak-color-border-subtle));
+    color: var(--ak-semantic-warning);
+  }
+  
+  .ak-badge-danger {
+    background: var(--ak-semantic-danger-soft);
+    border-color: color-mix(in oklab, var(--ak-semantic-danger) 35%, var(--ak-color-border-subtle));
+    color: var(--ak-semantic-danger);
+  }
+  
+  .ak-badge-info {
+    background: var(--ak-semantic-info-soft);
+    border-color: color-mix(in oklab, var(--ak-semantic-info) 35%, var(--ak-color-border-subtle));
+    color: var(--ak-semantic-info);
+  }
+  
+  /* Alert-Varianten (für Error/Success-Meldungen) */
+  .ak-alert-success {
+    background: var(--ak-semantic-success-soft);
+    border: 1px solid color-mix(in oklab, var(--ak-semantic-success) 25%, var(--ak-color-border-subtle));
+    color: var(--ak-semantic-success);
+  }
+  
+  .ak-alert-warning {
+    background: var(--ak-semantic-warning-soft);
+    border: 1px solid color-mix(in oklab, var(--ak-semantic-warning) 25%, var(--ak-color-border-subtle));
+    color: var(--ak-semantic-warning);
+  }
+  
+  .ak-alert-danger {
+    background: var(--ak-semantic-danger-soft);
+    border: 1px solid color-mix(in oklab, var(--ak-semantic-danger) 25%, var(--ak-color-border-subtle));
+    color: var(--ak-semantic-danger);
+  }
+  
+  .ak-alert-info {
+    background: var(--ak-semantic-info-soft);
+    border: 1px solid color-mix(in oklab, var(--ak-semantic-info) 25%, var(--ak-color-border-subtle));
+    color: var(--ak-semantic-info);
+  }
+
+  /* ============================================
+     COMPOSER SURFACE (Token-basiert)
+     ============================================ */
+  .ak-composer-surface {
+    background: linear-gradient(180deg, var(--ak-composer-bg-top), var(--ak-composer-bg-bottom));
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--ak-composer-border);
+    box-shadow: var(--ak-composer-shadow);
+    transition:
+      border-color var(--ak-motion-duration) var(--ak-motion-ease),
+      box-shadow var(--ak-motion-duration) var(--ak-motion-ease),
+      transform var(--ak-motion-duration) var(--ak-motion-ease);
+  }
+  .ak-composer-surface:hover {
+    border-color: var(--ak-composer-border-hover);
+    box-shadow: var(--ak-composer-shadow-hover);
+  }
+  .ak-composer-surface:focus-within {
+    border-color: var(--ak-composer-border-focus);
+    box-shadow: var(--ak-composer-shadow-focus), 0 0 0 2px var(--ak-focus-ring-color);
+  }
+  .ak-composer-surface--realtime {
+    background: var(--ak-semantic-danger-soft);
+    border-color: color-mix(in oklab, var(--ak-semantic-danger) 25%, var(--ak-composer-border));
+  }
+
+  /* ============================================
+     ACCENT UTILITIES
+     ============================================ */
+  .ak-accent {
+    color: var(--ak-color-accent);
+  }
+
+  .ak-accent-bg-soft {
+    background: var(--ak-color-accent-soft);
+  }
+
+  .ak-accent-border {
+    border-color: var(--ak-color-accent);
+  }
+
+  .ak-accent-icon {
+    color: var(--ak-color-accent);
+  }
+
+  /* ============================================
+     CODE BLOCK UTILITIES
+     ============================================ */
+  .ak-codeblock {
+    background: var(--ak-code-surface);
+    border: 1px solid var(--ak-code-border);
+    border-radius: var(--ak-radius-lg);
+  }
+
+  .ak-theme-dark .ak-codeblock {
+    background: var(--ak-code-surface-dark);
+    border-color: var(--ak-code-border-dark);
+  }
+
+  .ak-codeblock-header {
+    background: var(--ak-code-header);
+    border-bottom: 1px solid var(--ak-code-border);
+  }
+
+  .ak-theme-dark .ak-codeblock-header {
+    background: var(--ak-code-header-dark);
+    border-bottom-color: var(--ak-code-border-dark);
+  }
+
+  .ak-codeblock-footer {
+    background: var(--ak-code-footer);
+    border-top: 1px solid var(--ak-code-border);
+  }
+
+  .ak-theme-dark .ak-codeblock-footer {
+    background: var(--ak-code-footer-dark);
+    border-top-color: var(--ak-code-border-dark);
+  }
+
+  .ak-codeinline {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: var(--ak-radius-xs);
+    padding: 0.125rem 0.25rem;
+    font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+    font-size: 0.875em;
+  }
+
+  .ak-text-code-muted {
+    color: var(--ak-code-text-muted);
+  }
+
+  .ak-text-code-secondary {
+    color: var(--ak-code-text-secondary);
+  }
+
+  .ak-text-code-primary {
+    color: var(--ak-code-text-primary);
+  }
+}
+

@@ -1,0 +1,200 @@
+frontend/.env.example:5:NEXT_PUBLIC_ANALYTICS_PROVIDER=none  # options: none|plausible|posthog
+frontend/.env.example:8:NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+frontend/postcss.config.mjs:3:    "@tailwindcss/postcss": {},
+frontend/scripts/shield-doctor.sh:14:# Prüfe ob curl verfügbar ist
+frontend/pnpm-lock.yaml:38:      '@tanstack/react-table':
+frontend/pnpm-lock.yaml:117:      '@tailwindcss/postcss':
+frontend/pnpm-lock.yaml:222:    resolution: {integrity: sha512-gytXUbs8k2sXS9PnQptz5o0QnpLL51SwASIORY6XaBKF88nsOT0Zw9szLqlSGQDP/4TljBAD5y98p2U1fqkdsw==}
+frontend/pnpm-lock.yaml:836:  '@radix-ui/react-compose-refs@1.1.2':
+frontend/pnpm-lock.yaml:1411:  '@tailwindcss/postcss@4.1.18':
+frontend/pnpm-lock.yaml:1422:  '@tanstack/react-table@8.21.3':
+frontend/pnpm-lock.yaml:1435:  '@tanstack/table-core@8.21.3':
+frontend/pnpm-lock.yaml:1765:    resolution: {integrity: sha512-rV0YSoyhK2nZ4vEswT/QwqzqQXw5I6CjoaYMOX0TqBlWhojUf8P94mvI7nuJTeaCkkds3QE4+zS8Ko+GdXuZtA==}
+frontend/pnpm-lock.yaml:2156:    resolution: {integrity: sha512-wR/XK3D3XcLIZwpbvQwQ5fK+8Ykds1ip7A2Txe0yxncXSdq1L9skcG7blcedkOX+ZcgxGAmLX1FrRGbADwzi0w==}
+frontend/pnpm-lock.yaml:2576:  fast-json-stable-stringify@2.1.0:
+frontend/pnpm-lock.yaml:3022:  json-stable-stringify-without-jsonify@1.0.1:
+frontend/pnpm-lock.yaml:3231:  markdown-table@3.0.4:
+frontend/pnpm-lock.yaml:3258:  mdast-util-gfm-table@2.0.0:
+frontend/pnpm-lock.yaml:3286:    resolution: {integrity: sha512-xj68wMTvGXVOKonmog6LwyJKrYXZPvlwabaryTjLh9LuvovB/KAH+kvi8Gjj+7rJjsFi23nkUxRQv1KqSroMqA==}
+frontend/pnpm-lock.yaml:3316:  micromark-extension-gfm-table@2.1.1:
+frontend/pnpm-lock.yaml:3445:  napi-postinstall@0.3.4:
+frontend/pnpm-lock.yaml:3620:  possible-typed-array-names@1.1.0:
+frontend/pnpm-lock.yaml:3624:  postcss@8.4.31:
+frontend/pnpm-lock.yaml:3628:  postcss@8.5.6:
+frontend/pnpm-lock.yaml:3698:  react-remove-scroll-bar@2.3.8:
+frontend/pnpm-lock.yaml:3936:  stable-hash@0.0.5:
+frontend/pnpm-lock.yaml:4107:    resolution: {integrity: sha512-2Ac2RgzDe/cn48GvOe3M+o82pEFewD3UPbyoUHHdKasHwJKjds4fLXWf/Ux5kATBKN20oaFGu+jbElp1pos0mg==}
+frontend/pnpm-lock.yaml:4167:  unist-util-position@5.0.0:
+frontend/pnpm-lock.yaml:4170:  unist-util-remove-position@5.0.0:
+frontend/pnpm-lock.yaml:4173:  unist-util-stringify-position@4.0.0:
+frontend/pnpm-lock.yaml:4992:      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.7)(react@19.2.3)
+frontend/pnpm-lock.yaml:5002:  '@radix-ui/react-compose-refs@1.1.2(@types/react@19.2.7)(react@19.2.3)':
+frontend/pnpm-lock.yaml:5023:      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.7)(react@19.2.3)
+frontend/pnpm-lock.yaml:5041:      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.7)(react@19.2.3)
+frontend/pnpm-lock.yaml:5070:      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.7)(react@19.2.3)
+frontend/pnpm-lock.yaml:5096:      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.7)(react@19.2.3)
+frontend/pnpm-lock.yaml:5126:      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.7)(react@19.2.3)
+frontend/pnpm-lock.yaml:5144:      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.7)(react@19.2.3)
+frontend/pnpm-lock.yaml:5179:      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.7)(react@19.2.3)
+frontend/pnpm-lock.yaml:5186:      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.7)(react@19.2.3)
+frontend/pnpm-lock.yaml:5194:      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.7)(react@19.2.3)
+frontend/pnpm-lock.yaml:5485:  '@tailwindcss/postcss@4.1.18':
+frontend/pnpm-lock.yaml:5490:      postcss: 8.5.6
+frontend/pnpm-lock.yaml:5500:  '@tanstack/react-table@8.21.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+frontend/pnpm-lock.yaml:5502:      '@tanstack/table-core': 8.21.3
+frontend/pnpm-lock.yaml:5512:  '@tanstack/table-core@8.21.3': {}
+frontend/pnpm-lock.yaml:5948:      fast-json-stable-stringify: 2.1.0
+frontend/pnpm-lock.yaml:6055:      possible-typed-array-names: 1.1.0
+frontend/pnpm-lock.yaml:6691:      stable-hash: 0.0.5
+frontend/pnpm-lock.yaml:6831:      json-stable-stringify-without-jsonify: 1.0.1
+frontend/pnpm-lock.yaml:6893:  fast-json-stable-stringify@2.1.0: {}
+frontend/pnpm-lock.yaml:7048:      unist-util-remove-position: 5.0.0
+frontend/pnpm-lock.yaml:7093:      unist-util-position: 5.0.0
+frontend/pnpm-lock.yaml:7383:  json-stable-stringify-without-jsonify@1.0.1: {}
+frontend/pnpm-lock.yaml:7585:  markdown-table@3.0.4: {}
+frontend/pnpm-lock.yaml:7611:      unist-util-stringify-position: 4.0.0
+frontend/pnpm-lock.yaml:7641:  mdast-util-gfm-table@2.0.0:
+frontend/pnpm-lock.yaml:7645:      markdown-table: 3.0.4
+frontend/pnpm-lock.yaml:7666:      mdast-util-gfm-table: 2.0.0
+frontend/pnpm-lock.yaml:7680:      unist-util-remove-position: 5.0.0
+frontend/pnpm-lock.yaml:7707:      unist-util-stringify-position: 4.0.0
+frontend/pnpm-lock.yaml:7736:      unist-util-position: 5.0.0
+frontend/pnpm-lock.yaml:7831:  micromark-extension-gfm-table@2.1.1:
+frontend/pnpm-lock.yaml:7856:      micromark-extension-gfm-table: 2.1.1
+frontend/pnpm-lock.yaml:8033:  napi-postinstall@0.3.4: {}
+frontend/pnpm-lock.yaml:8048:      postcss: 8.4.31
+frontend/pnpm-lock.yaml:8210:  possible-typed-array-names@1.1.0: {}
+frontend/pnpm-lock.yaml:8212:  postcss@8.4.31:
+frontend/pnpm-lock.yaml:8218:  postcss@8.5.6:
+frontend/pnpm-lock.yaml:8290:  react-remove-scroll-bar@2.3.8(@types/react@19.2.7)(react@19.2.3):
+frontend/pnpm-lock.yaml:8301:      react-remove-scroll-bar: 2.3.8(@types/react@19.2.7)(react@19.2.3)
+frontend/pnpm-lock.yaml:8645:  stable-hash@0.0.5: {}
+frontend/pnpm-lock.yaml:8854:      possible-typed-array-names: 1.1.0
+frontend/pnpm-lock.yaml:8900:  unist-util-position@5.0.0:
+frontend/pnpm-lock.yaml:8904:  unist-util-remove-position@5.0.0:
+frontend/pnpm-lock.yaml:8909:  unist-util-stringify-position@4.0.0:
+frontend/pnpm-lock.yaml:8926:      napi-postinstall: 0.3.4
+frontend/pnpm-lock.yaml:8987:      unist-util-stringify-position: 4.0.0
+frontend/pnpm-lock.yaml:9016:      postcss: 8.5.6
+frontend/src/app/dashboard/page.tsx:365:                      barSize={40}
+frontend/src/app/dashboard/page.tsx:373:          {/* Sidebar Area */}
+frontend/src/app/ak-tokens.css:261:  /* Sidebar */
+frontend/src/app/ak-tokens.css:263:  --ak-sidebar-width: 256px;
+frontend/src/app/ak-tokens.css:264:  --ak-sidebar-topbar-height: 48px;
+frontend/src/app/ak-tokens.css:265:  --ak-sidebar-pad-x: var(--ak-space-3);
+frontend/src/app/ak-tokens.css:266:  --ak-sidebar-pad-y: var(--ak-space-2);
+frontend/src/app/ak-tokens.css:297:  --ak-focus-ring-offset: var(--ak-color-bg-sidebar);
+frontend/src/app/ak-tokens.css:309:/* Density: Comfortable (default) */
+frontend/src/app/ak-tokens.css:310:.ak-density-comfortable {
+frontend/src/__tests__/actionDispatch.test.ts:4: * FAIL-CLOSED: Tests prüfen, dass nur executable Actions dispatcht werden
+frontend/src/__tests__/actionDispatch.test.ts:9:import { normalizeExecutableActionId, isExecutableActionId } from '@/lib/actions/registry'
+frontend/src/__tests__/actionDispatch.test.ts:30:    it('should dispatch aklow-action-start event with correct structure for executable action', () => {
+frontend/src/__tests__/actionDispatch.test.ts:56:    it('should NOT dispatch for non-executable action', () => {
+frontend/src/__tests__/actionDispatch.test.ts:64:        expect.stringContaining('ist nicht executable'),
+frontend/src/__tests__/actionDispatch.test.ts:87:  describe('normalizeExecutableActionId', () => {
+frontend/src/__tests__/actionDispatch.test.ts:88:    it('should return executable action ID for valid action', () => {
+frontend/src/__tests__/actionDispatch.test.ts:89:      const result = normalizeExecutableActionId('inbox.summarize')
+frontend/src/__tests__/actionDispatch.test.ts:91:      expect(isExecutableActionId(result!)).toBe(true)
+frontend/src/__tests__/actionDispatch.test.ts:95:      const result = normalizeExecutableActionId('inbox.draftReply')
+frontend/src/__tests__/actionDispatch.test.ts:99:    it('should return null for non-executable action', () => {
+frontend/src/__tests__/actionDispatch.test.ts:100:      const result = normalizeExecutableActionId('unknown.action')
+frontend/src/modules/growth/GrowthRightDrawer.tsx:11:import { listActionsForModule, isExecutableActionId } from '@/lib/actions/registry';
+frontend/src/modules/growth/GrowthRightDrawer.tsx:36:  // FAIL-CLOSED: Filtere Fallback-Actions nach executable Status
+frontend/src/modules/growth/GrowthRightDrawer.tsx:37:  const fallbackActions = (getActionsForMode(mode, campaignType) || []).filter(id => isExecutableActionId(id));
+frontend/src/modules/growth/GrowthRightDrawer.tsx:86:      <div className="flex-1 overflow-y-auto ak-scrollbar">
+frontend/src/modules/growth/GrowthRightDrawer.tsx:117:                  <p className="text-xs text-[var(--ak-color-text-muted)]">Keine Core-Aktionen für Growth verfügbar.</p>
+frontend/public/widget.js:125:      position: fixed;
+frontend/public/widget.js:191:      position: fixed;
+frontend/public/widget.js:363:      position: absolute;
+frontend/public/widget.js:595:    #aklow-widget-messages::-webkit-scrollbar {
+frontend/public/widget.js:598:    #aklow-widget-messages::-webkit-scrollbar-track {
+frontend/public/widget.js:601:    #aklow-widget-messages::-webkit-scrollbar-thumb {
+frontend/public/widget.js:605:    #aklow-widget-messages::-webkit-scrollbar-thumb:hover {
+frontend/src/__tests__/actionRegistry.test.ts:28:      const validPlacements = ['primary', 'secondary', 'menu', 'hidden']
+frontend/README.md:74:│   │   ├── chat/         # Chat-related components (Composer, Shell)
+frontend/README.md:76:│   │   ├── CustomersSidebarWidget.tsx # Customer module
+frontend/README.md:77:│   │   ├── DocumentsSidebarWidget.tsx # Documents module
+frontend/README.md:78:│   │   ├── GrowthSidebarWidget.tsx    # Growth module
+frontend/README.md:106:### Core Modules (Sidebar)
+frontend/README.md:115:- **Visualizations**: Dynamic audio waves in composer (real microphone data + fallback animation).
+frontend/src/app/animations.css:71:    background-position: -100% 0;
+frontend/src/app/animations.css:74:    background-position: 200% 0;
+frontend/src/app/animations.css:80:    background-position: 0% 50%;
+frontend/src/app/animations.css:83:    background-position: 100% 50%;
+frontend/src/app/globals.css:76:  --ak-color-bg-sidebar: #f9fafb; /* Slightly warmer, less blue-gray */
+frontend/src/app/globals.css:154:  /* Composer Surface - Light Mode */
+frontend/src/app/globals.css:155:  --ak-composer-bg-top: rgba(255,255,255,0.96);
+frontend/src/app/globals.css:156:  --ak-composer-bg-bottom: rgba(255,255,255,0.90);
+frontend/src/app/globals.css:157:  --ak-composer-border: rgba(0,0,0,0.06);
+frontend/src/app/globals.css:158:  --ak-composer-border-hover: rgba(0,0,0,0.08);
+frontend/src/app/globals.css:159:  --ak-composer-border-focus: rgba(0,0,0,0.10);
+frontend/src/app/globals.css:160:  --ak-composer-shadow: 0 0 0 1px rgba(0,0,0,0.02), 0 4px 16px rgba(0,0,0,0.04), 0 16px 48px rgba(0,0,0,0.08);
+frontend/src/app/globals.css:161:  --ak-composer-shadow-hover: 0 0 0 1px rgba(0,0,0,0.03), 0 8px 24px rgba(0,0,0,0.06), 0 24px 64px rgba(0,0,0,0.10);
+frontend/src/app/globals.css:162:  --ak-composer-shadow-focus: 0 0 0 1px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.08), 0 32px 80px rgba(0,0,0,0.12);
+frontend/src/app/globals.css:189:  --ak-color-bg-sidebar: #181818;
+frontend/src/app/globals.css:198:  /* Warme Textfarben für bessere Lesbarkeit */
+frontend/src/app/globals.css:267:  /* Composer Surface - Dark Mode */
+frontend/src/app/globals.css:268:  --ak-composer-bg-top: rgba(30,30,30,0.92);
+frontend/src/app/globals.css:269:  --ak-composer-bg-bottom: rgba(30,30,30,0.78);
+frontend/src/app/globals.css:270:  --ak-composer-border: rgba(255,255,255,0.10);
+frontend/src/app/globals.css:271:  --ak-composer-border-hover: rgba(255,255,255,0.14);
+frontend/src/app/globals.css:272:  --ak-composer-border-focus: rgba(255,255,255,0.18);
+frontend/src/app/globals.css:273:  --ak-composer-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 8px 24px rgba(0,0,0,0.55), 0 24px 64px rgba(0,0,0,0.65);
+frontend/src/app/globals.css:274:  --ak-composer-shadow-hover: 0 0 0 1px rgba(255,255,255,0.05), 0 12px 32px rgba(0,0,0,0.60), 0 32px 80px rgba(0,0,0,0.72);
+frontend/src/app/globals.css:275:  --ak-composer-shadow-focus: 0 0 0 1px rgba(255,255,255,0.07), 0 16px 40px rgba(0,0,0,0.65), 0 40px 96px rgba(0,0,0,0.78);
+frontend/src/app/globals.css:430:  .no-scrollbar::-webkit-scrollbar {
+frontend/src/app/globals.css:433:  .no-scrollbar {
+frontend/src/app/globals.css:435:    scrollbar-width: none;
+frontend/src/app/globals.css:438:  .ak-scrollbar {
+frontend/src/app/globals.css:439:    scrollbar-width: thin;
+frontend/src/app/globals.css:440:    scrollbar-color: transparent transparent;
+frontend/src/app/globals.css:442:  .ak-scrollbar:hover {
+frontend/src/app/globals.css:443:    scrollbar-color: rgba(0,0,0,0.15) transparent;
+frontend/src/app/globals.css:445:  .ak-scrollbar::-webkit-scrollbar {
+frontend/src/app/globals.css:449:  .ak-scrollbar::-webkit-scrollbar-track {
+frontend/src/app/globals.css:452:  .ak-scrollbar::-webkit-scrollbar-thumb {
+frontend/src/app/globals.css:457:  .ak-scrollbar:hover::-webkit-scrollbar-thumb {
+frontend/src/app/globals.css:460:  .ak-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+frontend/src/app/globals.css:599:    background-position: 200% 0;
+frontend/src/app/globals.css:602:    background-position: -200% 0;
+frontend/src/modules/growth/GrowthShell.tsx:70:            aria-label="Sidebar öffnen"
+frontend/docs/reports/API_INTEGRATION_SUMMARY.md:32:- ✅ MemorySidebarWidget → Kategorien werden geladen
+frontend/docs/reports/API_INTEGRATION_SUMMARY.md:60:### 6. Composer Tools
+frontend/docs/reports/API_INTEGRATION_SUMMARY.md:115:DATABASE_URL=postgresql://...
+frontend/src/modules/growth/GrowthLeftDrawer.tsx:83:      <div className="flex-1 overflow-y-auto ak-scrollbar px-2 pb-4 mt-2">
+frontend/src/app/dashboard/quality/page.tsx:11:  positive_feedback_rate?: number; // may be 0..1 or percentage
+frontend/src/app/dashboard/quality/page.tsx:63:        <div className="text-sm text-[var(--ak-color-text-muted)]">Keine Daten verfügbar</div>
+frontend/src/app/dashboard/quality/page.tsx:69:  const positive = metrics.thumbs_up_count ?? 0;
+frontend/src/app/dashboard/quality/page.tsx:71:  const rawPositiveRate = metrics.positive_feedback_rate;
+frontend/src/app/dashboard/quality/page.tsx:72:  const positiveRate = rawPositiveRate !== undefined ? (rawPositiveRate > 1 ? rawPositiveRate : rawPositiveRate * 100) : undefined;
+frontend/src/app/dashboard/quality/page.tsx:73:  const negativeRate = positiveRate !== undefined ? Math.max(0, 100 - positiveRate) : undefined;
+frontend/src/app/dashboard/quality/page.tsx:94:          <div className="text-2xl font-bold text-[var(--ak-semantic-success)]">{positive}</div>
+frontend/src/app/dashboard/quality/page.tsx:96:            {positiveRate !== undefined ? `${positiveRate.toFixed(1)}%` : "–"}
+frontend/src/app/dashboard/quality/page.tsx:111:            {positiveRate !== undefined ? `${positiveRate.toFixed(1)}%` : "–"}
+frontend/src/app/dashboard/quality/page.tsx:130:            {positiveRate !== undefined ? `${positiveRate.toFixed(1)}%` : "–"}
+frontend/src/app/dashboard/quality/page.tsx:133:            Anteil positiver Feedbacks
+frontend/UI_FEATURES.md:297:  SortableGrid,
+frontend/UI_FEATURES.md:342:<SortableGrid
+frontend/UI_FEATURES.md:464:- Nutze `transform` statt `position` für Animations
+frontend/src/app/ak-inspector.css:3:    background: var(--ak-color-bg-sidebar);
+frontend/docs/reports/REFACTOR_10OF10_TODO.md:41:#### Weitere Repos
+frontend/docs/reports/REFACTOR_10OF10_TODO.md:80:  - `_archive/verticals/node-backend-gastro/tests/pos_bridge.worker.db_smoke.test.ts` - Module nicht gefunden (Archive-Test sollte entfernt werden)
+frontend/docs/reports/REFACTOR_10OF10_TODO.md:89:## Phase 1: Legacy aus Repos raus, nach ~/Legacy archivieren
+frontend/docs/reports/REFACTOR_10OF10_TODO.md:106:- [ ] Canon festlegen: AppShellV2 + WorkspaceRailV2 + WorkspaceSidebarV2
+frontend/src/app/ak-scaffold.css:2: * AKLOW UI Scaffold – Drawer/Header/Footer + Sidebar polish
+frontend/src/app/ak-scaffold.css:25:      .ak-sidebar-cap
+frontend/src/app/ak-scaffold.css:27:    position: relative;
+frontend/src/app/ak-scaffold.css:39:      .ak-sidebar-cap
+frontend/src/app/ak-scaffold.css:42:    position: absolute;
+frontend/src/app/ak-scaffold.css:57:      .ak-sidebar-cap
+frontend/src/app/ak-scaffold.css:69:      .ak-sidebar-cap
+frontend/src/app/ak-scaffold.css:72:    position: absolute;
+frontend/src/app/ak-scaffold.css:87:      .ak-sidebar-cap
+frontend/src/app/ak-scaffold.css:98:      .ak-sidebar-cap
+frontend/src/app/ak-scaffold.css:100:    position: relative;
+frontend/src/app/ak-scaffold.css:111:        .ak-sidebar-cap
+frontend/src/app/ak-scaffold.css:126:    position: sticky;
+frontend/src/app/ak-scaffold.css:134:    position: sticky;
+frontend/src/app/ak-scaffold.css:147:  .ak-sidebar-button {
+frontend/src/app/ak-scaffold.css:148:    position: relative;
+frontend/src/app/ak-scaffold.css:152:  .ak-sidebar-button::after {

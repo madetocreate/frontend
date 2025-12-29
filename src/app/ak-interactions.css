@@ -1,0 +1,146 @@
+/* AKLOW Interaction System: States & Micro-Motion */
+
+@layer components {
+  /* ============================================
+     INTERACTION STATES
+     ============================================ */
+
+  /* Neutral Interaction Item (Rail, Sidebar, etc.) */
+  .ak-item {
+    @apply relative flex items-center justify-center rounded-[var(--ak-radius-lg)] transition-all duration-[var(--ak-motion-duration)] ease-[var(--ak-motion-ease)] outline-none select-none cursor-pointer;
+    @apply text-[var(--ak-icon-default)];
+  }
+
+  /* Hover State - Subtiler Apple Style */
+  .ak-item-hover {
+    background: var(--ak-color-bg-hover);
+    color: var(--ak-icon-hover);
+  }
+
+  /* Active State - Apple Style mit subtiler Accent-Border */
+  .ak-item-active {
+    background: var(--ak-color-rail-active-bg);
+    border-left: 2px solid var(--ak-color-selected-border);
+    color: var(--ak-icon-active);
+    font-weight: 500; /* Medium statt Semibold - Apple Style */
+  }
+
+  /* Dark Mode Active State */
+  .ak-theme-dark .ak-item-active {
+    background: var(--ak-color-rail-active-bg);
+    border-left: 2px solid var(--ak-color-selected-border-dark);
+    color: var(--ak-icon-active-dark);
+  }
+  
+  .ak-theme-dark .ak-item {
+    color: var(--ak-icon-default-dark);
+  }
+  
+  .ak-theme-dark .ak-item-hover {
+    background: var(--ak-color-bg-hover);
+    color: var(--ak-icon-hover-dark);
+  }
+
+  /* Pressed State */
+  .ak-item-pressed {
+    @apply opacity-80;
+  }
+
+  /* Focus Ring - Subtiler Apple Style */
+  .ak-focus-ring {
+    @apply focus-visible:outline-none;
+  }
+  
+  .ak-focus-ring:focus-visible {
+    @apply ring-1 ring-offset-1;
+    --tw-ring-color: var(--ak-color-accent-glow);
+  }
+
+  .ak-theme-dark .ak-focus-ring:focus-visible {
+    --tw-ring-color: rgba(31, 41, 55, 0.3); /* Graphite statt Indigo */
+  }
+
+  /* ============================================
+     SURFACES - Apple Style (subtiler)
+     ============================================ */
+  .ak-surface {
+    background: var(--ak-color-bg-surface);
+    border: var(--ak-border-hairline);
+    box-shadow: var(--ak-elev-1);
+  }
+
+  .ak-theme-dark .ak-surface {
+    border: var(--ak-border-hairline-dark);
+  }
+
+  /* ============================================
+     MOTION TOKENS - Apple Style (sanftere Easing)
+     ============================================ */
+  :root {
+    --ak-ease-out: cubic-bezier(0.4, 0, 0.2, 1); /* Standard Apple */
+    --ak-dur-fast: 140ms;
+    --ak-dur-normal: 180ms;
+    --ak-dur-slow: 240ms;
+  }
+
+  .ak-motion {
+    @apply transition-all;
+    transition-duration: var(--ak-dur-normal);
+    transition-timing-function: var(--ak-ease-out);
+  }
+
+  .ak-motion-fast {
+    @apply transition-all;
+    transition-duration: var(--ak-dur-fast);
+    transition-timing-function: var(--ak-ease-out);
+  }
+
+  /* ============================================
+     ANIMATIONS
+     ============================================ */
+  @keyframes ak-pane-in {
+    from {
+      opacity: 0;
+      transform: translateX(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .ak-animate-pane-in {
+    animation: ak-pane-in var(--ak-dur-slow) var(--ak-ease-out) forwards;
+  }
+
+  @keyframes ak-card-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .ak-animate-card-in {
+    animation: ak-card-in var(--ak-dur-normal) var(--ak-ease-out) forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-delay: -1ms !important;
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      background-attachment: initial !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
+    }
+    .ak-item:active {
+      transform: none !important;
+    }
+  }
+}
+

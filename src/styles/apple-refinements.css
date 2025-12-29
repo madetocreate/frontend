@@ -1,0 +1,260 @@
+/**
+ * Apple Style Refinements
+ * SCOPED: Nur aktiv wenn .ak-apple-demo Klasse gesetzt ist
+ * 
+ * Verwendung: body.ak-apple-demo oder html.ak-apple-demo auf Demo/Showcase-Routen
+ */
+
+.ak-apple-demo {
+  /* ============================================
+     SANFTE HOVER-ÜBERGÄNGE
+     ============================================ */
+
+  .apple-hover-smooth {
+    transition: all var(--ak-motion-duration);
+  }
+
+  .apple-hover-smooth:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ak-elev-2);
+  }
+
+  .apple-hover-lift {
+    transition: transform var(--ak-motion-duration), box-shadow var(--ak-motion-duration);
+  }
+
+  .apple-hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--ak-elev-3);
+  }
+
+  /* ============================================
+     FADE-ANIMATIONEN
+     ============================================ */
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .apple-fade-in {
+    animation: fade-in var(--ak-motion-duration) var(--ak-motion-ease);
+  }
+
+  .apple-fade-in-up {
+    animation: fade-in-up var(--ak-motion-duration-slow) var(--ak-motion-ease);
+  }
+
+  .apple-slide-in-right {
+    animation: slide-in-right var(--ak-motion-duration) var(--ak-motion-ease);
+  }
+
+  /* ============================================
+     TYPOGRAPHY HIERARCHIE
+     ============================================ */
+
+  .apple-headline-1 {
+    font-size: var(--ak-font-size-5xl);
+    font-weight: var(--ak-font-weight-bold);
+    line-height: var(--ak-line-height-tight);
+    letter-spacing: -0.02em;
+  }
+
+  .apple-headline-2 {
+    font-size: var(--ak-font-size-4xl);
+    font-weight: var(--ak-font-weight-bold);
+    line-height: var(--ak-line-height-tight);
+    letter-spacing: -0.01em;
+  }
+
+  .apple-headline-3 {
+    font-size: var(--ak-font-size-3xl);
+    font-weight: var(--ak-font-weight-semibold);
+    line-height: var(--ak-line-height-normal);
+    letter-spacing: -0.01em;
+  }
+
+  .apple-headline-4 {
+    font-size: var(--ak-font-size-2xl);
+    font-weight: var(--ak-font-weight-semibold);
+    line-height: var(--ak-line-height-normal);
+  }
+
+  .apple-body-large {
+    font-size: var(--ak-font-size-xl);
+    font-weight: var(--ak-font-weight-normal);
+    line-height: var(--ak-line-height-relaxed);
+  }
+
+  .apple-body {
+    font-size: var(--ak-font-size-base);
+    font-weight: var(--ak-font-weight-normal);
+    line-height: var(--ak-line-height-normal);
+  }
+
+  .apple-caption {
+    font-size: var(--ak-font-size-sm);
+    font-weight: var(--ak-font-weight-normal);
+    line-height: var(--ak-line-height-normal);
+    color: var(--ak-color-text-secondary);
+  }
+
+  /* ============================================
+     ERWEITERTE GLASSMORPHISM
+     ============================================ */
+
+  .apple-glass-ultra {
+    background: var(--ak-glass-bg);
+    backdrop-filter: blur(50px) saturate(200%);
+    -webkit-backdrop-filter: blur(50px) saturate(200%);
+    border: var(--ak-glass-border);
+    box-shadow: 
+      0 8px 32px 0 rgba(31, 38, 135, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: all var(--ak-motion-duration);
+  }
+
+  .apple-glass-ultra:hover {
+    background: rgba(255, 255, 255, 0.7);
+    box-shadow: 
+      0 12px 40px 0 rgba(31, 38, 135, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+
+  /* ============================================
+     SPACING UTILITIES
+     ============================================ */
+
+  .apple-spacing-tight > * + * {
+    margin-top: var(--ak-space-3);
+  }
+
+  .apple-spacing-normal > * + * {
+    margin-top: var(--ak-space-5);
+  }
+
+  .apple-spacing-relaxed > * + * {
+    margin-top: var(--ak-space-8);
+  }
+
+  .apple-spacing-loose > * + * {
+    margin-top: var(--ak-space-12);
+  }
+
+  /* ============================================
+     CARD ENHANCEMENTS
+     ============================================ */
+
+  .apple-card-enhanced {
+    border-radius: var(--ak-radius-lg);
+    padding: var(--ak-space-8);
+    background: var(--ak-color-bg-surface);
+    border: var(--ak-border-default);
+    box-shadow: var(--ak-shadow-soft);
+    transition: all var(--ak-motion-duration);
+  }
+
+  .apple-card-enhanced:hover {
+    box-shadow: var(--ak-shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--ak-color-border-strong);
+  }
+
+  /* ============================================
+     BUTTON ENHANCEMENTS
+     ============================================ */
+
+  .apple-button-smooth {
+    transition: all var(--ak-motion-duration);
+    border-radius: var(--ak-radius-md);
+  }
+
+  .apple-button-smooth:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--ak-shadow-md);
+  }
+
+  .apple-button-smooth:active {
+    transform: translateY(0);
+    box-shadow: var(--ak-shadow-sm);
+  }
+
+  /* ============================================
+     INPUT ENHANCEMENTS
+     ============================================ */
+
+  .apple-input-enhanced {
+    border-radius: var(--ak-radius-md);
+    border: var(--ak-border-default);
+    padding: var(--ak-space-3) var(--ak-space-5);
+    background: var(--ak-color-bg-surface);
+    transition: all var(--ak-motion-duration);
+    font-size: var(--ak-font-size-base);
+  }
+
+  .apple-input-enhanced:focus {
+    outline: none;
+    border-color: var(--ak-color-accent);
+    box-shadow: 0 0 0 3px var(--ak-color-accent-soft);
+  }
+
+  /* ============================================
+     LIST ENHANCEMENTS
+     ============================================ */
+
+  .apple-list-item {
+    padding: var(--ak-space-5);
+    border-radius: var(--ak-radius-md);
+    transition: all var(--ak-motion-duration);
+    margin-bottom: var(--ak-space-3);
+  }
+
+  .apple-list-item:hover {
+    background: var(--ak-color-bg-hover);
+    transform: translateX(4px);
+  }
+
+  /* ============================================
+     SECTION SPACING
+     ============================================ */
+
+  .apple-section {
+    margin-bottom: var(--ak-space-16);
+  }
+
+  .apple-section-tight {
+    margin-bottom: var(--ak-space-8);
+  }
+
+  .apple-section-loose {
+    margin-bottom: var(--ak-space-24);
+  }
+}

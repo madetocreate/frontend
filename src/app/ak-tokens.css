@@ -1,0 +1,443 @@
+/**
+ * AKLOW Design Tokens - "Calm Glass" System
+ * 
+ * North Star: "Quiet Power"
+ * - Alles hat einen Platz (Rhythmus, Raster, gleiche Abstände)
+ * - Farbe ist Bedeutung, nicht Deko
+ * - Motion ist Feedback, nicht Entertainment
+ */
+
+:root {
+  /* ============================================
+     SURFACE LEVELS (4 Levels)
+     ============================================ */
+  
+  /* Surface 0 - Hintergrund (ruhige Basis) */
+  --ak-surface-0: #fbfbfb; /* Slightly warmer, less blue-gray */
+  --ak-surface-0-dark: #1c1c1e;
+  
+  /* Surface 1 - Panels (Linkes Panel, Chat-Canvas, Drawer-Body) */
+  --ak-surface-1: #ffffff;
+  --ak-surface-1-dark: #2c2c2e;
+  
+  /* Surface 2 - Interactive Containers (Kontexte, List-Rows bei Hover/Selected) */
+  --ak-surface-2: rgba(0, 0, 0, 0.02);
+  --ak-surface-2-dark: rgba(255, 255, 255, 0.05);
+  --ak-surface-2-hover: rgba(0, 0, 0, 0.03); /* Subtiler - Apple Style */
+  --ak-surface-2-hover-dark: rgba(255, 255, 255, 0.06);
+  --ak-surface-2-selected: rgba(0, 0, 0, 0.04); /* Subtiler - Apple Style */
+  --ak-surface-2-selected-dark: rgba(255, 255, 255, 0.1);
+  
+  /* Surface 3 - Glass (nur für transient UI: Popover, Tooltips, Drawer-Header) */
+  /* AK Glass Recipe: Einheitliche Definition für alle Glass-Elemente */
+  --ak-glass-bg: rgba(255, 255, 255, 0.8); /* Etwas transparenter - Apple Style */
+  --ak-glass-bg-dark: rgba(28, 28, 30, 0.8);
+  --ak-glass-blur: 20px; /* Mehr Blur wie macOS */
+  --ak-glass-saturate: 200%; /* Mehr Sättigung für lebendigeres Glass */
+  --ak-glass-highlight: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0) 60%
+  );
+  --ak-glass-highlight-dark: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.18),
+    rgba(255, 255, 255, 0) 65%
+  );
+  --ak-glass-noise-opacity: 0.035;
+  --ak-glass-noise-opacity-dark: 0.02;
+  --ak-glass-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  --ak-glass-border-color: rgba(0, 0, 0, 0.08);
+  --ak-glass-border-color-dark: rgba(255, 255, 255, 0.12);
+  --ak-glass-border: 0.5px solid var(--ak-glass-border-color);
+  --ak-glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --ak-glass-shadow-dark: 0 4px 20px rgba(0, 0, 0, 0.5);
+  
+  /* ============================================
+     GRAPHITE ACCENTS (System-wide)
+     ============================================ */
+  --ak-color-graphite-base: #1f2937;
+  --ak-color-graphite-hover: #111827;
+  --ak-color-graphite-soft: rgba(31, 41, 55, 0.08);
+  --ak-color-graphite-text: #ffffff;
+  --ak-color-graphite-border: rgba(31, 41, 55, 0.12);
+  --ak-color-graphite-selected: rgba(31, 41, 55, 0.1);
+  --ak-color-graphite-surface: #1f2937;
+  --ak-color-graphite-surface-muted: #374151;
+  --ak-color-graphite-elevated: #2d3748; /* slate-800 lifted */
+
+  /* Tooltip Background (Graffiti/Graphite) */
+  --ak-color-tooltip-bg: var(--ak-color-graphite-surface);
+  --ak-color-tooltip-text: #ffffff;
+
+  /* Code Block Surfaces (Graphite-basiert) */
+  --ak-code-surface: #1e1e1e; /* Graphite-basiert, leicht dunkler */
+  --ak-code-surface-dark: #1e1e1e; /* Bleibt dark für Code */
+  --ak-code-header: #2d2d2d; /* Graphite-surface-muted ähnlich */
+  --ak-code-header-dark: #2d2d2d;
+  --ak-code-footer: #252525; /* Zwischen surface und header */
+  --ak-code-footer-dark: #252525;
+  --ak-code-border: rgba(255, 255, 255, 0.1); /* Subtiler Border */
+  --ak-code-border-dark: rgba(255, 255, 255, 0.1);
+  --ak-code-text-primary: rgba(255, 255, 255, 0.8);
+  --ak-code-text-secondary: rgba(255, 255, 255, 0.5);
+  --ak-code-text-muted: rgba(255, 255, 255, 0.4);
+
+  /* Rail Active Pill */
+  --ak-color-rail-active-bg: rgba(0, 0, 0, 0.10); /* Dezentes Grau für ausgewählte Icons */
+  --ak-color-rail-active-icon: var(--ak-text-primary);
+  --ak-color-rail-hover-bg: rgba(0, 0, 0, 0.05); /* Subtiler - Apple Style */
+  
+  /* Selected States - Apple Style mit Accent-Touch */
+  --ak-color-selected-border: rgba(31, 41, 55, 0.15); /* Sanfter Graphite-Rand */
+  --ak-color-selected-bg: rgba(31, 41, 55, 0.05); /* Sehr subtiler Graphite-Hintergrund */
+  --ak-color-selected-bg-strong: rgba(31, 41, 55, 0.08); /* Für stärkere Selected States */
+  
+  /* Icon Colors - Sanftere Übergänge */
+  --ak-icon-default: rgba(0, 0, 0, 0.5); /* Statt #6e6e73 - weicher */
+  --ak-icon-hover: rgba(0, 0, 0, 0.7); /* Statt primary - sanfter Übergang */
+  --ak-icon-active: var(--ak-color-accent); /* Behalte Accent für Active */
+  --ak-icon-active-glow: rgba(31, 41, 55, 0.2); /* Subtiler Graphite Glow */
+  
+  /* Accent Variants - Mehr Nuancen */
+  --ak-color-accent-subtle: rgba(31, 41, 55, 0.04); /* Sehr subtil für Selected */
+  --ak-color-accent-border: rgba(31, 41, 55, 0.2); /* Für Borders */
+  --ak-color-accent-glow: rgba(31, 41, 55, 0.15); /* Für Glow-Effekte */
+
+  /* ============================================
+     SPACING (4pt Grid)
+     ============================================ */
+  --ak-space-1: 4px;
+  --ak-space-2: 8px;
+  --ak-space-3: 12px;
+  --ak-space-4: 16px;
+  --ak-space-5: 20px;
+  --ak-space-6: 24px;
+  --ak-space-8: 32px;
+  --ak-space-10: 40px;
+  --ak-space-12: 48px;
+  --ak-space-16: 64px;
+  --ak-space-24: 96px;
+  
+  /* ============================================
+     RADIUS - Apple Style (größer und runder)
+     ============================================ */
+  --ak-radius-xs: 6px;
+  --ak-radius-sm: 8px; /* Statt 6px - Apple verwendet oft 8px */
+  --ak-radius-md: 12px; /* Statt 8px - Apple verwendet oft 12px */
+  --ak-radius-lg: 16px; /* Statt 12px - Apple verwendet oft 16px */
+  --ak-radius-xl: 20px; /* Statt 16px - Apple verwendet oft 20px */
+  --ak-radius-2xl: 24px; /* Neu für große Cards */
+  --ak-radius-3xl: 32px; /* Neu für sehr große Overlays */
+  --ak-radius-pill: 9999px;
+  
+  /* ============================================
+     BORDERS - Apple Style (noch subtiler)
+     ============================================ */
+  --ak-border-hairline: 0.5px solid rgba(0, 0, 0, 0.06); /* Noch subtiler - Apple Style */
+  --ak-border-hairline-dark: 0.5px solid rgba(255, 255, 255, 0.1);
+  --ak-border-default: 0.5px solid rgba(0, 0, 0, 0.08); /* Statt 1px - Apple Style */
+  --ak-border-default-dark: 0.5px solid rgba(255, 255, 255, 0.1);
+  --ak-border-strong: 0.5px solid rgba(0, 0, 0, 0.1); /* Statt 1px - Apple Style */
+  --ak-border-strong-dark: 0.5px solid rgba(255, 255, 255, 0.14);
+  
+  /* ============================================
+     ELEVATION (Shadows) - Apple Style (noch subtiler)
+     ============================================ */
+  --ak-elev-0: none;
+  --ak-elev-1: 0 1px 2px rgba(0, 0, 0, 0.02), 0 1px 1px rgba(0, 0, 0, 0.03); /* Noch subtiler - Apple Style */
+  --ak-elev-1-dark: 0 1px 2px rgba(0, 0, 0, 0.25), 0 1px 1px rgba(0, 0, 0, 0.3);
+  --ak-elev-2: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.05); /* Noch subtiler - Apple Style */
+  --ak-elev-2-dark: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.35);
+  --ak-elev-3: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.08); /* Noch subtiler - Apple Style */
+  --ak-elev-3-dark: 0 4px 16px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --ak-elev-4: 0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.06); /* Subtile Tiefe für Popovers */
+  --ak-elev-4-dark: 0 8px 32px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4);
+  
+  /* Accent Glow Shadow */
+  --ak-shadow-accent-glow: 0 0 10px var(--ak-color-accent);
+  
+  /* ============================================
+     TYPOGRAPHY
+     ============================================ */
+  --ak-font-size-xs: 11px;
+  --ak-font-size-sm: 13px;
+  --ak-font-size-base: 15px;
+  --ak-font-size-lg: 17px;
+  --ak-font-size-xl: 20px;
+  --ak-font-size-2xl: 24px;
+  --ak-font-size-3xl: 32px;
+  --ak-font-size-4xl: 40px;
+  --ak-font-size-5xl: 48px;
+  
+  --ak-line-height-tight: 1.3;
+  --ak-line-height-normal: 1.45;
+  --ak-line-height-relaxed: 1.6;
+  
+  --ak-font-weight-normal: 400;
+  --ak-font-weight-medium: 500;
+  --ak-font-weight-semibold: 600;
+  --ak-font-weight-bold: 700;
+  
+  /* ============================================
+     COLORS - Text
+     ============================================ */
+  --ak-text-primary: #1d1d1f;
+  --ak-text-primary-dark: #f2f2f7;
+  --ak-text-secondary: #6e6e73;
+  --ak-text-secondary-dark: rgba(242, 242, 247, 0.7);
+  --ak-text-muted: #86868b;
+  --ak-text-muted-dark: rgba(242, 242, 247, 0.5);
+  --ak-text-low-white: rgba(0, 0, 0, 0.9);
+  --ak-text-low-white-dark: rgba(255, 255, 255, 0.95);
+  
+  /* ============================================
+     COLORS - Accents (pro Bereich)
+     ============================================ */
+  /* Posteingang: Graphite */
+  --ak-accent-inbox: #1F2937;
+  --ak-accent-inbox-soft: rgba(31, 41, 55, 0.1);
+  
+  /* Kunden */
+  --ak-accent-customers: #111827; /* Dunkleres Graphite */
+  --ak-accent-customers-soft: rgba(17, 24, 39, 0.1);
+  
+  /* Dokumente */
+  --ak-accent-documents: #374151; /* Medium Graphite */
+  --ak-accent-documents-soft: rgba(55, 65, 81, 0.1);
+  
+  /* Wachstum */
+  --ak-accent-growth: #4B5563; /* Warmes Graphite */
+  --ak-accent-growth-soft: rgba(75, 85, 99, 0.1);
+
+  /* Shield */
+  --ak-accent-shield: #1F2937; /* Graphite */
+  --ak-accent-shield-soft: rgba(31, 41, 55, 0.1);
+
+  /* Phone */
+  --ak-accent-phone: #f43f5e;
+  --ak-accent-phone-soft: rgba(244, 63, 94, 0.1);
+
+  /* Website */
+  --ak-accent-website: #8b5cf6;
+  --ak-accent-website-soft: rgba(139, 92, 246, 0.1);
+
+  /* Actions - alias auf inbox (Graphite) */
+  --ak-accent-actions: var(--ak-accent-inbox);
+  --ak-accent-actions-soft: var(--ak-accent-inbox-soft);
+
+  /* Marketing - alias auf growth (Graphite) */
+  --ak-accent-marketing: var(--ak-accent-growth);
+  --ak-accent-marketing-soft: var(--ak-accent-growth-soft);
+
+  /* Settings - alias auf shield (Graphite) */
+  --ak-accent-settings: var(--ak-accent-shield);
+  --ak-accent-settings-soft: var(--ak-accent-shield-soft);
+
+  /* Telephony - alias auf phone (Rose) */
+  --ak-accent-telephony: var(--ak-accent-phone);
+  --ak-accent-telephony-soft: var(--ak-accent-phone-soft);
+
+  /* Email - alias auf inbox (Graphite) */
+  --ak-accent-email: var(--ak-accent-inbox);
+  --ak-accent-email-soft: var(--ak-accent-inbox-soft);
+
+  /* Chat - alias auf website (Purple) */
+  --ak-accent-chat: var(--ak-accent-website);
+  --ak-accent-chat-soft: var(--ak-accent-website-soft);
+
+  /* Automation - eigener Akzent (Apple-ish Blau) */
+  --ak-accent-automation: #0A84FF;
+  --ak-accent-automation-soft: rgba(10, 132, 255, 0.12);
+
+  /* Reviews - eigener Akzent (warm/amber) */
+  --ak-accent-reviews: #F59E0B;
+  --ak-accent-reviews-soft: rgba(245, 158, 11, 0.12);
+
+  /* ============================================
+     COLORS - Semantic
+     ============================================ */
+  --ak-semantic-success: #34c759;
+  --ak-semantic-success-soft: rgba(52, 199, 89, 0.1);
+  --ak-semantic-warning: #ff9500;
+  --ak-semantic-warning-soft: rgba(255, 149, 0, 0.1);
+  --ak-semantic-danger: #ff3b30;
+  --ak-semantic-danger-soft: rgba(255, 59, 48, 0.1);
+  --ak-semantic-info: #1F2937; /* Graphite statt Blue */
+  --ak-semantic-info-soft: rgba(31, 41, 55, 0.1);
+  
+  /* ============================================
+    MOTION - Apple Style (sanftere Easing-Kurven)
+    ============================================ */
+  --ak-motion-fast: 140ms;
+  --ak-motion-base: 200ms;
+  --ak-motion-slow: 240ms;
+  --ak-motion-duration-fast: 160ms;
+  --ak-motion-duration: 220ms;
+  --ak-motion-duration-slow: 320ms;
+  --ak-ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1); /* Sanfter - Apple Style */
+  --ak-motion-ease: cubic-bezier(0.25, 0.1, 0.25, 1); /* Sanfter - Apple Style */
+  --ak-motion-ease-out: cubic-bezier(0.4, 0, 0.2, 1); /* Standard Apple */
+  --ak-motion-ease-smooth: cubic-bezier(0.33, 1, 0.68, 1); /* Sehr smooth - Apple Style */
+  --ak-motion-spring: 600ms cubic-bezier(0.34, 1.56, 0.64, 1); /* Apple-style spring */
+  
+  /* ============================================
+     COMPONENT SPECIFICS
+     ============================================ */
+  /* List Rows */
+  --ak-row-height: 52px;
+  --ak-row-height-compact: 44px;
+  --ak-row-padding-x: var(--ak-space-4);
+  --ak-row-padding-y: var(--ak-space-5); /* Mehr Whitespace - Apple Style (16px → 20px) */
+  
+  /* Buttons */
+  --ak-button-height-sm: 32px;
+  --ak-button-height-md: 40px;
+  --ak-button-height-lg: 44px;
+  --ak-button-padding-x-sm: var(--ak-space-3);
+  --ak-button-padding-x-md: var(--ak-space-4);
+  --ak-button-padding-x-lg: var(--ak-space-5);
+  
+  /* Cards */
+  --ak-card-padding: var(--ak-space-6); /* Mehr Whitespace - Apple Style (16px → 24px) */
+  --ak-card-radius: var(--ak-radius-lg);
+  
+  /* Drawer */
+  --ak-drawer-width: clamp(320px, 30vw, 480px);
+  --ak-drawer-header-height: 56px;
+  
+  /* Sidebar */
+  --ak-rail-width: 72px;
+  --ak-sidebar-width: 256px;
+  --ak-sidebar-topbar-height: 48px;
+  --ak-sidebar-pad-x: var(--ak-space-3);
+  --ak-sidebar-pad-y: var(--ak-space-2);
+  --ak-workbench-width: 450px;
+  --ak-popover-gap: var(--ak-space-2);
+  
+  /* Modals & Dialogs */
+  --ak-modal-padding: var(--ak-space-6); /* Mehr Whitespace - Apple Style */
+  --ak-dialog-padding: var(--ak-space-6);
+  --ak-modal-radius: var(--ak-radius-2xl); /* Größerer Radius - Apple Style */
+  
+  /* Backdrop */
+  --ak-backdrop-blur: 8px; /* Für Overlays */
+  --ak-backdrop-opacity: 0.3; /* Subtiler - Apple Style */
+  
+  /* Tooltips */
+  --ak-tooltip-radius: var(--ak-radius-md);
+  --ak-tooltip-shadow: var(--ak-elev-2);
+  --ak-tooltip-blur: 8px; /* Subtiler Blur */
+  
+  /* Density Toggle */
+  --ak-density: 1;
+  --ak-pad-x: var(--ak-space-4);
+  --ak-pad-y: var(--ak-space-3);
+  --ak-row-h: var(--ak-row-height);
+  --ak-card-pad: var(--ak-card-padding);
+  
+  /* Divider */
+  --ak-divider-color: var(--ak-color-border-fine);
+  --ak-divider-hairline: 1px;
+  
+  /* Focus Ring */
+  --ak-focus-ring-color: var(--ak-color-accent-soft);
+  --ak-focus-ring-offset: var(--ak-color-bg-sidebar);
+}
+
+/* Density: Compact */
+.ak-density-compact {
+  --ak-density: 0.85;
+  --ak-pad-x: var(--ak-space-3);
+  --ak-pad-y: var(--ak-space-2);
+  --ak-row-h: var(--ak-row-height-compact);
+  --ak-card-pad: var(--ak-space-3);
+}
+
+/* Density: Comfortable (default) */
+.ak-density-comfortable {
+  --ak-density: 1;
+  --ak-pad-x: var(--ak-space-4);
+  --ak-pad-y: var(--ak-space-3);
+  --ak-row-h: var(--ak-row-height);
+  --ak-card-pad: var(--ak-card-padding);
+}
+
+/* Dark Mode Overrides */
+.ak-theme-dark {
+  --ak-surface-0: var(--ak-surface-0-dark);
+  --ak-surface-1: var(--ak-surface-1-dark);
+  --ak-surface-2: var(--ak-surface-2-dark);
+  --ak-surface-2-hover: var(--ak-surface-2-hover-dark);
+  --ak-surface-2-selected: var(--ak-surface-2-selected-dark);
+  --ak-glass-bg: var(--ak-glass-bg-dark);
+  --ak-glass-border-color: var(--ak-glass-border-color-dark);
+  --ak-glass-border: 0.5px solid var(--ak-glass-border-color);
+  --ak-glass-shadow: var(--ak-glass-shadow-dark);
+  --ak-glass-saturate: 180%;
+  --ak-glass-noise-opacity: var(--ak-glass-noise-opacity-dark);
+  --ak-glass-highlight: var(--ak-glass-highlight-dark);
+  --ak-glass-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --ak-border-hairline: var(--ak-border-hairline-dark);
+  --ak-border-default: var(--ak-border-default-dark);
+  --ak-border-strong: var(--ak-border-strong-dark);
+  --ak-elev-1: var(--ak-elev-1-dark);
+  --ak-elev-2: var(--ak-elev-2-dark);
+  --ak-elev-3: var(--ak-elev-3-dark);
+  --ak-text-primary: var(--ak-text-primary-dark);
+  --ak-text-secondary: var(--ak-text-secondary-dark);
+  --ak-text-muted: var(--ak-text-muted-dark);
+  --ak-text-low-white: var(--ak-text-low-white-dark);
+
+  /* Graphite in Dark Mode - significantly lifted for better readability */
+  --ak-color-graphite-base: #4b5563; /* Slate-600 (was 700) */
+  --ak-color-graphite-hover: #6b7280; /* Slate-500 (was 600) */
+  --ak-color-graphite-soft: rgba(255, 255, 255, 0.15); /* Increased opacity */
+  --ak-color-graphite-text: #ffffff; /* Pure white for max contrast */
+  --ak-color-graphite-border: rgba(255, 255, 255, 0.25);
+  --ak-color-graphite-selected: rgba(255, 255, 255, 0.2);
+  --ak-color-graphite-surface: #1f2937; /* Keep dark background */
+  --ak-color-graphite-surface-muted: #374151; /* Slate-700 */
+  --ak-color-graphite-elevated: #374151;
+
+  --ak-color-tooltip-bg: var(--ak-color-graphite-surface-muted);
+  --ak-color-rail-active-bg: rgba(255, 255, 255, 0.15); /* Dezentes Grau für ausgewählte Icons im Dark Mode */
+  --ak-color-rail-active-icon: #ffffff;
+  --ak-color-rail-hover-bg: rgba(255, 255, 255, 0.06); /* Subtiler - Apple Style */
+  
+  /* Selected States - Dark Mode */
+  --ak-color-selected-border-dark: rgba(229, 231, 235, 0.2); /* Light Graphite für Dark Mode */
+  --ak-color-selected-bg-dark: rgba(229, 231, 235, 0.08);
+  
+  /* Icon Colors - Dark Mode */
+  --ak-icon-default-dark: rgba(255, 255, 255, 0.5);
+  --ak-icon-hover-dark: rgba(255, 255, 255, 0.7);
+  --ak-icon-active-dark: var(--ak-color-accent);
+
+  /* Graphite Accents in Dark Mode - significantly lighter for readability */
+  --ak-accent-inbox: #e5e7eb; /* Slate-200 */
+  --ak-accent-inbox-soft: rgba(229, 231, 235, 0.15);
+  
+  --ak-accent-customers: #f3f4f6; /* Slate-100 */
+  --ak-accent-customers-soft: rgba(243, 244, 246, 0.15);
+  
+  --ak-accent-documents: #d1d5db; /* Slate-300 */
+  --ak-accent-documents-soft: rgba(209, 213, 219, 0.15);
+  
+  --ak-accent-growth: #9ca3af; /* Slate-400 */
+  --ak-accent-growth-soft: rgba(156, 163, 175, 0.15);
+
+  --ak-accent-shield: #e5e7eb; /* Slate-200 */
+  --ak-accent-shield-soft: rgba(229, 231, 235, 0.15);
+
+  --ak-semantic-info: #e5e7eb; /* Graphite for info */
+  --ak-semantic-info-soft: rgba(229, 231, 235, 0.15);
+
+  /* Dark Mode Overrides für neue Accents */
+  --ak-accent-automation: #3b82f6; /* Lighter blue for dark mode */
+  --ak-accent-automation-soft: rgba(59, 130, 246, 0.15);
+  
+  --ak-accent-reviews: #fbbf24; /* Lighter amber for dark mode */
+  --ak-accent-reviews-soft: rgba(251, 191, 36, 0.15);
+}
+

@@ -1,0 +1,46 @@
+@layer components {
+  .ak-heading {
+    font-size: var(--ak-font-size-lg);
+    font-weight: var(--ak-font-weight-medium); /* Medium statt Semibold - Apple Style */
+    letter-spacing: -0.011em; /* Subtiler Tracking - Apple Style */
+    line-height: var(--ak-line-height-tight);
+  }
+
+  .ak-subheading {
+    font-size: var(--ak-font-size-base);
+    font-weight: var(--ak-font-weight-medium); /* Medium statt Semibold - Apple Style */
+    letter-spacing: -0.011em;
+    line-height: var(--ak-line-height-tight);
+  }
+
+  .ak-body {
+    @apply text-base leading-relaxed;
+  }
+
+  .ak-caption {
+    @apply text-xs leading-relaxed;
+  }
+
+  /* Typo-Polish: 3 Text-Stile */
+  .ak-text-title {
+    font-size: var(--ak-font-size-base);
+    font-weight: var(--ak-font-weight-medium); /* Medium statt Semibold - Apple Style */
+    line-height: var(--ak-line-height-tight);
+    color: var(--ak-color-text-primary);
+    letter-spacing: -0.011em; /* Subtiler Tracking - Apple Style */
+  }
+
+  .ak-text-body {
+    font-size: var(--ak-font-size-sm);
+    font-weight: var(--ak-font-weight-normal);
+    line-height: var(--ak-line-height-normal);
+    color: var(--ak-color-text-primary);
+  }
+
+  .ak-text-meta {
+    font-size: var(--ak-font-size-xs);
+    font-weight: var(--ak-font-weight-normal);
+    line-height: var(--ak-line-height-normal);
+    color: var(--ak-color-text-muted);
+  }
+}

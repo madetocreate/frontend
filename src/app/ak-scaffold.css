@@ -1,0 +1,317 @@
+/*
+ * AKLOW UI Scaffold – Drawer/Header/Footer + Sidebar polish
+ *
+ * Ziel: Header/Footer aller Drawers über ein gemeinsames „Scaffold“ konsistent machen,
+ * plus saubere Hover/Auswahl-Effekte (auch für versehentlich genutzte Tailwind-Varianten
+ * wie `hover:ak-surface-2-hover`).
+ */
+
+@layer utilities {
+  .ak-glass {
+    border: var(--ak-glass-border);
+  }
+
+  .ak-glass-popover {
+    border: var(--ak-glass-border);
+    border-radius: var(--ak-radius-lg);
+    box-shadow: var(--ak-glass-shadow), var(--ak-glass-inner-shadow);
+  }
+
+  :is(
+      .ak-glass,
+      .ak-glass-popover,
+      .ak-glass-drawer-header,
+      .ak-drawer-header,
+      .ak-drawer-footer,
+      .ak-sidebar-cap
+    ) {
+    position: relative;
+    overflow: hidden;
+    background: var(--ak-glass-bg);
+    box-shadow: var(--ak-glass-shadow), var(--ak-glass-inner-shadow);
+  }
+
+  :is(
+      .ak-glass,
+      .ak-glass-popover,
+      .ak-glass-drawer-header,
+      .ak-drawer-header,
+      .ak-drawer-footer,
+      .ak-sidebar-cap
+    )::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: var(--ak-glass-highlight);
+    opacity: 0.22;
+    mix-blend-mode: screen;
+    z-index: 0;
+  }
+
+  .ak-theme-dark :is(
+      .ak-glass,
+      .ak-glass-popover,
+      .ak-glass-drawer-header,
+      .ak-drawer-header,
+      .ak-drawer-footer,
+      .ak-sidebar-cap
+    )::before {
+    background: var(--ak-glass-highlight-dark);
+    opacity: 0.42;
+  }
+
+  :is(
+      .ak-glass,
+      .ak-glass-popover,
+      .ak-glass-drawer-header,
+      .ak-drawer-header,
+      .ak-drawer-footer,
+      .ak-sidebar-cap
+    )::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='3' cy='7' r='1' fill='rgba(255,255,255,0.08)'/%3E%3Ccircle cx='19' cy='21' r='0.8' fill='rgba(255,255,255,0.04)'/%3E%3Ccircle cx='33' cy='11' r='0.6' fill='rgba(255,255,255,0.05)'/%3E%3C/svg%3E");
+    opacity: var(--ak-glass-noise-opacity);
+    mix-blend-mode: soft-light;
+    z-index: 0;
+  }
+
+  .ak-theme-dark :is(
+      .ak-glass,
+      .ak-glass-popover,
+      .ak-glass-drawer-header,
+      .ak-drawer-header,
+      .ak-drawer-footer,
+      .ak-sidebar-cap
+    )::after {
+    opacity: var(--ak-glass-noise-opacity-dark);
+  }
+
+  :is(
+      .ak-glass,
+      .ak-glass-popover,
+      .ak-glass-drawer-header,
+      .ak-drawer-header,
+      .ak-drawer-footer,
+      .ak-sidebar-cap
+    ) > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    :is(
+        .ak-glass,
+        .ak-glass-popover,
+        .ak-glass-drawer-header,
+        .ak-drawer-header,
+        .ak-drawer-footer,
+        .ak-sidebar-cap
+      ) {
+      backdrop-filter: blur(var(--ak-glass-blur)) saturate(var(--ak-glass-saturate));
+      -webkit-backdrop-filter: blur(var(--ak-glass-blur))
+        saturate(var(--ak-glass-saturate));
+    }
+  }
+
+  .ak-drawer-header {
+    height: var(--ak-drawer-header-height);
+    min-height: var(--ak-drawer-header-height);
+    padding: 0 var(--ak-space-4);
+    display: flex;
+    align-items: center;
+    border-bottom: var(--ak-glass-border);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  .ak-drawer-footer {
+    padding: var(--ak-space-3) var(--ak-space-4);
+    border-top: var(--ak-glass-border);
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+  }
+
+  .hover\:ak-surface-2-hover:hover {
+    background: var(--ak-surface-2-hover);
+  }
+
+  .hover\:ak-elev-1:hover {
+    box-shadow: var(--ak-elev-1);
+  }
+
+  .ak-sidebar-button {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ak-sidebar-button::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--ak-motion-duration-fast) var(--ak-motion-ease);
+    background: radial-gradient(
+      220px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(255, 255, 255, 0.55),
+      transparent 55%
+    );
+  }
+
+  .ak-theme-dark .ak-sidebar-button::after {
+    background: radial-gradient(
+      220px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(255, 255, 255, 0.12),
+      transparent 55%
+    );
+  }
+
+  .ak-sidebar-button:hover::after {
+    opacity: 0.35;
+  }
+
+  .ak-brand-mark {
+    background: radial-gradient(
+        120% 120% at 30% 20%,
+        rgba(255, 255, 255, 0.9),
+        rgba(255, 255, 255, 0.2) 60%,
+        rgba(0, 0, 0, 0.06) 100%
+      ),
+      var(--ak-glass-bg);
+    border: var(--ak-glass-border);
+    box-shadow: var(--ak-glass-shadow);
+    backdrop-filter: blur(var(--ak-glass-blur));
+    -webkit-backdrop-filter: blur(var(--ak-glass-blur));
+    border-radius: var(--ak-radius-xl);
+  }
+
+  .ak-theme-dark .ak-brand-mark {
+    background: radial-gradient(
+        120% 120% at 30% 20%,
+        rgba(255, 255, 255, 0.16),
+        rgba(255, 255, 255, 0.06) 60%,
+        rgba(0, 0, 0, 0.35) 100%
+      ),
+      var(--ak-glass-bg);
+    box-shadow: var(--ak-glass-shadow);
+  }
+
+  /* Rail Tooltip - Graphite Pill Style */
+  .ak-rail-tooltip {
+    background: var(--ak-color-tooltip-bg);
+    color: var(--ak-color-tooltip-text);
+    border: 1px solid var(--ak-color-graphite-border);
+    border-radius: var(--ak-radius-md);
+    padding: var(--ak-space-1) var(--ak-space-2);
+    font-size: var(--ak-font-size-xs);
+    font-weight: 500;
+    box-shadow: var(--ak-elev-2);
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+  }
+
+  .ak-theme-dark .ak-rail-tooltip {
+    box-shadow: var(--ak-elev-2-dark);
+  }
+
+  /* Rail Background - keine Außenkante am Viewport-Rand */
+  .ak-rail {
+    background: var(--ak-color-bg-sidebar);
+    position: relative;
+  }
+
+  /* Divider als Pseudo-Element (innenliegend) */
+  .ak-divider-right {
+    position: relative;
+  }
+
+  .ak-divider-right::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1px;
+    height: 100%;
+    background: var(--ak-color-border-fine);
+    pointer-events: none;
+    opacity: 1;
+  }
+
+  /* Sidebar Caps: genau eine Hairline, kein Double Border */
+  .ak-sidebar-cap--top {
+    border-bottom: 1px solid var(--ak-color-border-fine);
+  }
+
+  .ak-sidebar-cap--bottom {
+    border-top: 1px solid var(--ak-color-border-fine);
+  }
+
+  /* Global Motion Utilities */
+  .ak-transition-base {
+    transition-duration: var(--ak-motion-base);
+    transition-timing-function: var(--ak-ease-standard);
+  }
+
+  .ak-transition-fast {
+    transition-duration: var(--ak-motion-fast);
+    transition-timing-function: var(--ak-ease-standard);
+  }
+
+  .ak-transition-slow {
+    transition-duration: var(--ak-motion-slow);
+    transition-timing-function: var(--ak-ease-standard);
+  }
+
+  /* Card Hover Effects */
+  .ak-card-hover {
+    transition: transform var(--ak-motion-base) var(--ak-ease-standard),
+                box-shadow var(--ak-motion-base) var(--ak-ease-standard),
+                border-color var(--ak-motion-fast) var(--ak-ease-standard);
+  }
+
+  .ak-card-hover:hover {
+    transform: translateY(-1px);
+  }
+
+  /* Popover/Dropdown Animation */
+  .ak-popover-enter {
+    animation: ak-fade-in var(--ak-motion-base) var(--ak-ease-standard),
+               ak-scale-in var(--ak-motion-base) var(--ak-ease-standard);
+  }
+
+  @keyframes ak-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes ak-scale-in {
+    from { transform: scale(0.95); }
+    to { transform: scale(1); }
+  }
+
+  /* Chip Background Fade */
+  .ak-chip-transition {
+    transition: background-color var(--ak-motion-fast) var(--ak-ease-standard),
+                color var(--ak-motion-fast) var(--ak-ease-standard);
+  }
+
+  /* Modal/Overlay Surface - für DashboardOverlay und ähnliche */
+  .ak-glass-modal {
+    background: var(--ak-color-bg-surface);
+    border: var(--ak-glass-border);
+    box-shadow: var(--ak-glass-shadow), var(--ak-glass-inner-shadow);
+  }
+
+  .ak-theme-dark .ak-glass-modal {
+    background: var(--ak-color-graphite-surface-strong);
+    border-color: var(--ak-color-graphite-border);
+  }
+}
